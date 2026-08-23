@@ -1,0 +1,22 @@
+{
+  "name": "gearhub",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "pnpm core:prepare && turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "core:build": "pnpm --filter @gearhub/core build:wasm",
+    "core:prepare": "node scripts/prepare-core.mjs"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "turbo": "^2.10.11",
+    "typescript": "5.9.3"
+  }
+}

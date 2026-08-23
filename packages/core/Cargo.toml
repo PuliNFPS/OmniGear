@@ -1,0 +1,11 @@
+[package]
+name = "gearhub-core-wasm"
+version = "0.1.0"
+edition = "2024"
+description = "Protocol and device abstractions for Gearhub"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-bindgen = "0.2"

@@ -1,0 +1,14 @@
+node_modules/
+.pnpm-store/
+dist/
+.turbo/
+packages/core/target/
+packages/core/pkg/*.wasm
+packages/core/pkg/.gitignore
+*.log
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db

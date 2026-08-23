@@ -1,0 +1,10 @@
+{
+  "name": "@gearhub/core",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build:wasm": "wasm-pack build --target web --out-dir pkg --out-name index",
+    "lint": "node ../../scripts/run-rust-tool.mjs lint",
+    "format": "node ../../scripts/run-rust-tool.mjs format"
+  }
+}
