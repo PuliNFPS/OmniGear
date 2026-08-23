@@ -1,0 +1,4 @@
+interface:
+  display_name: "Shadcn Modular UI"
+  short_description: "Safe CLI usage and reusable UI composition"
+  default_prompt: "Use $shadcn-modular-ui to add this interface with the Shadcn CLI and reusable components."
