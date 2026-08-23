@@ -1,6 +1,6 @@
 # OmniGear
 
-A web app for configuring gaming mice and keyboards from different brands in a single, fast interface — without installing several heavy programs.
+A web app for configuring gaming mice and keyboards from different brands in a single, fast interface  without installing several heavy programs.
 
 This repository replaces the previous Portuguese-only placeholder with the current OmniGear workspace.
 
@@ -28,8 +28,12 @@ The preview currently uses two mock peripherals so you can explore DPI, polling 
 
 ## Scripts
 
-| Command | Description |
-| --- | --- |
-| `pnpm dev` | Prepare the WASM core and start the web app |
-| `pnpm build` | Build all packages |
-| `pnpm lint` | Lint the workspace |
+| Command       | Description                                 |
+| ------------- | ------------------------------------------- |
+| `pnpm dev`    | Prepare the WASM core and start the web app |
+| `pnpm build`  | Build all packages                          |
+| `pnpm lint`   | Lint the workspace                          |
+| `pnpm test`   | Run focused TypeScript and Rust tests       |
+| `pnpm verify` | Run all local and CI quality gates          |
+
+See [Code intelligence and quality checks](docs/code-quality.md) for Graphify setup, functionality search, architecture checks, and the team workflow.

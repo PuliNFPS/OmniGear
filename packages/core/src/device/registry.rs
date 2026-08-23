@@ -7,4 +7,3 @@ pub enum RegisteredDriver {
 pub fn mock_registry() -> Vec<RegisteredDriver> {
     vec![RegisteredDriver::MockMouse(MockMouseDriver)]
 }
-

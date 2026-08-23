@@ -1,4 +1,4 @@
 interface:
-  display_name: "Onion Architecture"
-  short_description: "Dependency inversion and clean boundaries"
-  default_prompt: "Use $onion-architecture to design this feature with inward dependencies and explicit ports."
+  display_name: 'Onion Architecture'
+  short_description: 'Dependency inversion and clean boundaries'
+  default_prompt: 'Use $onion-architecture to design this feature with inward dependencies and explicit ports.'

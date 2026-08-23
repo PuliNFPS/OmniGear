@@ -1,0 +1,11 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  "ignoreBinaries": ["graphify", "wasm-pack"],
+  "ignoreIssues": {
+    // Skeleton abstractions intentionally kept for the upcoming WebHID implementation.
+    "apps/web/src/hardware/ConnectedDevice.ts": ["files"],
+    "apps/web/src/hardware/WebHidTransport.ts": ["files"],
+    // Public while the store API is still being shaped.
+    "apps/web/src/store/deviceStore.ts": ["types"],
+  },
+}

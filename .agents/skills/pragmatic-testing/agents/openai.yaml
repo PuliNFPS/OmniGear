@@ -1,4 +1,4 @@
 interface:
-  display_name: "Pragmatic Testing"
-  short_description: "Focused TypeScript and Rust test strategy"
-  default_prompt: "Use $pragmatic-testing to add the smallest meaningful tests for this change."
+  display_name: 'Pragmatic Testing'
+  short_description: 'Focused TypeScript and Rust test strategy'
+  default_prompt: 'Use $pragmatic-testing to add the smallest meaningful tests for this change.'

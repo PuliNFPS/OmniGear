@@ -14,4 +14,3 @@ pub fn core_version() -> String {
 pub fn is_wasm_available() -> bool {
     true
 }
-

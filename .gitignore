@@ -2,6 +2,7 @@ node_modules/
 .pnpm-store/
 dist/
 .turbo/
+target/
 packages/core/target/
 packages/core/pkg/*.wasm
 packages/core/pkg/.gitignore
@@ -12,3 +13,7 @@ packages/core/pkg/.gitignore
 !.env.example
 .DS_Store
 Thumbs.db
+graphify-out/cache/
+graphify-out/.graphify_root
+graphify-out/cost.json
+graphify-out/20*/
