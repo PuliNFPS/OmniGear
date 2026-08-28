@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Maintainable Code'
+  short_description: 'Modular code with clear reusable boundaries'
+  default_prompt: 'Use $maintainable-code to implement this change with clear modules and no duplicated logic.'

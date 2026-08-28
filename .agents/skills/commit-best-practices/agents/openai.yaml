@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Commit Best Practices'
+  short_description: 'Safe branches and concise commit messages'
+  default_prompt: 'Use $commit-best-practices to prepare and create a safe, focused Git commit.'

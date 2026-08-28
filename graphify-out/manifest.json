@@ -1,0 +1,332 @@
+{
+  ".cursor/mcp.json": {
+    "mtime": 1787522628.8294816,
+    "seen": 1787522692.0222676,
+    "ast_hash": "0e65726eeed290805ca4911466543339",
+    "semantic_hash": "0e65726eeed290805ca4911466543339"
+  },
+  ".dependency-cruiser.cjs": {
+    "mtime": 1787533567.61691,
+    "seen": 1787533615.1759286,
+    "ast_hash": "c0b36295ef799b8e7c82bdf572d92231",
+    "semantic_hash": "c0b36295ef799b8e7c82bdf572d92231"
+  },
+  "apps/web/components.json": {
+    "mtime": 1787447771.322063,
+    "seen": 1787522523.722927,
+    "ast_hash": "cc11844c79470d8c38cc6a4a8867c72e",
+    "semantic_hash": "cc11844c79470d8c38cc6a4a8867c72e"
+  },
+  "apps/web/eslint.config.js": {
+    "mtime": 1787444942.139122,
+    "seen": 1787522523.722929,
+    "ast_hash": "2ea2ee1f482de56a4933cd6de23a5142",
+    "semantic_hash": "2ea2ee1f482de56a4933cd6de23a5142"
+  },
+  "apps/web/package.json": {
+    "mtime": 1787522172.8549976,
+    "seen": 1787522523.7229307,
+    "ast_hash": "76eac185ff30733d365ef9e84276dfc0",
+    "semantic_hash": "76eac185ff30733d365ef9e84276dfc0"
+  },
+  "apps/web/src/App.tsx": {
+    "mtime": 1787448094.1722648,
+    "seen": 1787522523.7229319,
+    "ast_hash": "50029183981a466563041e456ed216f6",
+    "semantic_hash": "50029183981a466563041e456ed216f6"
+  },
+  "apps/web/src/components/BrandMark.tsx": {
+    "mtime": 1787517150.9779284,
+    "seen": 1787522523.7229335,
+    "ast_hash": "e85f90bd8acb36b17e27812d67c00266",
+    "semantic_hash": "e85f90bd8acb36b17e27812d67c00266"
+  },
+  "apps/web/src/components/DeviceIcon.tsx": {
+    "mtime": 1787444942.217664,
+    "seen": 1787522523.7229347,
+    "ast_hash": "2235a8d1de6cd3b8d36322a94cb8ae02",
+    "semantic_hash": "2235a8d1de6cd3b8d36322a94cb8ae02"
+  },
+  "apps/web/src/components/DevicePanel.tsx": {
+    "mtime": 1787448208.409791,
+    "seen": 1787522523.7229362,
+    "ast_hash": "d66116be384034e0fbcf5aec7b2efba7",
+    "semantic_hash": "d66116be384034e0fbcf5aec7b2efba7"
+  },
+  "apps/web/src/components/SegmentedControl.tsx": {
+    "mtime": 1787448098.2287307,
+    "seen": 1787522523.722937,
+    "ast_hash": "2c8c6f84745a2d3be79647e89bb2a60f",
+    "semantic_hash": "2c8c6f84745a2d3be79647e89bb2a60f"
+  },
+  "apps/web/src/components/SettingRow.tsx": {
+    "mtime": 1787444942.2443159,
+    "seen": 1787522523.722938,
+    "ast_hash": "9b60e87e727e623fa0ac31f3ba150b0e",
+    "semantic_hash": "9b60e87e727e623fa0ac31f3ba150b0e"
+  },
+  "apps/web/src/components/Sidebar.tsx": {
+    "mtime": 1787448095.4305043,
+    "seen": 1787522523.72294,
+    "ast_hash": "b4b861fa24ec16cb4d4d9673caa54c75",
+    "semantic_hash": "b4b861fa24ec16cb4d4d9673caa54c75"
+  },
+  "apps/web/src/core/coreBridge.ts": {
+    "mtime": 1787445020.3352058,
+    "seen": 1787522523.722941,
+    "ast_hash": "5c235cf0b033e1557ff93ec33b19f05b",
+    "semantic_hash": "5c235cf0b033e1557ff93ec33b19f05b"
+  },
+  "apps/web/src/hardware/ConnectedDevice.ts": {
+    "mtime": 1787444942.2627678,
+    "seen": 1787522523.7229419,
+    "ast_hash": "5cfe8fe6b2687596fa85115ad22ecdf2",
+    "semantic_hash": "5cfe8fe6b2687596fa85115ad22ecdf2"
+  },
+  "apps/web/src/hardware/WebHidTransport.ts": {
+    "mtime": 1787444942.2728956,
+    "seen": 1787522523.722943,
+    "ast_hash": "29fd9c5de7b99f8fd879784228fbe9c1",
+    "semantic_hash": "29fd9c5de7b99f8fd879784228fbe9c1"
+  },
+  "apps/web/src/hardware/deviceDiscovery.test.ts": {
+    "mtime": 1787522172.857677,
+    "seen": 1787522523.722944,
+    "ast_hash": "64a55eabc11aa6d0ef96e75881bda765",
+    "semantic_hash": "64a55eabc11aa6d0ef96e75881bda765"
+  },
+  "apps/web/src/hardware/deviceDiscovery.ts": {
+    "mtime": 1787444942.2678583,
+    "seen": 1787522523.722945,
+    "ast_hash": "44670c37af11c7d63079670ec7863014",
+    "semantic_hash": "44670c37af11c7d63079670ec7863014"
+  },
+  "apps/web/src/main.tsx": {
+    "mtime": 1787444942.2754073,
+    "seen": 1787522523.7229462,
+    "ast_hash": "c10fd1ff88f07819fb37655ef1ffd3f1",
+    "semantic_hash": "c10fd1ff88f07819fb37655ef1ffd3f1"
+  },
+  "apps/web/src/mocks/peripherals.ts": {
+    "mtime": 1787444942.282494,
+    "seen": 1787522523.7229471,
+    "ast_hash": "c3fb885d182f07ba6bd08dd20182e125",
+    "semantic_hash": "c3fb885d182f07ba6bd08dd20182e125"
+  },
+  "apps/web/src/store/deviceStore.ts": {
+    "mtime": 1787447664.107798,
+    "seen": 1787522523.722948,
+    "ast_hash": "2722e1621e14a42e97bae1f62e6bd2b6",
+    "semantic_hash": "2722e1621e14a42e97bae1f62e6bd2b6"
+  },
+  "apps/web/src/vite-env.d.ts": {
+    "mtime": 1787444926.94771,
+    "seen": 1787522523.722949,
+    "ast_hash": "0352474ba2918efe13895edbc3780d94",
+    "semantic_hash": "0352474ba2918efe13895edbc3780d94"
+  },
+  "apps/web/tsconfig.app.json": {
+    "mtime": 1787444942.3440952,
+    "seen": 1787522523.7229502,
+    "ast_hash": "d01228955b739b81b36922024e414840",
+    "semantic_hash": "d01228955b739b81b36922024e414840"
+  },
+  "apps/web/tsconfig.json": {
+    "mtime": 1787444942.3472683,
+    "seen": 1787522523.722952,
+    "ast_hash": "cebcd0aef9a53b9c724ac53266f03437",
+    "semantic_hash": "cebcd0aef9a53b9c724ac53266f03437"
+  },
+  "apps/web/tsconfig.node.json": {
+    "mtime": 1787444924.3088005,
+    "seen": 1787522523.7229528,
+    "ast_hash": "af4b44f148e1896d2423ab8b74ecd548",
+    "semantic_hash": "af4b44f148e1896d2423ab8b74ecd548"
+  },
+  "apps/web/vite.config.ts": {
+    "mtime": 1787444942.3661897,
+    "seen": 1787522523.722954,
+    "ast_hash": "c0fa1060ab5d841b1a36f3965b1aa871",
+    "semantic_hash": "c0fa1060ab5d841b1a36f3965b1aa871"
+  },
+  "package.json": {
+    "mtime": 1787533567.6258342,
+    "seen": 1787533615.1797512,
+    "ast_hash": "2435f1a896ac745e3d892402a7096b16",
+    "semantic_hash": "2435f1a896ac745e3d892402a7096b16"
+  },
+  "packages/core/Cargo.toml": {
+    "mtime": 1787445017.9774547,
+    "seen": 1787522523.722956,
+    "ast_hash": "6279407aaf56c6988d3a8892ce38e012",
+    "semantic_hash": "6279407aaf56c6988d3a8892ce38e012"
+  },
+  "packages/core/package.json": {
+    "mtime": 1787522172.8549976,
+    "seen": 1787522523.722957,
+    "ast_hash": "f4166027809d62ce1b55763507ff0781",
+    "semantic_hash": "f4166027809d62ce1b55763507ff0781"
+  },
+  "packages/core/pkg/index.d.ts": {
+    "mtime": 1787444942.378406,
+    "seen": 1787522523.7229578,
+    "ast_hash": "49675a6e125b943fa3be730a1e72c666",
+    "semantic_hash": "49675a6e125b943fa3be730a1e72c666"
+  },
+  "packages/core/pkg/index.js": {
+    "mtime": 1787444942.3815627,
+    "seen": 1787522523.7229588,
+    "ast_hash": "20a2db2881f999e10ec74104fcd728b0",
+    "semantic_hash": "20a2db2881f999e10ec74104fcd728b0"
+  },
+  "packages/core/pkg/package.json": {
+    "mtime": 1787445018.7728026,
+    "seen": 1787522523.7229598,
+    "ast_hash": "3fbce51bb1e18998e8ed8f60eb1a4236",
+    "semantic_hash": "3fbce51bb1e18998e8ed8f60eb1a4236"
+  },
+  "packages/core/src/command.rs": {
+    "mtime": 1787522644.283635,
+    "seen": 1787522692.0264196,
+    "ast_hash": "29acac8ff1adeca37762b8a4ecbce973",
+    "semantic_hash": "29acac8ff1adeca37762b8a4ecbce973"
+  },
+  "packages/core/src/device/capabilities.rs": {
+    "mtime": 1787522644.285041,
+    "seen": 1787522692.0264213,
+    "ast_hash": "ea5d1d48c8f5cc8b3ec577e5f0b5ef1f",
+    "semantic_hash": "ea5d1d48c8f5cc8b3ec577e5f0b5ef1f"
+  },
+  "packages/core/src/device/mod.rs": {
+    "mtime": 1787522644.285041,
+    "seen": 1787522692.0264223,
+    "ast_hash": "a6cf1c845cff174b759ddfe8098dd0db",
+    "semantic_hash": "a6cf1c845cff174b759ddfe8098dd0db"
+  },
+  "packages/core/src/device/registry.rs": {
+    "mtime": 1787522644.285041,
+    "seen": 1787522692.0264237,
+    "ast_hash": "3cc12aeb4cd02960aa499e2329a45c80",
+    "semantic_hash": "3cc12aeb4cd02960aa499e2329a45c80"
+  },
+  "packages/core/src/drivers/mock_mouse.rs": {
+    "mtime": 1787522644.2860427,
+    "seen": 1787522692.0264251,
+    "ast_hash": "ba008d88d535499eef2c4639f0cfa600",
+    "semantic_hash": "ba008d88d535499eef2c4639f0cfa600"
+  },
+  "packages/core/src/drivers/mod.rs": {
+    "mtime": 1787522644.2860427,
+    "seen": 1787522692.026426,
+    "ast_hash": "1a4ec9eded1adc538c6218d45b5eef40",
+    "semantic_hash": "1a4ec9eded1adc538c6218d45b5eef40"
+  },
+  "packages/core/src/lib.rs": {
+    "mtime": 1787522644.2865508,
+    "seen": 1787522692.0264275,
+    "ast_hash": "4081a24a1d4fb81a348167ddf140c849",
+    "semantic_hash": "4081a24a1d4fb81a348167ddf140c849"
+  },
+  "packages/core/src/protocols/mod.rs": {
+    "mtime": 1787522644.2865508,
+    "seen": 1787522692.0264287,
+    "ast_hash": "ed2e626d51b2901af92b3fd538eacb4f",
+    "semantic_hash": "ed2e626d51b2901af92b3fd538eacb4f"
+  },
+  "packages/shared/package.json": {
+    "mtime": 1787444942.4021218,
+    "seen": 1787522523.7229686,
+    "ast_hash": "eeaab9837876ad0e0c3eb6df8703983f",
+    "semantic_hash": "eeaab9837876ad0e0c3eb6df8703983f"
+  },
+  "packages/shared/src/index.ts": {
+    "mtime": 1787444942.4067345,
+    "seen": 1787522523.7229695,
+    "ast_hash": "9a486f172b1319e31dc723af4042c2ed",
+    "semantic_hash": "9a486f172b1319e31dc723af4042c2ed"
+  },
+  "packages/shared/tsconfig.json": {
+    "mtime": 1787444942.4087522,
+    "seen": 1787522523.7229707,
+    "ast_hash": "e75a5fbe9914d5d2c4fbd204500648e0",
+    "semantic_hash": "e75a5fbe9914d5d2c4fbd204500648e0"
+  },
+  "packages/ui/components.json": {
+    "mtime": 1787447775.152419,
+    "seen": 1787522523.7229717,
+    "ast_hash": "929048556389e0bf3ddffc54060cde1b",
+    "semantic_hash": "929048556389e0bf3ddffc54060cde1b"
+  },
+  "packages/ui/package.json": {
+    "mtime": 1787448100.6598823,
+    "seen": 1787522523.7229733,
+    "ast_hash": "948ef5ef5bc0fcfedef9363fc22b9cb2",
+    "semantic_hash": "948ef5ef5bc0fcfedef9363fc22b9cb2"
+  },
+  "packages/ui/src/components/alert.tsx": {
+    "mtime": 1787448208.6778996,
+    "seen": 1787522523.7229745,
+    "ast_hash": "cfe3059e77ff5723a0ed064f1713ac30",
+    "semantic_hash": "cfe3059e77ff5723a0ed064f1713ac30"
+  },
+  "packages/ui/src/components/badge.tsx": {
+    "mtime": 1787448208.6853426,
+    "seen": 1787522523.7229755,
+    "ast_hash": "6c6a6af4607f8ee33d8d04ff160b2497",
+    "semantic_hash": "6c6a6af4607f8ee33d8d04ff160b2497"
+  },
+  "packages/ui/src/components/button.tsx": {
+    "mtime": 1787448208.6959429,
+    "seen": 1787522523.7229764,
+    "ast_hash": "eaae4b279b0b88bd042e3d0dca913797",
+    "semantic_hash": "eaae4b279b0b88bd042e3d0dca913797"
+  },
+  "packages/ui/src/components/select.tsx": {
+    "mtime": 1787448208.710323,
+    "seen": 1787522523.7229776,
+    "ast_hash": "a4ef62b04accb53013c51b78d8b0aa21",
+    "semantic_hash": "a4ef62b04accb53013c51b78d8b0aa21"
+  },
+  "packages/ui/src/lib/utils.ts": {
+    "mtime": 1787444942.4360192,
+    "seen": 1787522523.7229786,
+    "ast_hash": "8595c2f874aa1ff8c7cc28df2999f354",
+    "semantic_hash": "8595c2f874aa1ff8c7cc28df2999f354"
+  },
+  "packages/ui/tsconfig.json": {
+    "mtime": 1787444942.4375365,
+    "seen": 1787522523.7229795,
+    "ast_hash": "b0972c4a6902fa8eedeea8a9797efb4d",
+    "semantic_hash": "b0972c4a6902fa8eedeea8a9797efb4d"
+  },
+  "prettier.config.mjs": {
+    "mtime": 1787444942.571328,
+    "seen": 1787522523.7229805,
+    "ast_hash": "929ce6da37b74ed56c9fc002e625ee21",
+    "semantic_hash": "929ce6da37b74ed56c9fc002e625ee21"
+  },
+  "scripts/prepare-core.mjs": {
+    "mtime": 1787444942.6038694,
+    "seen": 1787522523.7229817,
+    "ast_hash": "7599999481025d120a81318411e6c33a",
+    "semantic_hash": "7599999481025d120a81318411e6c33a"
+  },
+  "scripts/run-rust-tool.mjs": {
+    "mtime": 1787522224.8394446,
+    "seen": 1787522523.7229826,
+    "ast_hash": "9b1401779296d36c091dbc9f4e36d293",
+    "semantic_hash": "9b1401779296d36c091dbc9f4e36d293"
+  },
+  "tsconfig.audit.json": {
+    "mtime": 1787522172.8559923,
+    "seen": 1787522523.7229836,
+    "ast_hash": "70825b744fd557879e2c9d0b1d1fe11d",
+    "semantic_hash": "70825b744fd557879e2c9d0b1d1fe11d"
+  },
+  "turbo.json": {
+    "mtime": 1787522642.0977278,
+    "seen": 1787522692.0283606,
+    "ast_hash": "f7dddb274deb9e05bfd02f54130c2dda",
+    "semantic_hash": "f7dddb274deb9e05bfd02f54130c2dda"
+  }
+}

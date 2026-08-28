@@ -1,0 +1,672 @@
+{
+  "communities": {
+    "0": [
+      "apps_web_src_app_app_update",
+      "apps_web_src_hardware_connecteddevice",
+      "apps_web_src_hardware_connecteddevice_connecteddevice",
+      "apps_web_src_hardware_connecteddevice_connecteddevice_constructor",
+      "apps_web_src_hardware_connecteddevice_connecteddevice_setdpi",
+      "apps_web_src_hardware_connecteddevice_connecteddevice_setpollingrate",
+      "apps_web_src_hardware_devicediscovery",
+      "apps_web_src_hardware_devicediscovery_discoverdevices",
+      "apps_web_src_hardware_devicediscovery_test",
+      "apps_web_src_hardware_webhidtransport",
+      "apps_web_src_hardware_webhidtransport_hardwaretransport",
+      "apps_web_src_hardware_webhidtransport_hardwaretransport_open",
+      "apps_web_src_hardware_webhidtransport_hardwaretransport_send",
+      "apps_web_src_hardware_webhidtransport_hiddevicehandle",
+      "apps_web_src_hardware_webhidtransport_hiddevicehandle_open",
+      "apps_web_src_hardware_webhidtransport_hiddevicehandle_sendreport",
+      "apps_web_src_hardware_webhidtransport_webhidtransport",
+      "apps_web_src_hardware_webhidtransport_webhidtransport_constructor",
+      "apps_web_src_hardware_webhidtransport_webhidtransport_open",
+      "apps_web_src_hardware_webhidtransport_webhidtransport_send",
+      "apps_web_src_mocks_peripherals",
+      "apps_web_src_mocks_peripherals_mockperipherals",
+      "apps_web_src_store_devicestore",
+      "apps_web_src_store_devicestore_devicestore",
+      "apps_web_src_store_devicestore_devicestore_connectdevices",
+      "apps_web_src_store_devicestore_devicestore_selectdevice",
+      "apps_web_src_store_devicestore_devicestore_updatesetting",
+      "apps_web_src_store_devicestore_feedback",
+      "apps_web_src_store_devicestore_savestate",
+      "apps_web_src_store_devicestore_usedevicestore",
+      "packages_shared_src_index",
+      "packages_shared_src_index_connectedperipheral",
+      "packages_shared_src_index_connectedperipheral_setdpi",
+      "packages_shared_src_index_connectedperipheral_setpollingrate",
+      "packages_shared_src_index_devicecapabilities",
+      "packages_shared_src_index_devicesettings",
+      "packages_shared_src_index_hidcommand",
+      "packages_shared_src_index_peripheraltype"
+    ],
+    "1": [
+      "apps_web_src_components_brandmark",
+      "apps_web_src_components_brandmark_brandmark",
+      "apps_web_src_components_deviceicon",
+      "apps_web_src_components_deviceicon_deviceicon",
+      "apps_web_src_components_devicepanel",
+      "apps_web_src_components_devicepanel_profiles",
+      "apps_web_src_components_devicepanel_toggle",
+      "apps_web_src_components_segmentedcontrol",
+      "apps_web_src_components_segmentedcontrol_segmentedcontrol",
+      "apps_web_src_components_settingrow",
+      "apps_web_src_components_settingrow_settingrow",
+      "apps_web_src_components_sidebar",
+      "apps_web_src_components_sidebar_sidebar",
+      "packages_ui_src_components_badge",
+      "packages_ui_src_components_badge_badge",
+      "packages_ui_src_components_badge_badgevariants",
+      "packages_ui_src_components_select",
+      "packages_ui_src_components_select_select",
+      "packages_ui_src_components_select_selectcontent",
+      "packages_ui_src_components_select_selectgroup",
+      "packages_ui_src_components_select_selectitem",
+      "packages_ui_src_components_select_selectlabel",
+      "packages_ui_src_components_select_selectscrolldownbutton",
+      "packages_ui_src_components_select_selectscrollupbutton",
+      "packages_ui_src_components_select_selectseparator",
+      "packages_ui_src_components_select_selecttrigger",
+      "packages_ui_src_components_select_selectvalue",
+      "packages_ui_src_lib_utils",
+      "packages_ui_src_lib_utils_cn"
+    ],
+    "2": [
+      "apps_web_package_dependencies_react_dom",
+      "apps_web_package_devdependencies_types_react",
+      "apps_web_package_json_react_dom",
+      "apps_web_package_json_types_react",
+      "packages_ui_package",
+      "packages_ui_package_devdependencies",
+      "packages_ui_package_devdependencies_react",
+      "packages_ui_package_devdependencies_types_react",
+      "packages_ui_package_devdependencies_typescript",
+      "packages_ui_package_exports",
+      "packages_ui_package_exports_components",
+      "packages_ui_package_exports_hooks",
+      "packages_ui_package_exports_lib",
+      "packages_ui_package_imports",
+      "packages_ui_package_imports_components",
+      "packages_ui_package_imports_hooks",
+      "packages_ui_package_imports_lib",
+      "packages_ui_package_json_react",
+      "packages_ui_package_name",
+      "packages_ui_package_peerdependencies",
+      "packages_ui_package_peerdependencies_react",
+      "packages_ui_package_peerdependencies_react_dom",
+      "packages_ui_package_private",
+      "packages_ui_package_scripts",
+      "packages_ui_package_scripts_build",
+      "packages_ui_package_scripts_lint",
+      "packages_ui_package_type",
+      "packages_ui_package_version"
+    ],
+    "3": [
+      "apps_web_package_devdependencies",
+      "apps_web_package_devdependencies_eslint",
+      "apps_web_package_devdependencies_eslint_js",
+      "apps_web_package_devdependencies_eslint_plugin_react_hooks",
+      "apps_web_package_devdependencies_eslint_plugin_react_refresh",
+      "apps_web_package_devdependencies_globals",
+      "apps_web_package_devdependencies_tailwindcss",
+      "apps_web_package_devdependencies_tailwindcss_vite",
+      "apps_web_package_devdependencies_types_react_dom",
+      "apps_web_package_devdependencies_typescript",
+      "apps_web_package_devdependencies_typescript_eslint",
+      "apps_web_package_devdependencies_vite",
+      "apps_web_package_devdependencies_vitejs_plugin_react",
+      "apps_web_package_devdependencies_vitest",
+      "eslint",
+      "eslint_js",
+      "eslint_plugin_react_hooks",
+      "eslint_plugin_react_refresh",
+      "globals",
+      "tailwindcss",
+      "tailwindcss_vite",
+      "types_react_dom",
+      "typescript_eslint",
+      "vite",
+      "vitejs_plugin_react",
+      "vitest"
+    ],
+    "4": [
+      "package",
+      "package_engines",
+      "package_engines_node",
+      "package_name",
+      "package_packagemanager",
+      "package_private",
+      "package_scripts",
+      "package_scripts_audit",
+      "package_scripts_audit_boundaries",
+      "package_scripts_audit_rust",
+      "package_scripts_audit_ts",
+      "package_scripts_build",
+      "package_scripts_core_build",
+      "package_scripts_core_prepare",
+      "package_scripts_dev",
+      "package_scripts_format",
+      "package_scripts_format_check",
+      "package_scripts_graph_index",
+      "package_scripts_graph_query",
+      "package_scripts_graph_status",
+      "package_scripts_graph_update",
+      "package_scripts_lint",
+      "package_scripts_test",
+      "package_scripts_verify"
+    ],
+    "5": [
+      "apps_web_package_dependencies",
+      "apps_web_package_dependencies_gearhub_core_wasm",
+      "apps_web_package_dependencies_gearhub_shared",
+      "apps_web_package_dependencies_gearhub_ui",
+      "apps_web_package_dependencies_lucide_react",
+      "apps_web_package_dependencies_react",
+      "apps_web_package_dependencies_zustand",
+      "apps_web_package_json_lucide_react",
+      "apps_web_package_json_react",
+      "class_variance_authority",
+      "clsx",
+      "gearhub_core_wasm",
+      "gearhub_shared",
+      "gearhub_ui",
+      "packages_ui_package_dependencies",
+      "packages_ui_package_dependencies_class_variance_authority",
+      "packages_ui_package_dependencies_clsx",
+      "packages_ui_package_dependencies_lucide_react",
+      "packages_ui_package_dependencies_radix_ui",
+      "packages_ui_package_dependencies_tailwind_merge",
+      "radix_ui",
+      "tailwind_merge",
+      "zustand"
+    ],
+    "6": [
+      "apps_web_tsconfig_app",
+      "apps_web_tsconfig_app_compileroptions",
+      "apps_web_tsconfig_app_compileroptions_allowjs",
+      "apps_web_tsconfig_app_compileroptions_allowsyntheticdefaultimports",
+      "apps_web_tsconfig_app_compileroptions_esmoduleinterop",
+      "apps_web_tsconfig_app_compileroptions_forceconsistentcasinginfilenames",
+      "apps_web_tsconfig_app_compileroptions_isolatedmodules",
+      "apps_web_tsconfig_app_compileroptions_jsx",
+      "apps_web_tsconfig_app_compileroptions_lib",
+      "apps_web_tsconfig_app_compileroptions_module",
+      "apps_web_tsconfig_app_compileroptions_moduleresolution",
+      "apps_web_tsconfig_app_compileroptions_noemit",
+      "apps_web_tsconfig_app_compileroptions_resolvejsonmodule",
+      "apps_web_tsconfig_app_compileroptions_skiplibcheck",
+      "apps_web_tsconfig_app_compileroptions_strict",
+      "apps_web_tsconfig_app_compileroptions_target",
+      "apps_web_tsconfig_app_compileroptions_usedefineforclassfields",
+      "apps_web_tsconfig_app_include",
+      "apps_web_tsconfig_app_json_ref_src",
+      "ref_dom",
+      "ref_dom_iterable",
+      "ref_es2022"
+    ],
+    "7": [
+      "apps_web_src_app",
+      "apps_web_src_app_app",
+      "apps_web_src_app_emptystate",
+      "apps_web_src_components_devicepanel_devicepanel",
+      "apps_web_src_core_corebridge",
+      "apps_web_src_core_corebridge_corestatus",
+      "apps_web_src_core_corebridge_loadcore",
+      "apps_web_src_main",
+      "packages_core_pkg_index",
+      "packages_core_pkg_index_core_version",
+      "packages_core_pkg_index_init",
+      "packages_core_pkg_index_is_wasm_available",
+      "packages_ui_src_components_alert",
+      "packages_ui_src_components_alert_alert",
+      "packages_ui_src_components_alert_alertdescription",
+      "packages_ui_src_components_alert_alerttitle",
+      "packages_ui_src_components_alert_alertvariants",
+      "packages_ui_src_components_button",
+      "packages_ui_src_components_button_button",
+      "packages_ui_src_components_button_buttonvariants"
+    ],
+    "8": [
+      "apps_web_components",
+      "apps_web_components_aliases",
+      "apps_web_components_aliases_components",
+      "apps_web_components_aliases_hooks",
+      "apps_web_components_aliases_lib",
+      "apps_web_components_aliases_ui",
+      "apps_web_components_aliases_utils",
+      "apps_web_components_iconlibrary",
+      "apps_web_components_rsc",
+      "apps_web_components_schema",
+      "apps_web_components_style",
+      "apps_web_components_tailwind",
+      "apps_web_components_tailwind_basecolor",
+      "apps_web_components_tailwind_config",
+      "apps_web_components_tailwind_css",
+      "apps_web_components_tailwind_cssvariables",
+      "apps_web_components_tailwind_prefix",
+      "apps_web_components_tsx"
+    ],
+    "9": [
+      "packages_ui_components",
+      "packages_ui_components_aliases",
+      "packages_ui_components_aliases_components",
+      "packages_ui_components_aliases_hooks",
+      "packages_ui_components_aliases_lib",
+      "packages_ui_components_aliases_ui",
+      "packages_ui_components_aliases_utils",
+      "packages_ui_components_iconlibrary",
+      "packages_ui_components_rsc",
+      "packages_ui_components_schema",
+      "packages_ui_components_style",
+      "packages_ui_components_tailwind",
+      "packages_ui_components_tailwind_basecolor",
+      "packages_ui_components_tailwind_config",
+      "packages_ui_components_tailwind_css",
+      "packages_ui_components_tailwind_cssvariables",
+      "packages_ui_components_tailwind_prefix",
+      "packages_ui_components_tsx"
+    ],
+    "10": [
+      "ref_build",
+      "ref_dist",
+      "ref_lint",
+      "ref_test",
+      "turbo_build_dependson",
+      "turbo_build_outputs",
+      "turbo_dev_cache",
+      "turbo_dev_persistent",
+      "turbo_json_turbo",
+      "turbo_lint_dependson",
+      "turbo_schema",
+      "turbo_tasks",
+      "turbo_tasks_build",
+      "turbo_tasks_dev",
+      "turbo_tasks_lint",
+      "turbo_tasks_test",
+      "turbo_test_dependson",
+      "turbo_test_outputs"
+    ],
+    "11": [
+      "packages_core_src_command",
+      "packages_core_src_command_hidcommand",
+      "packages_core_src_command_rs_vec",
+      "packages_core_src_device_mod",
+      "packages_core_src_device_mod_mousedriver",
+      "packages_core_src_device_registry",
+      "packages_core_src_device_registry_mock_registry",
+      "packages_core_src_device_registry_registereddriver",
+      "packages_core_src_device_registry_rs_vec",
+      "packages_core_src_drivers_mock_mouse",
+      "packages_core_src_drivers_mock_mouse_encodes_dpi_little_endian",
+      "packages_core_src_drivers_mock_mouse_encodes_polling_rate_little_endian",
+      "packages_core_src_drivers_mock_mouse_mockmousedriver",
+      "packages_core_src_drivers_mock_mouse_mockmousedriver_set_dpi",
+      "packages_core_src_drivers_mock_mouse_mockmousedriver_set_polling_rate"
+    ],
+    "12": [
+      "ref_apps_ts",
+      "ref_apps_tsx",
+      "ref_packages_ts",
+      "ref_packages_tsx",
+      "tsconfig_audit",
+      "tsconfig_audit_compileroptions",
+      "tsconfig_audit_compileroptions_allowsyntheticdefaultimports",
+      "tsconfig_audit_compileroptions_esmoduleinterop",
+      "tsconfig_audit_compileroptions_jsx",
+      "tsconfig_audit_compileroptions_module",
+      "tsconfig_audit_compileroptions_moduleresolution",
+      "tsconfig_audit_compileroptions_resolvejsonmodule",
+      "tsconfig_audit_compileroptions_skiplibcheck",
+      "tsconfig_audit_compileroptions_target",
+      "tsconfig_audit_include"
+    ],
+    "13": [
+      "apps_web_package",
+      "apps_web_package_imports",
+      "apps_web_package_imports_components",
+      "apps_web_package_imports_hooks",
+      "apps_web_package_imports_lib",
+      "apps_web_package_name",
+      "apps_web_package_private",
+      "apps_web_package_scripts",
+      "apps_web_package_scripts_build",
+      "apps_web_package_scripts_dev",
+      "apps_web_package_scripts_lint",
+      "apps_web_package_scripts_test",
+      "apps_web_package_type",
+      "apps_web_package_version"
+    ],
+    "14": [
+      "knip",
+      "package_devdependencies",
+      "package_devdependencies_dependency_cruiser",
+      "package_devdependencies_knip",
+      "package_devdependencies_prettier",
+      "package_devdependencies_turbo",
+      "package_devdependencies_typescript",
+      "package_json_dependency_cruiser",
+      "prettier",
+      "turbo",
+      "typescript"
+    ],
+    "15": [
+      "packages_shared_package",
+      "packages_shared_package_devdependencies",
+      "packages_shared_package_devdependencies_typescript",
+      "packages_shared_package_exports",
+      "packages_shared_package_name",
+      "packages_shared_package_private",
+      "packages_shared_package_scripts",
+      "packages_shared_package_scripts_build",
+      "packages_shared_package_scripts_lint",
+      "packages_shared_package_type",
+      "packages_shared_package_version"
+    ],
+    "16": [
+      "packages_ui_tsconfig",
+      "packages_ui_tsconfig_compileroptions",
+      "packages_ui_tsconfig_compileroptions_jsx",
+      "packages_ui_tsconfig_compileroptions_module",
+      "packages_ui_tsconfig_compileroptions_moduleresolution",
+      "packages_ui_tsconfig_compileroptions_noemit",
+      "packages_ui_tsconfig_compileroptions_skiplibcheck",
+      "packages_ui_tsconfig_compileroptions_strict",
+      "packages_ui_tsconfig_compileroptions_target",
+      "packages_ui_tsconfig_include",
+      "packages_ui_tsconfig_json_ref_src"
+    ],
+    "17": [
+      "packages_shared_tsconfig",
+      "packages_shared_tsconfig_compileroptions",
+      "packages_shared_tsconfig_compileroptions_module",
+      "packages_shared_tsconfig_compileroptions_moduleresolution",
+      "packages_shared_tsconfig_compileroptions_noemit",
+      "packages_shared_tsconfig_compileroptions_skiplibcheck",
+      "packages_shared_tsconfig_compileroptions_strict",
+      "packages_shared_tsconfig_compileroptions_target",
+      "packages_shared_tsconfig_include",
+      "packages_shared_tsconfig_json_ref_src"
+    ],
+    "18": [
+      "apps_web_tsconfig_node",
+      "apps_web_tsconfig_node_compileroptions",
+      "apps_web_tsconfig_node_compileroptions_composite",
+      "apps_web_tsconfig_node_compileroptions_module",
+      "apps_web_tsconfig_node_compileroptions_moduleresolution",
+      "apps_web_tsconfig_node_compileroptions_noemit",
+      "apps_web_tsconfig_node_compileroptions_skiplibcheck",
+      "apps_web_tsconfig_node_include",
+      "ref_vite_config_ts"
+    ],
+    "19": [
+      "packages_core_package",
+      "packages_core_package_name",
+      "packages_core_package_private",
+      "packages_core_package_scripts",
+      "packages_core_package_scripts_build_wasm",
+      "packages_core_package_scripts_format",
+      "packages_core_package_scripts_lint",
+      "packages_core_package_scripts_test",
+      "packages_core_package_version"
+    ],
+    "20": [
+      "packages_core_pkg_package",
+      "packages_core_pkg_package_main",
+      "packages_core_pkg_package_name",
+      "packages_core_pkg_package_type",
+      "packages_core_pkg_package_types",
+      "packages_core_pkg_package_version"
+    ],
+    "21": [
+      "option",
+      "packages_core_src_device_capabilities",
+      "packages_core_src_device_capabilities_mousecapabilities",
+      "packages_core_src_device_capabilities_rs_vec"
+    ],
+    "22": [
+      "packages_core_src_lib",
+      "packages_core_src_lib_core_version",
+      "packages_core_src_lib_is_wasm_available",
+      "string"
+    ],
+    "23": [
+      "scripts_run_rust_tool",
+      "scripts_run_rust_tool_commands",
+      "scripts_run_rust_tool_coredirectory",
+      "scripts_run_rust_tool_result"
+    ],
+    "24": [
+      "apps_web_tsconfig",
+      "apps_web_tsconfig_files",
+      "apps_web_tsconfig_references"
+    ],
+    "25": [
+      "cursor_mcp",
+      "cursor_mcp_mcp_server_graphify",
+      "mcp_command_graphify_mcp"
+    ],
+    "26": [
+      "scripts_prepare_core",
+      "scripts_prepare_core_result"
+    ],
+    "27": [
+      "apps_web_eslint_config"
+    ],
+    "28": [
+      "apps_web_src_vite_env_d"
+    ],
+    "29": [
+      "apps_web_vite_config"
+    ],
+    "30": [
+      "crate:gearhub-core-wasm"
+    ],
+    "31": [
+      "dependency_cruiser_cjs_dependency_cruiser"
+    ],
+    "32": [
+      "dependency_cruiser_dependency_cruiser"
+    ],
+    "33": [
+      "hidcommand"
+    ],
+    "34": [
+      "packages_core_pkg_index_d"
+    ],
+    "35": [
+      "packages_core_src_drivers_mod"
+    ],
+    "36": [
+      "packages_core_src_protocols_mod"
+    ],
+    "37": [
+      "prettier_config"
+    ]
+  },
+  "cohesion": {
+    "0": 0.0953058321479374,
+    "1": 0.11576354679802955,
+    "2": 0.07407407407407407,
+    "3": 0.07692307692307693,
+    "4": 0.08333333333333333,
+    "5": 0.08695652173913043,
+    "6": 0.09090909090909091,
+    "7": 0.18421052631578946,
+    "8": 0.1111111111111111,
+    "9": 0.1111111111111111,
+    "10": 0.1111111111111111,
+    "11": 0.19047619047619047,
+    "12": 0.13333333333333333,
+    "13": 0.14285714285714285,
+    "14": 0.18181818181818182,
+    "15": 0.18181818181818182,
+    "16": 0.18181818181818182,
+    "17": 0.2,
+    "18": 0.2222222222222222,
+    "19": 0.2222222222222222,
+    "20": 0.3333333333333333,
+    "21": 0.5,
+    "22": 0.5,
+    "23": 0.5,
+    "24": 0.6666666666666666,
+    "25": 0.6666666666666666,
+    "26": 1.0,
+    "27": 1.0,
+    "28": 1.0,
+    "29": 1.0,
+    "30": 1.0,
+    "31": 1.0,
+    "32": 1.0,
+    "33": 1.0,
+    "34": 1.0,
+    "35": 1.0,
+    "36": 1.0,
+    "37": 1.0
+  },
+  "gods": [
+    {
+      "id": "package_scripts",
+      "label": "scripts",
+      "degree": 18
+    },
+    {
+      "id": "apps_web_tsconfig_app_compileroptions",
+      "label": "compilerOptions",
+      "degree": 16
+    },
+    {
+      "id": "packages_shared_src_index_connectedperipheral",
+      "label": "ConnectedPeripheral",
+      "degree": 11
+    },
+    {
+      "id": "tsconfig_audit_compileroptions",
+      "label": "compilerOptions",
+      "degree": 9
+    },
+    {
+      "id": "apps_web_src_hardware_connecteddevice_connecteddevice",
+      "label": "ConnectedDevice",
+      "degree": 8
+    },
+    {
+      "id": "packages_ui_tsconfig_compileroptions",
+      "label": "compilerOptions",
+      "degree": 8
+    },
+    {
+      "id": "packages_shared_src_index_devicesettings",
+      "label": "DeviceSettings",
+      "degree": 7
+    },
+    {
+      "id": "packages_shared_tsconfig_compileroptions",
+      "label": "compilerOptions",
+      "degree": 7
+    },
+    {
+      "id": "apps_web_src_hardware_webhidtransport_hardwaretransport",
+      "label": "HardwareTransport",
+      "degree": 6
+    },
+    {
+      "id": "apps_web_src_app_app",
+      "label": "App()",
+      "degree": 6
+    }
+  ],
+  "surprises": [
+    {
+      "source": "ConnectedDevice",
+      "target": "ConnectedPeripheral",
+      "source_files": [
+        "apps/web/src/hardware/ConnectedDevice.ts",
+        "packages/shared/src/index.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "implements",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "ConnectedDevice",
+      "target": "DeviceCapabilities",
+      "source_files": [
+        "apps/web/src/hardware/ConnectedDevice.ts",
+        "packages/shared/src/index.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "ConnectedDevice",
+      "target": "DeviceSettings",
+      "source_files": [
+        "apps/web/src/hardware/ConnectedDevice.ts",
+        "packages/shared/src/index.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "ConnectedDevice",
+      "target": "PeripheralType",
+      "source_files": [
+        "apps/web/src/hardware/ConnectedDevice.ts",
+        "packages/shared/src/index.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "DeviceStore",
+      "target": "ConnectedPeripheral",
+      "source_files": [
+        "apps/web/src/store/deviceStore.ts",
+        "packages/shared/src/index.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `devDependencies` connect `devDependencies` to `ui/package.json`, `web/package.json`?",
+      "why": "High betweenness centrality (0.026) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `dependencies` connect `dependencies` to `ui/package.json`, `web/package.json`?",
+      "why": "High betweenness centrality (0.019) - this node is a cross-community bridge."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `Feedback`, `SaveState`, `profiles` to the rest of the system?",
+      "why": "192 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `index.ts` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.0953058321479374 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `DevicePanel.tsx` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.11576354679802955 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `ui/package.json` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.07407407407407407 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `devDependencies` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.07692307692307693 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

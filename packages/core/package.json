@@ -5,6 +5,7 @@
   "scripts": {
     "build:wasm": "wasm-pack build --target web --out-dir pkg --out-name index",
     "lint": "node ../../scripts/run-rust-tool.mjs lint",
-    "format": "node ../../scripts/run-rust-tool.mjs format"
+    "format": "node ../../scripts/run-rust-tool.mjs format",
+    "test": "node ../../scripts/run-rust-tool.mjs test"
   }
 }
