@@ -337,7 +337,6 @@
       "apps_web_package_version"
     ],
     "14": [
-      "dependency_cruiser",
       "knip",
       "package_devdependencies",
       "package_devdependencies_dependency_cruiser",
@@ -345,6 +344,7 @@
       "package_devdependencies_prettier",
       "package_devdependencies_turbo",
       "package_devdependencies_typescript",
+      "package_json_dependency_cruiser",
       "prettier",
       "turbo",
       "typescript"
@@ -465,18 +465,21 @@
       "dependency_cruiser_cjs_dependency_cruiser"
     ],
     "32": [
-      "hidcommand"
+      "dependency_cruiser_dependency_cruiser"
     ],
     "33": [
-      "packages_core_pkg_index_d"
+      "hidcommand"
     ],
     "34": [
-      "packages_core_src_drivers_mod"
+      "packages_core_pkg_index_d"
     ],
     "35": [
-      "packages_core_src_protocols_mod"
+      "packages_core_src_drivers_mod"
     ],
     "36": [
+      "packages_core_src_protocols_mod"
+    ],
+    "37": [
       "prettier_config"
     ]
   },
@@ -517,7 +520,8 @@
     "33": 1.0,
     "34": 1.0,
     "35": 1.0,
-    "36": 1.0
+    "36": 1.0,
+    "37": 1.0
   },
   "gods": [
     {

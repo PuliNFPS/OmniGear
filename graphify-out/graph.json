@@ -1693,17 +1693,6 @@
       "source_location": "L32"
     },
     {
-      "id": "dependency_cruiser",
-      "label": "dependency-cruiser",
-      "_origin": "ast",
-      "community": 14,
-      "community_name": "devDependencies",
-      "file_type": "concept",
-      "norm_label": "dependency-cruiser",
-      "source_file": "package.json",
-      "source_location": "L28"
-    },
-    {
       "id": "knip",
       "label": "knip",
       "_origin": "ast",
@@ -1713,6 +1702,17 @@
       "norm_label": "knip",
       "source_file": "package.json",
       "source_location": "L29"
+    },
+    {
+      "id": "package_json_dependency_cruiser",
+      "label": "dependency-cruiser",
+      "_origin": "ast",
+      "community": 14,
+      "community_name": "devDependencies",
+      "file_type": "concept",
+      "norm_label": "dependency-cruiser",
+      "source_file": "package.json",
+      "source_location": "L28"
     },
     {
       "id": "prettier",
@@ -3231,10 +3231,21 @@
       "source_location": "L1"
     },
     {
+      "id": "dependency_cruiser_dependency_cruiser",
+      "label": "dependency-cruiser",
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "dependency-cruiser",
+      "confidence": "EXTRACTED",
+      "file_type": "code",
+      "norm_label": "dependency-cruiser",
+      "source_file": "dependency-cruiser"
+    },
+    {
       "id": "hidcommand",
       "label": "HidCommand",
       "_origin": "ast",
-      "community": 32,
+      "community": 33,
       "community_name": "HidCommand",
       "file_type": "code",
       "norm_label": "hidcommand",
@@ -3245,7 +3256,7 @@
       "id": "packages_core_pkg_index_d",
       "label": "index.d.ts",
       "_origin": "ast",
-      "community": 33,
+      "community": 34,
       "community_name": "index.d.ts",
       "file_type": "code",
       "norm_label": "index.d.ts",
@@ -3256,7 +3267,7 @@
       "id": "packages_core_src_drivers_mod",
       "label": "drivers/mod.rs",
       "_origin": "ast",
-      "community": 34,
+      "community": 35,
       "community_name": "drivers/mod.rs",
       "file_type": "code",
       "norm_label": "drivers/mod.rs",
@@ -3267,7 +3278,7 @@
       "id": "packages_core_src_protocols_mod",
       "label": "protocols/mod.rs",
       "_origin": "ast",
-      "community": 35,
+      "community": 36,
       "community_name": "protocols/mod.rs",
       "file_type": "code",
       "norm_label": "protocols/mod.rs",
@@ -3278,7 +3289,7 @@
       "id": "prettier_config",
       "label": "prettier.config.mjs",
       "_origin": "ast",
-      "community": 36,
+      "community": 37,
       "community_name": "prettier.config.mjs",
       "file_type": "code",
       "norm_label": "prettier.config.mjs",
@@ -5826,7 +5837,7 @@
     },
     {
       "source": "package_devdependencies_dependency_cruiser",
-      "target": "dependency_cruiser",
+      "target": "package_json_dependency_cruiser",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -9624,6 +9635,15 @@
       "weight": 1.0
     },
     {
+      "source": "dependency_cruiser_cjs_dependency_cruiser",
+      "target": "dependency_cruiser_cjs_dependency_cruiser",
+      "relation": "dynamic_import",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": ".dependency-cruiser.cjs"
+    },
+    {
       "source": "packages_core_src_drivers_mock_mouse_mockmousedriver",
       "target": "packages_core_src_device_mod_mousedriver",
       "relation": "implements",
@@ -9835,5 +9855,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "b335c7781371e06667dac456eb50b9742e841862"
+  "built_at_commit": "e064405572a84f405d78bf3dc56311025098e625"
 }

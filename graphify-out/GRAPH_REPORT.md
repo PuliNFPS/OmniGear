@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 405 nodes · 466 edges · 37 communities (31 shown, 6 thin omitted)
+- 406 nodes · 467 edges · 38 communities (32 shown, 6 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 1 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b335c778`
+- Built from commit: `e0644055`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -71,7 +71,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (37 total, 6 thin omitted)
+## Communities (38 total, 6 thin omitted)
 
 ### Community 0 - "index.ts"
 Cohesion: 0.10
@@ -131,7 +131,7 @@ Nodes (13): imports, #components/*, #hooks/*, #lib/*, name, private, scripts, bu
 
 ### Community 14 - "devDependencies"
 Cohesion: 0.18
-Nodes (11): dependency-cruiser, knip, devDependencies, dependency-cruiser, knip, prettier, turbo, typescript (+3 more)
+Nodes (11): knip, devDependencies, dependency-cruiser, knip, prettier, turbo, typescript, dependency-cruiser (+3 more)
 
 ### Community 15 - "shared/package.json"
 Cohesion: 0.18

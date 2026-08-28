@@ -6,10 +6,10 @@
     "semantic_hash": "0e65726eeed290805ca4911466543339"
   },
   ".dependency-cruiser.cjs": {
-    "mtime": 1787522172.8559923,
-    "seen": 1787522523.7229238,
-    "ast_hash": "967b63e39f3ca74e6b8fed481a18192b",
-    "semantic_hash": "967b63e39f3ca74e6b8fed481a18192b"
+    "mtime": 1787533567.61691,
+    "seen": 1787533615.1759286,
+    "ast_hash": "c0b36295ef799b8e7c82bdf572d92231",
+    "semantic_hash": "c0b36295ef799b8e7c82bdf572d92231"
   },
   "apps/web/components.json": {
     "mtime": 1787447771.322063,
@@ -150,10 +150,10 @@
     "semantic_hash": "c0fa1060ab5d841b1a36f3965b1aa871"
   },
   "package.json": {
-    "mtime": 1787522868.0816345,
-    "seen": 1787522952.6554046,
-    "ast_hash": "8ce8b24ab246fa48cdb78b3ff323cd22",
-    "semantic_hash": "8ce8b24ab246fa48cdb78b3ff323cd22"
+    "mtime": 1787533567.6258342,
+    "seen": 1787533615.1797512,
+    "ast_hash": "2435f1a896ac745e3d892402a7096b16",
+    "semantic_hash": "2435f1a896ac745e3d892402a7096b16"
   },
   "packages/core/Cargo.toml": {
     "mtime": 1787445017.9774547,

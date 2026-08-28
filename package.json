@@ -13,7 +13,7 @@
     "format": "prettier --write . && pnpm --filter @gearhub/core format",
     "format:check": "prettier --check . && cargo fmt --all --check",
     "audit:ts": "knip",
-    "audit:boundaries": "depcruise --validate apps/web/src packages/ui/src packages/shared/src",
+    "audit:boundaries": "depcruise --config .dependency-cruiser.cjs apps/web/src packages/ui/src packages/shared/src",
     "audit:rust": "node scripts/run-rust-tool.mjs audit",
     "audit": "pnpm audit:ts && pnpm audit:boundaries && pnpm audit:rust",
     "verify": "pnpm format:check && pnpm lint && pnpm test && pnpm build && pnpm run audit",

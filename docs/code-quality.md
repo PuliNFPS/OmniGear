@@ -52,6 +52,22 @@ For another MCP-compatible assistant, configure an stdio server with command `gr
 
 ## Deterministic checks
 
+The Dependency Cruiser configuration was initialized with the installed CLI and then
+adapted to OmniGear's actual monorepo boundaries:
+
+```sh
+pnpm exec depcruise --init yes
+```
+
+The generated baseline detected `tsconfig.audit.json` and TypeScript automatically.
+OmniGear keeps the applicable generated protections for runtime cycles, unresolved
+imports, undeclared packages, and imports from tests, then adds package-to-app,
+cross-app, and WASM bridge rules. The generated orphan rule is deferred while the
+repository is a skeleton, and its generic production-to-dev-dependency rule is omitted
+because it misclassifies the workspace's intentional peer/dev dependency arrangement.
+Re-run the initializer only into a temporary checkout when upgrading Dependency Cruiser;
+compare and merge the result instead of overwriting `.dependency-cruiser.cjs`.
+
 Run everything before opening a pull request:
 
 ```sh
