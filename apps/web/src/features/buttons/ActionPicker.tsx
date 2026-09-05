@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@gearhub/ui/co
 import { actionLabel } from './actionLabel';
 
 /** Macro está fora do v1: nenhuma opção de macro é oferecida. */
-const OPTIONS: ButtonAction[] = [
+export const OPTIONS: ButtonAction[] = [
   { kind: 'button', button: 'left' },
   { kind: 'button', button: 'right' },
   { kind: 'button', button: 'middle' },
@@ -15,6 +15,24 @@ const OPTIONS: ButtonAction[] = [
   { kind: 'scroll', direction: 'down' },
   { kind: 'disabled' },
 ];
+
+/** Identidade estável da opção para `key=`. Deriva do dado, não do rótulo exibido. */
+function optionKey(action: ButtonAction): string {
+  switch (action.kind) {
+    case 'button':
+      return `button:${action.button}`;
+    case 'dpi':
+      return `dpi:${action.mode}`;
+    case 'keystroke':
+      return `keystroke:${action.keys.join('+')}`;
+    case 'scroll':
+      return `scroll:${action.direction}`;
+    case 'disabled':
+      return 'disabled';
+    case 'macro':
+      return `macro:${action.macroId}`;
+  }
+}
 
 export function ActionPicker({
   open,
@@ -36,7 +54,7 @@ export function ActionPicker({
         <div className="grid gap-1">
           {OPTIONS.map((action) => (
             <button
-              key={actionLabel(action)}
+              key={optionKey(action)}
               type="button"
               onClick={() => {
                 onPick(action);

@@ -1,3 +1,4 @@
+import { SectionHeading } from '@gearhub/ui/components/panel';
 import { useState } from 'react';
 import { MouseRender } from '../../components/MouseRender/MouseRender';
 import { useMouseStore } from '../../store/mouseStore';
@@ -15,12 +16,16 @@ export function ButtonsSection() {
 
   return (
     <div className="mx-auto w-full max-w-3xl p-8">
-      <MouseRender
-        renderId={capabilities.renderId}
-        buttons={capabilities.buttons}
-        activeButtonId={editingId ?? undefined}
-        onSelectButton={setEditingId}
-      />
+      <SectionHeading>Botões</SectionHeading>
+
+      <div className="mt-3">
+        <MouseRender
+          renderId={capabilities.renderId}
+          buttons={capabilities.buttons}
+          activeButtonId={editingId ?? undefined}
+          onSelectButton={setEditingId}
+        />
+      </div>
 
       <ul className="mx-auto mt-8 max-w-md space-y-1">
         {capabilities.buttons.map((button) => (
