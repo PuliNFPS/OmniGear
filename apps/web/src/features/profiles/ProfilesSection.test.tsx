@@ -30,17 +30,24 @@ describe('ProfilesSection', () => {
     expect(screen.getAllByText('Slot vazio')).toHaveLength(3);
   });
 
-  it('gravar num slot vazio grava o draft atual naquele índice na store', async () => {
+  it('gravar num slot vazio grava o draft atual (não o slot ativo) naquele índice na store', async () => {
     await open('mock-vanguard');
     render(<ProfilesSection />);
-    const draft = useMouseStore.getState().session!.draft;
 
     vi.useFakeTimers();
+    // Muda o draft para que ele deixe de bater com o que está no slot ativo —
+    // assim o teste só passa se o slot vazio ganhar o draft, não uma cópia
+    // do que já estava salvo no slot 1.
+    useMouseStore.getState().patchDraft((draft) => {
+      draft.pollingRate = 8000;
+    });
+    await vi.runAllTimersAsync();
+
     fireEvent.click(screen.getAllByRole('button', { name: 'Gravar aqui' })[0]!);
     await vi.runAllTimersAsync();
     vi.useRealTimers();
 
     const { session } = useMouseStore.getState();
-    expect(session!.slots[1]!.profile).toEqual(draft);
+    expect(session!.slots[1]!.profile!.pollingRate).toBe(8000);
   });
 });
