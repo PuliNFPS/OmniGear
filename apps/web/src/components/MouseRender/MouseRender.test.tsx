@@ -14,10 +14,12 @@ describe('MouseRender', () => {
     const left = screen.getByRole('button', { name: 'Botão esquerdo' });
     expect(left.style.left).toBe('25%');
     expect(left.style.top).toBe('20%');
+    expect(left.style.transform).toBe('translate(-50%, -50%)');
   });
 
   it('renderiza um callout por botão declarado nas capabilities', () => {
     render(<MouseRender renderId="generic-5button" buttons={buttons} onSelectButton={vi.fn()} />);
     expect(screen.getAllByRole('button')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Botão direito' })).toBeInTheDocument();
   });
 });
