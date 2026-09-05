@@ -3135,13 +3135,23 @@ Create `apps/web/src/features/device/DeviceSection.tsx`:
 
 ```tsx
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@gearhub/ui/components/dialog';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { loadCore, type CoreStatus } from '../../core/coreBridge';
 import { useMouseStore } from '../../store/mouseStore';
 
 export function DeviceSection() {
   const session = useMouseStore((state) => state.session);
   const factoryReset = useMouseStore((state) => state.factoryReset);
   const [confirming, setConfirming] = useState(false);
+  // Restaura o consumidor do core Rust/WASM. A topbar antiga era o único lugar
+  // que o carregava; ao removê-la, o app parou de carregar o core em silêncio.
+  // Esta é a casa natural dele: a tela que fala sobre o dispositivo em si.
+  const [core, setCore] = useState<CoreStatus | null>(null);
+  useEffect(() => {
+    loadCore()
+      .then(setCore)
+      .catch(() => setCore({ version: 'indisponível', wasm: false }));
+  }, []);
   if (!session) return null;
 
   return (
@@ -3149,6 +3159,15 @@ export function DeviceSection() {
       <section className="flex items-center justify-between rounded-xl border border-border-subtle bg-bg-surface px-4 py-3">
         <span className="text-sm text-text-primary">Firmware</span>
         <span className="tnum text-sm text-text-muted">{session.telemetry.firmware}</span>
+      </section>
+
+      <section className="flex items-center justify-between rounded-xl border border-border-subtle bg-bg-surface px-4 py-3">
+        <span className="text-sm text-text-primary">Motor de configuração</span>
+        <span className="tnum text-sm text-text-muted">
+          {core
+            ? `${core.version}${core.wasm ? ' · WASM' : ' · ponte de desenvolvimento'}`
+            : 'carregando…'}
+        </span>
       </section>
 
       <section className="flex items-center justify-between rounded-xl border border-border-subtle bg-bg-surface px-4 py-3">
