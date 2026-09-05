@@ -78,14 +78,25 @@ export const mockMice: MockMouse[] = [
       dpi: { min: 100, max: 26_000, step: 50, maxStages: 5, independentXY: true },
       pollingRate: {
         supported: [125, 500, 1000, 4000, 8000],
-        runtimeHours: { 125: [70, 90], 500: [58, 70], 1000: [45, 56], 4000: [32, 40], 8000: [27, 34] },
+        runtimeHours: {
+          125: [70, 90],
+          500: [58, 70],
+          1000: [45, 56],
+          4000: [32, 40],
+          8000: [27, 34],
+        },
       },
       buttons: [
         { id: 'left', label: 'Botão esquerdo', hotspot: { x: 0.27, y: 0.19 }, remappable: false },
         { id: 'right', label: 'Botão direito', hotspot: { x: 0.73, y: 0.19 }, remappable: true },
         { id: 'middle', label: 'Botão do meio', hotspot: { x: 0.5, y: 0.18 }, remappable: true },
         { id: 'back', label: 'Lateral traseiro', hotspot: { x: 0.12, y: 0.38 }, remappable: true },
-        { id: 'forward', label: 'Lateral dianteiro', hotspot: { x: 0.12, y: 0.47 }, remappable: true },
+        {
+          id: 'forward',
+          label: 'Lateral dianteiro',
+          hotspot: { x: 0.12, y: 0.47 },
+          remappable: true,
+        },
       ],
       parameters: {
         motionSync: true,
