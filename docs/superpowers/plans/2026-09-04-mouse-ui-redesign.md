@@ -1334,7 +1334,7 @@ A UI antiga vai aparecer com as cores trocadas neste ponto — ela referenciava 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/ui/src/styles/tokens.css packages/ui/package.json apps/web/src/styles.css
+git add packages/ui/src/styles/tokens.css packages/ui/package.json packages/ui/components.json apps/web/src/styles.css
 git commit -m "feat: move design tokens into the ui package"
 ```
 
