@@ -74,6 +74,11 @@ export const useMouseStore = create<MouseStore>((set, get) => {
     feedback: null,
 
     openMouse: async (id) => {
+      // Um mouse novo começa com a bancada limpa: sem apply pendente do
+      // anterior e sem lastConfirmed que pertence a outro dispositivo.
+      if (applyTimer) clearTimeout(applyTimer);
+      applyTimer = null;
+      lastConfirmed = null;
       set({ loading: true, feedback: null });
       const driver = createMockDriver(id);
       const [identity, capabilities, telemetry, slots] = await Promise.all([

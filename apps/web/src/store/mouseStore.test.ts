@@ -1,3 +1,4 @@
+import { DeviceDisconnectedError } from '@gearhub/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMockDriver } from '../hardware/mockDriver';
 import { useMouseStore } from './mouseStore';
@@ -66,6 +67,24 @@ describe('mouseStore', () => {
 
     expect(useMouseStore.getState().disconnected).toBe(false);
     expect(spy.mock.calls[0]![0].pollingRate).toBe(8000);
+  });
+
+  it('trata desconexão durante o apply sem mostrar toast de erro', async () => {
+    await open();
+    const before = useMouseStore.getState().session!.draft.pollingRate;
+    vi.spyOn(useMouseStore.getState().driver!, 'applyLive').mockRejectedValue(
+      new DeviceDisconnectedError(),
+    );
+
+    useMouseStore.getState().patchDraft((draft) => {
+      draft.pollingRate = 8000;
+    });
+    await vi.runAllTimersAsync();
+
+    const state = useMouseStore.getState();
+    expect(state.disconnected).toBe(true);
+    expect(state.feedback).toBeNull();
+    expect(state.session!.draft.pollingRate).toBe(before);
   });
 
   it('limpa o dirty ao gravar no slot', async () => {
