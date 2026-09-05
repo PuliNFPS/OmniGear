@@ -1,0 +1,119 @@
+/*
+ * Dois níveis. Primitivos nomeados por valor, nunca referenciados por componente.
+ * Semânticos nomeados por papel, o único nível que componente usa.
+ *
+ * VALORES PROVISÓRIOS: substituídos na Task 14 pela paleta medida em OKLCH e
+ * emitida em HSL por `interfaces:better-colors`. Os NOMES são definitivos.
+ */
+:root {
+  /* primitivos */
+  --gray-950: 60 3% 4%;
+  --gray-900: 60 3% 8%;
+  --gray-850: 60 3% 11%;
+  --gray-800: 60 3% 14%;
+  --gray-700: 60 3% 17%;
+  --gray-600: 60 2% 24%;
+  --gray-400: 60 2% 54%;
+  --gray-300: 60 3% 72%;
+  --gray-100: 60 5% 95%;
+  --red-400: 0 79% 71%;
+  --stage-green-value: 145 63% 60%;
+  --stage-cyan-value: 187 68% 60%;
+  --stage-blue-value: 220 90% 74%;
+  --stage-violet-value: 267 85% 77%;
+  --stage-magenta-value: 315 82% 72%;
+
+  /* semânticos — superfícies */
+  --color-bg-canvas: var(--gray-950);
+  --color-bg-surface: var(--gray-900);
+  --color-bg-raised: var(--gray-850);
+  --color-bg-hover: var(--gray-800);
+
+  /* semânticos — bordas */
+  --color-border-subtle: var(--gray-700);
+  --color-border-strong: var(--gray-600);
+
+  /* semânticos — texto */
+  --color-text-primary: var(--gray-100);
+  --color-text-secondary: var(--gray-300);
+  --color-text-muted: var(--gray-400);
+
+  /* semânticos — ênfase. Sem acento cromático: primário é inversão de contraste. */
+  --color-fill-solid: var(--gray-100);
+  --color-fill-solid-text: var(--gray-950);
+
+  /* semânticos — perigo. Único vermelho do app. */
+  --color-danger: var(--red-400);
+
+  /* semânticos — estágios de DPI. Única cor de identidade do app. */
+  --color-stage-green: var(--stage-green-value);
+  --color-stage-cyan: var(--stage-cyan-value);
+  --color-stage-blue: var(--stage-blue-value);
+  --color-stage-violet: var(--stage-violet-value);
+  --color-stage-magenta: var(--stage-magenta-value);
+
+  /*
+   * Camada de compatibilidade com o contrato do shadcn.
+   * Os primitivos gerados (button, alert, badge, select, slider, switch,
+   * dialog) consomem estes nomes — sem eles, todos renderizam sem estilo.
+   * Nenhum componente NOSSO usa esta camada: ela existe só para os
+   * primitivos, e é aqui que o `accent` do shadcn (que significa "fundo de
+   * hover") fica isolado do nosso vocabulário.
+   */
+  --shadcn-background: var(--color-bg-canvas);
+  --shadcn-foreground: var(--color-text-primary);
+  --shadcn-card: var(--color-bg-surface);
+  --shadcn-popover: var(--color-bg-raised);
+  --shadcn-primary: var(--color-fill-solid);
+  --shadcn-primary-foreground: var(--color-fill-solid-text);
+  --shadcn-secondary: var(--color-bg-raised);
+  --shadcn-muted: var(--color-bg-raised);
+  --shadcn-muted-foreground: var(--color-text-muted);
+  --shadcn-accent: var(--color-bg-hover);
+  --shadcn-destructive: var(--color-danger);
+  --shadcn-border: var(--color-border-subtle);
+  --shadcn-input: var(--color-border-strong);
+  --shadcn-ring: var(--color-fill-solid);
+}
+
+@theme inline {
+  --color-bg-canvas: hsl(var(--color-bg-canvas));
+  --color-bg-surface: hsl(var(--color-bg-surface));
+  --color-bg-raised: hsl(var(--color-bg-raised));
+  --color-bg-hover: hsl(var(--color-bg-hover));
+  --color-border-subtle: hsl(var(--color-border-subtle));
+  --color-border-strong: hsl(var(--color-border-strong));
+  --color-text-primary: hsl(var(--color-text-primary));
+  --color-text-secondary: hsl(var(--color-text-secondary));
+  --color-text-muted: hsl(var(--color-text-muted));
+  --color-fill-solid: hsl(var(--color-fill-solid));
+  --color-fill-solid-text: hsl(var(--color-fill-solid-text));
+  --color-danger: hsl(var(--color-danger));
+  --color-stage-green: hsl(var(--color-stage-green));
+  --color-stage-cyan: hsl(var(--color-stage-cyan));
+  --color-stage-blue: hsl(var(--color-stage-blue));
+  --color-stage-violet: hsl(var(--color-stage-violet));
+  --color-stage-magenta: hsl(var(--color-stage-magenta));
+
+  /* contrato shadcn — gera bg-primary, text-foreground, border-input, ring-ring… */
+  --color-background: hsl(var(--shadcn-background));
+  --color-foreground: hsl(var(--shadcn-foreground));
+  --color-card: hsl(var(--shadcn-card));
+  --color-card-foreground: hsl(var(--shadcn-foreground));
+  --color-popover: hsl(var(--shadcn-popover));
+  --color-popover-foreground: hsl(var(--shadcn-foreground));
+  --color-primary: hsl(var(--shadcn-primary));
+  --color-primary-foreground: hsl(var(--shadcn-primary-foreground));
+  --color-secondary: hsl(var(--shadcn-secondary));
+  --color-secondary-foreground: hsl(var(--shadcn-foreground));
+  --color-muted: hsl(var(--shadcn-muted));
+  --color-muted-foreground: hsl(var(--shadcn-muted-foreground));
+  --color-accent: hsl(var(--shadcn-accent));
+  --color-accent-foreground: hsl(var(--shadcn-foreground));
+  --color-destructive: hsl(var(--shadcn-destructive));
+  --color-border: hsl(var(--shadcn-border));
+  --color-input: hsl(var(--shadcn-input));
+  --color-ring: hsl(var(--shadcn-ring));
+
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}

@@ -11,7 +11,8 @@
   "exports": {
     "./components/*": "./src/components/*.tsx",
     "./hooks/*": "./src/hooks/*.ts",
-    "./lib/*": "./src/lib/*.ts"
+    "./lib/*": "./src/lib/*.ts",
+    "./styles/*": "./src/styles/*"
   },
   "scripts": {
     "build": "tsc --noEmit",

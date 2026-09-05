@@ -1,74 +1,13 @@
 @import 'tailwindcss';
+@import '@gearhub/ui/styles/tokens.css';
 @source "../../../packages/ui/src";
 
-:root {
-  --background: 40 20% 98%;
-  --foreground: 240 6% 10%;
-  --surface: 0 0% 100%;
-  --card: 0 0% 100%;
-  --card-foreground: 240 6% 10%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 6% 10%;
-  --muted-foreground: 240 4% 43%;
-  --border: 240 6% 89%;
-  --strong: 240 5% 72%;
-  --accent: 240 7% 94%;
-  --accent-foreground: 240 6% 10%;
-  --secondary: 240 7% 94%;
-  --secondary-foreground: 240 6% 10%;
-  --input: 240 6% 89%;
-  --destructive: 0 72% 51%;
-  --primary: 28 88% 48%;
-  --primary-foreground: 0 0% 100%;
-  --ring: 28 88% 48%;
-  --status: 151 56% 39%;
+/* Todo valor de configuração muda enquanto o usuário arrasta. Com numerais
+   proporcionais o número muda de largura e o layout treme. */
+.tnum {
+  font-variant-numeric: tabular-nums;
 }
-.dark {
-  --background: 60 3% 6%;
-  --foreground: 40 10% 94%;
-  --surface: 60 3% 9%;
-  --card: 60 3% 9%;
-  --card-foreground: 40 10% 94%;
-  --popover: 60 3% 11%;
-  --popover-foreground: 40 10% 94%;
-  --muted-foreground: 45 4% 58%;
-  --border: 60 3% 17%;
-  --strong: 60 3% 28%;
-  --accent: 60 3% 15%;
-  --accent-foreground: 40 10% 94%;
-  --secondary: 60 3% 15%;
-  --secondary-foreground: 40 10% 94%;
-  --input: 60 3% 17%;
-  --destructive: 0 63% 54%;
-  --primary: 29 89% 56%;
-  --primary-foreground: 30 20% 8%;
-  --ring: 29 89% 56%;
-  --status: 148 50% 51%;
-}
-@theme inline {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-surface: hsl(var(--surface));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-border: hsl(var(--border));
-  --color-strong: hsl(var(--strong));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-input: hsl(var(--input));
-  --color-destructive: hsl(var(--destructive));
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-ring: hsl(var(--ring));
-  --color-status: hsl(var(--status));
-  --font-sans:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
+
 * {
   border-color: hsl(var(--border));
 }
