@@ -1481,7 +1481,7 @@ export function SectionHeading({
 Run: `pnpm --filter @gearhub/ui lint`
 Expected: sem erros
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add packages/ui
@@ -2368,7 +2368,7 @@ export function MouseRender({
 Run: `pnpm --filter @gearhub/web exec vitest run src/components/MouseRender/MouseRender.test.tsx`
 Expected: PASS — 2 testes
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add apps/web/src/components/MouseRender
@@ -3052,7 +3052,7 @@ import { ProfilesSection } from './profiles/ProfilesSection';
 Run: `pnpm --filter @gearhub/web exec vitest run src/features/profiles/ProfilesSection.test.tsx`
 Expected: PASS — 2 testes
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add apps/web/src/features/profiles apps/web/src/features/registry.ts
@@ -3247,7 +3247,7 @@ import { DeviceSection } from './device/DeviceSection';
 Run: `pnpm --filter @gearhub/web exec vitest run src/features/device/DeviceSection.test.tsx`
 Expected: PASS — 2 testes
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add apps/web/src/features/device apps/web/src/features/registry.ts apps/web/package.json
@@ -3289,7 +3289,18 @@ Modify `package.json` (raiz) — a perna Rust do `format:check` passa pelo wrapp
 
 Onde o cargo existe, o comportamento é idêntico (`cargo fmt --all --check`). Onde não existe, pula em vez de derrubar o gate inteiro.
 
-- [ ] **Step 2: Rodar o gate completo**
+- [ ] **Step 2: Fechar as duas lacunas de teste que as revisões deixaram para trás**
+
+A revisão da Task 10 apontou que a fiação entre o `onChange` de um controle e o store não é testada em nenhuma tela — só a renderização é. A Task 10 fechou isso para Parameters; DPI e Performance continuam abertas. É a única lógica não-declarativa dessas telas: um handler ligado à chave errada passa em tudo hoje.
+
+Acrescentar um teste de escrita a cada uma, no mesmo formato do que já existe em `ButtonsSection.test.tsx` e `ParametersSection.test.tsx`:
+
+- `DpiSection.test.tsx` — arrastar o slider do estágio 1 e afirmar que `session.draft.dpi.stages[0].x` recebeu o valor. Como o `Slider` do Radix não responde a `fireEvent.change`, acionar por teclado: `fireEvent.keyDown(thumb, { key: 'ArrowRight' })` no elemento com `role="slider"` encontrado por nome acessível.
+- `PerformanceSection.test.tsx` — clicar numa opção do `Segmented` de polling por nome acessível e afirmar que `session.draft.pollingRate` mudou.
+
+Em ambos: timers falsos ao abrir o mouse, timers reais depois para o apply throttled disparar sem ruído, store resetado no `afterEach`, saída limpa.
+
+- [ ] **Step 3: Rodar o gate completo**
 
 Run: `pnpm verify`
 Expected: PASS em format, lint, test, build e audit. A saída deve conter `[core] Rust is not installed; skipping format:check` e o mesmo para `audit` — isso é sucesso, não falha.
@@ -3301,13 +3312,13 @@ Se `knip` (`audit:ts`) reportar exports não usados, remover o export — não a
 Run: `pnpm audit:boundaries`
 Expected: PASS. Em particular, nenhum import de `apps/web` dentro de `packages/*`.
 
-- [ ] **Step 3: Rodar o app e percorrer a fatia vertical**
+- [ ] **Step 4: Rodar o app e percorrer a fatia vertical**
 
 Run: `pnpm dev`
 
 Percorrer manualmente: galeria → abrir o Vanguard → Botões (remapear o lateral) → DPI (arrastar um estágio) → Desempenho (trocar o polling e ver a autonomia mudar) → Parâmetros → Perfis (gravar no slot 2) → Dispositivo. Depois abrir o Scout e confirmar que rotação de sensor, LOD e alcance estendido **não aparecem**.
 
-- [ ] **Step 4: Atualizar o README**
+- [ ] **Step 5: Atualizar o README**
 
 Modify `README.md` — substituir a frase da seção de setup:
 
@@ -3323,11 +3334,11 @@ how the interface adapts: the Vanguard 8K exposes sensor rotation, lift-off dist
 extended range, and the Scout Wired does not render those controls at all.
 ```
 
-- [ ] **Step 5: Atualizar o grafo**
+- [ ] **Step 6: Atualizar o grafo**
 
 Run: `pnpm graph:update`
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add README.md graphify-out
