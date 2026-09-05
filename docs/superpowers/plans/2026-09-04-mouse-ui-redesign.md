@@ -21,6 +21,7 @@
 - Componentes referenciam apenas tokens semânticos (`--color-bg-raised`), nunca primitivos (`--gray-800`) e nunca valores literais.
 - Cor no chrome é proibida. As únicas presenças cromáticas são os estágios de DPI (`green | cyan | blue | violet | magenta`) e o vermelho de destrutivo.
 - Não introduzir um segundo framework de teste. Vitest é o runner do repositório (skill `pragmatic-testing`).
+- **Superfícies e títulos de seção vêm de `Panel`, `PanelRaised` e `SectionHeading`** (`@gearhub/ui/components/panel`, criados na Task 5). Os blocos de código das Tasks 6–12 foram escritos antes desses primitivos existirem e mostram as classes expandidas — onde um bloco trouxer `rounded-xl border border-border-subtle bg-bg-surface` ou `text-xs font-semibold uppercase tracking-[0.12em] text-text-muted`, o implementador **usa o primitivo** e mantém no `className` apenas o que sobra (padding, layout). Essa é a regra vencedora quando ela e um bloco de código discordarem. Motivo: a skill `maintainable-code` do repositório proíbe repetir conhecimento — sem os primitivos, a mesma string aparece 11 vezes, e a Task 14 teria de mudar 11 lugares.
 - Após qualquer mudança estrutural, rodar `pnpm graph:update` (conforme `AGENTS.md`).
 
 ## Ajustes ao spec feitos por este plano
@@ -35,13 +36,13 @@ Três lacunas apareceram ao derivar as tarefas. O plano as fecha; o spec deve se
 
 Os tipos antigos (`DeviceSettings`, `ConnectedPeripheral`) **coexistem com os novos entre a Task 1 e a Task 6**. Isso é temporário e deliberado: permite que a árvore compile e os testes passem em cada commit. A Task 6 é o ponto de corte — remove a UI antiga e os tipos antigos de uma vez, quando o substituto já existe. Nenhum commit deixa o repositório vermelho.
 
-| Fase | Tasks | Entrega |
-| --- | --- | --- |
-| Fundação | 1–3 | Tipos, driver mock e store, testados, sem UI nova |
-| Base visual | 4–5 | Tokens em `packages/ui` e primitivos shadcn |
-| Corte | 6 | Shell + home + Performance; UI e tipos antigos removidos |
-| Telas | 7–12 | DPI, render, Buttons, Parameters, Profiles, Device |
-| Fechamento | 13–14 | Verificação completa e passe das skills `interfaces:*` |
+| Fase        | Tasks | Entrega                                                  |
+| ----------- | ----- | -------------------------------------------------------- |
+| Fundação    | 1–3   | Tipos, driver mock e store, testados, sem UI nova        |
+| Base visual | 4–5   | Tokens em `packages/ui` e primitivos shadcn              |
+| Corte       | 6     | Shell + home + Performance; UI e tipos antigos removidos |
+| Telas       | 7–12  | DPI, render, Buttons, Parameters, Profiles, Device       |
+| Fechamento  | 13–14 | Verificação completa e passe das skills `interfaces:*`   |
 
 ---
 
@@ -50,6 +51,7 @@ Os tipos antigos (`DeviceSettings`, `ConnectedPeripheral`) **coexistem com os no
 Cria os tipos do spec §5 e as duas funções de domínio que o store vai precisar. Inclui a configuração do Vitest no pacote, que hoje não tem runner.
 
 **Files:**
+
 - Create: `packages/shared/src/mouse/capabilities.ts`
 - Create: `packages/shared/src/mouse/profile.ts`
 - Create: `packages/shared/src/mouse/telemetry.ts`
@@ -59,6 +61,7 @@ Cria os tipos do spec §5 e as duas funções de domínio que o store vai precis
 - Test: `packages/shared/src/mouse/session.test.ts`
 
 **Interfaces:**
+
 - Consumes: nada.
 - Produces: `MouseCapabilities`, `MouseButton`, `ParameterCapabilities`, `MouseRenderId`, `MouseProfile`, `DpiStage`, `DpiStageColor`, `ButtonAction`, `MouseParameters`, `MouseTelemetry`, `MouseSession`, `ProfileSlot`, `profileFingerprint(profile: MouseProfile): string`, `isDirty(session: MouseSession): boolean`, `estimateRuntimeHours(caps: MouseCapabilities, pollingRate: number): [number, number] | null`.
 
@@ -168,7 +171,11 @@ describe('isDirty', () => {
 describe('estimateRuntimeHours', () => {
   const caps = {
     pollingRate: { supported: [1000, 8000], runtimeHours: { 1000: [45, 56], 8000: [27, 34] } },
-  } as MouseCapabilities;
+    // `as unknown as` é obrigatório: o objeto tem 1 das 7 propriedades de
+    // MouseCapabilities, e um `as` direto viola TS2352 sob o `strict: true`
+    // que o pacote já usa. O `{} as MouseCapabilities` mais acima não precisa,
+    // porque `{}` é literal vazio, não um objeto parcialmente formado.
+  } as unknown as MouseCapabilities;
 
   it('devolve a faixa declarada para o polling rate', () => {
     expect(estimateRuntimeHours(caps, 8000)).toEqual([27, 34]);
@@ -380,6 +387,7 @@ git commit -m "feat: add mouse domain types and profile fingerprint"
 A porta fala a linguagem do domínio. Decidir quais relatórios HID enviar é responsabilidade do adapter, nunca da UI.
 
 **Files:**
+
 - Create: `packages/shared/src/mouse/driver.ts`
 - Modify: `packages/shared/src/index.ts`
 - Create: `apps/web/src/mocks/mice.ts`
@@ -387,6 +395,7 @@ A porta fala a linguagem do domínio. Decidir quais relatórios HID enviar é re
 - Test: `apps/web/src/hardware/mockDriver.test.ts`
 
 **Interfaces:**
+
 - Consumes: tudo da Task 1.
 - Produces: `MouseDriver`, `MouseIdentity`, `DeviceDisconnectedError`, `createMockDriver(mouseId: string): MockMouseDriver`, `MockMouseDriver` (a porta mais `simulateDisconnect()`, `simulateReconnect()`, `failNextWrite()`), `mockMice: MockMouse[]`, `MouseSummary`, `listMockMice(): Promise<MouseSummary[]>`.
 
@@ -572,14 +581,25 @@ export const mockMice: MockMouse[] = [
       dpi: { min: 100, max: 26_000, step: 50, maxStages: 5, independentXY: true },
       pollingRate: {
         supported: [125, 500, 1000, 4000, 8000],
-        runtimeHours: { 125: [70, 90], 500: [58, 70], 1000: [45, 56], 4000: [32, 40], 8000: [27, 34] },
+        runtimeHours: {
+          125: [70, 90],
+          500: [58, 70],
+          1000: [45, 56],
+          4000: [32, 40],
+          8000: [27, 34],
+        },
       },
       buttons: [
         { id: 'left', label: 'Botão esquerdo', hotspot: { x: 0.27, y: 0.19 }, remappable: false },
         { id: 'right', label: 'Botão direito', hotspot: { x: 0.73, y: 0.19 }, remappable: true },
         { id: 'middle', label: 'Botão do meio', hotspot: { x: 0.5, y: 0.18 }, remappable: true },
         { id: 'back', label: 'Lateral traseiro', hotspot: { x: 0.12, y: 0.38 }, remappable: true },
-        { id: 'forward', label: 'Lateral dianteiro', hotspot: { x: 0.12, y: 0.47 }, remappable: true },
+        {
+          id: 'forward',
+          label: 'Lateral dianteiro',
+          hotspot: { x: 0.12, y: 0.47 },
+          remappable: true,
+        },
       ],
       parameters: {
         motionSync: true,
@@ -756,10 +776,12 @@ git commit -m "feat: add mouse driver port and mock implementation"
 Concentra as decisões de aplicação: throttle do arraste, reversão em falha, preservação do draft na desconexão.
 
 **Files:**
+
 - Create: `apps/web/src/store/mouseStore.ts`
 - Test: `apps/web/src/store/mouseStore.test.ts`
 
 **Interfaces:**
+
 - Consumes: Task 1 e Task 2.
 - Produces: `useMouseStore` com o estado `{ session, driver, status, applying, feedback, disconnected }` e as ações `openMouse(id)`, `closeMouse()`, `patchDraft(recipe)`, `saveToSlot(index)`, `selectSlot(index)`, `factoryReset()`.
 
@@ -915,7 +937,11 @@ export const useMouseStore = create<MouseStore>((set, get) => {
         feedback:
           error instanceof DeviceDisconnectedError
             ? null
-            : { type: 'error', title: 'Não foi aplicado', message: 'A mudança voltou ao valor anterior.' },
+            : {
+                type: 'error',
+                title: 'Não foi aplicado',
+                message: 'A mudança voltou ao valor anterior.',
+              },
       }));
     }
   }
@@ -998,7 +1024,11 @@ export const useMouseStore = create<MouseStore>((set, get) => {
               slot.index === index ? { ...slot, profile: structuredClone(session.draft) } : slot,
             ),
           },
-          feedback: { type: 'success', title: 'Salvo', message: `Perfil gravado no slot ${index}.` },
+          feedback: {
+            type: 'success',
+            title: 'Salvo',
+            message: `Perfil gravado no slot ${index}.`,
+          },
         });
       } catch {
         set({
@@ -1032,7 +1062,11 @@ export const useMouseStore = create<MouseStore>((set, get) => {
       if (!session) return;
       set({
         session: { ...session, slots: session.slots.map((slot) => ({ ...slot, profile: null })) },
-        feedback: { type: 'success', title: 'Restaurado', message: 'Os slots do mouse foram limpos.' },
+        feedback: {
+          type: 'success',
+          title: 'Restaurado',
+          message: 'Os slots do mouse foram limpos.',
+        },
       });
     },
 
@@ -1043,7 +1077,11 @@ export const useMouseStore = create<MouseStore>((set, get) => {
 function emptyProfile(): MouseProfile {
   return {
     name: 'Novo perfil',
-    dpi: { stages: [{ id: 's1', x: 800, y: 800, color: 'green' }], activeStageId: 's1', independentXY: false },
+    dpi: {
+      stages: [{ id: 's1', x: 800, y: 800, color: 'green' }],
+      activeStageId: 's1',
+      independentXY: false,
+    },
     pollingRate: 1000,
     bindings: {},
     parameters: {
@@ -1081,10 +1119,12 @@ Os tokens saem do app e passam a morar no design system. Hoje `packages/ui` depe
 Os **valores** desta task são provisórios e explicitamente marcados como tal: a Task 14 os substitui pelos valores medidos por `interfaces:better-colors`. O que esta task fixa são os **papéis**.
 
 **Files:**
+
 - Create: `packages/ui/src/styles/tokens.css`
 - Modify: `apps/web/src/styles.css`
 
 **Interfaces:**
+
 - Consumes: nada.
 - Produces: os tokens semânticos `--color-bg-canvas`, `--color-bg-surface`, `--color-bg-raised`, `--color-bg-hover`, `--color-border-subtle`, `--color-border-strong`, `--color-text-primary`, `--color-text-secondary`, `--color-text-muted`, `--color-fill-solid`, `--color-fill-solid-text`, `--color-danger`, `--color-stage-green|cyan|blue|violet|magenta`, e as classes utilitárias Tailwind correspondentes.
 
@@ -1277,15 +1317,20 @@ git commit -m "feat: move design tokens into the ui package"
 Seguindo a skill `shadcn-modular-ui` do repositório: inspecionar antes de rodar, adicionar só o necessário, não usar `--overwrite` nem `--all`.
 
 **Files:**
+
 - Create: `packages/ui/src/components/slider.tsx`
 - Create: `packages/ui/src/components/switch.tsx`
 - Create: `packages/ui/src/components/dialog.tsx`
+
 <!-- tooltip removido no scan de pré-voo: nenhuma tarefa o consome -->
+
 - Create: `packages/ui/src/components/segmented.tsx`
+- Create: `packages/ui/src/components/panel.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 4.
-- Produces: `Slider`, `Switch`, `Dialog` + subcomponentes, e `Segmented` (composto próprio, não shadcn).
+- Produces: `Slider`, `Switch`, `Dialog` + subcomponentes (shadcn), e os compostos próprios `Segmented`, `Panel`, `PanelRaised`, `SectionHeading`.
 
 - [ ] **Step 1: Inspecionar a configuração existente**
 
@@ -1358,12 +1403,57 @@ export function Segmented<T extends number | string>({
 }
 ```
 
-- [ ] **Step 4: Verificar tipos**
+- [ ] **Step 4: Escrever `Panel` e `SectionHeading`**
+
+Sem estes dois, a mesma string de classes de superfície aparece 11 vezes e a de título de seção 8 vezes ao longo das Tasks 6–12. A skill `maintainable-code` do repositório manda extrair comportamento repetido para uma unidade bem nomeada, e estes são o mesmo conceito com a mesma razão de mudar: quando os degraus de superfície mudarem na Task 14, muda um arquivo.
+
+Create `packages/ui/src/components/panel.tsx`:
+
+```tsx
+import type { ComponentProps, ElementType, ReactNode } from 'react';
+import { cn } from '../lib/utils';
+
+/** Superfície que agrupa controles relacionados. Elevação vem de bg + borda, nunca de sombra. */
+export function Panel({ className, ...props }: ComponentProps<'section'>) {
+  return (
+    <section
+      className={cn('rounded-xl border border-border-subtle bg-bg-surface', className)}
+      {...props}
+    />
+  );
+}
+
+/** Um degrau acima do Panel: card selecionado, ou card dentro de card. */
+export function PanelRaised({ className, ...props }: ComponentProps<'section'>) {
+  return (
+    <section
+      className={cn('rounded-xl border border-border-strong bg-bg-raised', className)}
+      {...props}
+    />
+  );
+}
+
+export function SectionHeading({
+  as: Tag = 'h2',
+  children,
+}: {
+  as?: ElementType;
+  children: ReactNode;
+}) {
+  return (
+    <Tag className="text-xs font-semibold uppercase tracking-[0.12em] text-text-muted">
+      {children}
+    </Tag>
+  );
+}
+```
+
+- [ ] **Step 5: Verificar tipos**
 
 Run: `pnpm --filter @gearhub/ui lint`
 Expected: sem erros
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add packages/ui
@@ -1379,6 +1469,7 @@ Esta é a task que remove a UI e os tipos antigos. Ela entrega uma fatia vertica
 O `sectionRegistry` existe para que o rail nunca mostre um item de menu sem tela atrás. As tasks 7–12 acrescentam uma entrada cada.
 
 **Files:**
+
 - Create: `apps/web/src/app/AppShell.tsx`
 - Create: `apps/web/src/app/DeviceWorkspace.tsx`
 - Create: `apps/web/src/app/DirtyBar.tsx`
@@ -1392,6 +1483,7 @@ O `sectionRegistry` existe para que o rail nunca mostre um item de menu sem tela
 - Test: `apps/web/src/features/performance/PerformanceSection.test.tsx`
 
 **Interfaces:**
+
 - Consumes: Tasks 1–5.
 - Produces: `sectionRegistry: SectionDefinition[]`, `SectionDefinition = { id: string; label: string; Component: () => JSX.Element }`, `AppShell`.
 
@@ -1700,7 +1792,11 @@ export function DeviceWorkspace() {
             <span className="text-text-secondary">
               O mouse desconectou. Suas alterações foram preservadas.
             </span>
-            <button type="button" onClick={() => void reconnect()} className="text-text-primary underline">
+            <button
+              type="button"
+              onClick={() => void reconnect()}
+              className="text-text-primary underline"
+            >
               Reaplicar
             </button>
           </div>
@@ -1837,12 +1933,14 @@ git commit -m "feat: replace settings page with device workspace shell"
 ## Task 7: Seção de DPI
 
 **Files:**
+
 - Create: `apps/web/src/features/dpi/DpiSection.tsx`
 - Create: `apps/web/src/features/dpi/stageColors.ts`
 - Modify: `apps/web/src/features/registry.ts`
 - Test: `apps/web/src/features/dpi/DpiSection.test.tsx`
 
 **Interfaces:**
+
 - Consumes: Tasks 1–6.
 - Produces: `DpiSection`, `stageColorClass(color: DpiStageColor): string`.
 
@@ -1990,7 +2088,10 @@ export function DpiSection() {
             >
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-sm text-text-secondary">
-                  <span aria-hidden className={`size-2 rounded-full ${stageColorClass(stage.color)}`} />
+                  <span
+                    aria-hidden
+                    className={`size-2 rounded-full ${stageColorClass(stage.color)}`}
+                  />
                   Estágio {index + 1}
                 </span>
                 <span className="tnum text-sm font-semibold text-text-primary">{stage.x}</span>
@@ -2021,7 +2122,9 @@ export function DpiSection() {
                       profile.dpi.activeStageId = stage.id;
                     })
                   }
-                  className={active ? 'text-text-primary' : 'text-text-muted hover:text-text-primary'}
+                  className={
+                    active ? 'text-text-primary' : 'text-text-muted hover:text-text-primary'
+                  }
                 >
                   {active ? 'Estágio ativo' : 'Tornar ativo'}
                 </button>
@@ -2099,11 +2202,13 @@ git commit -m "feat: add dpi stage section"
 Silhueta genérica paramétrica com hotspots posicionados a partir de coordenadas normalizadas. É o contrato que permite trocar por SVG por modelo depois sem tocar em componente.
 
 **Files:**
+
 - Create: `apps/web/src/components/MouseRender/MouseRender.tsx`
 - Create: `apps/web/src/components/MouseRender/shells.ts`
 - Test: `apps/web/src/components/MouseRender/MouseRender.test.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 1.
 - Produces: `MouseRender({ renderId, buttons, activeButtonId, onSelectButton })`, `SHELLS: Record<MouseRenderId, { viewBox: string; outline: string; seam: string }>`.
 
@@ -2191,11 +2296,7 @@ export function MouseRender({
   return (
     <div className="relative mx-auto aspect-[100/160] w-[220px]">
       <svg viewBox={shell.viewBox} className="h-full w-full" aria-hidden>
-        <path
-          d={shell.outline}
-          className="fill-bg-raised stroke-border-strong"
-          strokeWidth={1.5}
-        />
+        <path d={shell.outline} className="fill-bg-raised stroke-border-strong" strokeWidth={1.5} />
         <path d={shell.seam} className="stroke-border-subtle" strokeWidth={1} />
       </svg>
 
@@ -2242,6 +2343,7 @@ git commit -m "feat: add parametric mouse render with button hotspots"
 ## Task 9: Seção de Buttons
 
 **Files:**
+
 - Create: `apps/web/src/features/buttons/ButtonsSection.tsx`
 - Create: `apps/web/src/features/buttons/ActionPicker.tsx`
 - Create: `apps/web/src/features/buttons/actionLabel.ts`
@@ -2249,6 +2351,7 @@ git commit -m "feat: add parametric mouse render with button hotspots"
 - Test: `apps/web/src/features/buttons/actionLabel.test.ts`
 
 **Interfaces:**
+
 - Consumes: Tasks 1–8.
 - Produces: `ButtonsSection`, `ActionPicker({ open, onOpenChange, onPick })`, `actionLabel(action: ButtonAction): string`.
 
@@ -2326,12 +2429,7 @@ Create `apps/web/src/features/buttons/ActionPicker.tsx`:
 
 ```tsx
 import type { ButtonAction } from '@gearhub/shared';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@gearhub/ui/components/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@gearhub/ui/components/dialog';
 import { actionLabel } from './actionLabel';
 
 /** Macro está fora do v1: nenhuma opção de macro é oferecida. */
@@ -2477,12 +2575,14 @@ git commit -m "feat: add button remapping section"
 A tela onde a regra "capability ausente ⇒ controle ausente" fica mais visível: o Scout renderiza um subconjunto estrito do Vanguard.
 
 **Files:**
+
 - Create: `apps/web/src/features/parameters/ParametersSection.tsx`
 - Create: `apps/web/src/features/parameters/ToggleRow.tsx`
 - Modify: `apps/web/src/features/registry.ts`
 - Test: `apps/web/src/features/parameters/ParametersSection.test.tsx`
 
 **Interfaces:**
+
 - Consumes: Tasks 1–6.
 - Produces: `ParametersSection`, `ToggleRow({ label, description, checked, onChange })`.
 
@@ -2689,7 +2789,9 @@ export function ParametersSection() {
               <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-text-muted">
                 Altura de rastreio
               </h3>
-              <span className="tnum text-sm text-text-primary">{parameters.lodMm.toFixed(1)} mm</span>
+              <span className="tnum text-sm text-text-primary">
+                {parameters.lodMm.toFixed(1)} mm
+              </span>
             </div>
             <p className="mb-3 mt-1 text-[13px] text-text-muted">
               Até que altura o sensor continua lendo o mousepad ao levantar o mouse.
@@ -2770,11 +2872,13 @@ git commit -m "feat: add sensor parameters section"
 ## Task 11: Seção de Profiles
 
 **Files:**
+
 - Create: `apps/web/src/features/profiles/ProfilesSection.tsx`
 - Modify: `apps/web/src/features/registry.ts`
 - Test: `apps/web/src/features/profiles/ProfilesSection.test.tsx`
 
 **Interfaces:**
+
 - Consumes: Tasks 1–6.
 - Produces: `ProfilesSection`.
 
@@ -2923,11 +3027,13 @@ git commit -m "feat: add onboard profile slots section"
 ## Task 12: Seção de Device
 
 **Files:**
+
 - Create: `apps/web/src/features/device/DeviceSection.tsx`
 - Modify: `apps/web/src/features/registry.ts`
 - Test: `apps/web/src/features/device/DeviceSection.test.tsx`
 
 **Interfaces:**
+
 - Consumes: Tasks 1–6.
 - Produces: `DeviceSection`.
 
@@ -2991,12 +3097,7 @@ Expected: FAIL — `Failed to resolve import "./DeviceSection"`
 Create `apps/web/src/features/device/DeviceSection.tsx`:
 
 ```tsx
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@gearhub/ui/components/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@gearhub/ui/components/dialog';
 import { useState } from 'react';
 import { useMouseStore } from '../../store/mouseStore';
 
@@ -3102,6 +3203,7 @@ git commit -m "feat: add device section with guarded factory reset"
 ## Task 13: Verificação completa
 
 **Files:**
+
 - Modify: `README.md`
 - Modify: `graphify-out/**` (gerado)
 
@@ -3157,6 +3259,7 @@ git commit -m "feat: refresh readme and code graph for the redesign"
 Só agora, sobre tela construída. Esta é a task que produz os valores definitivos da paleta.
 
 **Files:**
+
 - Modify: `packages/ui/src/styles/tokens.css`
 - Modify: arquivos apontados por cada skill
 
@@ -3205,14 +3308,14 @@ git commit -m "feat: apply measured palette and interface review fixes"
 
 ## Cobertura do spec
 
-| Seção do spec | Task |
-| --- | --- |
-| §4 Arquitetura de informação (7 telas) | 6, 7, 9, 10, 11, 12 |
-| §5 Modelo de dados | 1 |
-| §6 Porta do driver e os dois "sujos" | 2, 3, 6 (DirtyBar) |
-| §7 Sistema visual | 4, 14 |
-| §8 Estados e erro | 3 (revert, desconexão), 6 (banner, dirty bar), 12 (confirmação) |
-| §9 Estrutura de arquivos e remoções | 6 |
-| §10 Testes | 1, 2, 3, 6, 7, 8, 9, 10, 11, 12 |
-| §11 Gates de qualidade | 13, 14 |
-| §12 Caminho pós-v1 | não implementado por desenho — `MouseRenderId` e `ButtonAction.macro` deixam o espaço |
+| Seção do spec                          | Task                                                                                  |
+| -------------------------------------- | ------------------------------------------------------------------------------------- |
+| §4 Arquitetura de informação (7 telas) | 6, 7, 9, 10, 11, 12                                                                   |
+| §5 Modelo de dados                     | 1                                                                                     |
+| §6 Porta do driver e os dois "sujos"   | 2, 3, 6 (DirtyBar)                                                                    |
+| §7 Sistema visual                      | 4, 14                                                                                 |
+| §8 Estados e erro                      | 3 (revert, desconexão), 6 (banner, dirty bar), 12 (confirmação)                       |
+| §9 Estrutura de arquivos e remoções    | 6                                                                                     |
+| §10 Testes                             | 1, 2, 3, 6, 7, 8, 9, 10, 11, 12                                                       |
+| §11 Gates de qualidade                 | 13, 14                                                                                |
+| §12 Caminho pós-v1                     | não implementado por desenho — `MouseRenderId` e `ButtonAction.macro` deixam o espaço |

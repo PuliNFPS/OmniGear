@@ -40,46 +40,46 @@ Qualquer redesign de tela que não resolva isso primeiro vira uma reescrita sile
 
 ### Fora do v1
 
-| Item | Motivo |
-| --- | --- |
-| Macros | Não selecionado no escopo. `ButtonAction` já reserva o caso `macro`. |
-| Cloud config / login | É backend, não UI. |
-| Iluminação / RGB | Nenhum mouse das referências prioriza; o mock atual tem, mas sai. |
-| Teclado | Decidido: só mouse no v1. Nomes `Mouse*` deixam o irmão `Keyboard*` óbvio depois. |
-| WebHID real | O `WebHidTransport` existe e não está ligado. Entra depois, atrás da mesma porta. |
-| SVG por modelo de mouse | Ver decisão D4. |
-| Tema claro | Ver decisão D7. |
+| Item                    | Motivo                                                                            |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| Macros                  | Não selecionado no escopo. `ButtonAction` já reserva o caso `macro`.              |
+| Cloud config / login    | É backend, não UI.                                                                |
+| Iluminação / RGB        | Nenhum mouse das referências prioriza; o mock atual tem, mas sai.                 |
+| Teclado                 | Decidido: só mouse no v1. Nomes `Mouse*` deixam o irmão `Keyboard*` óbvio depois. |
+| WebHID real             | O `WebHidTransport` existe e não está ligado. Entra depois, atrás da mesma porta. |
+| SVG por modelo de mouse | Ver decisão D4.                                                                   |
+| Tema claro              | Ver decisão D7.                                                                   |
 
 ## 3. Decisões
 
 Registradas com a alternativa que foi descartada, para que quem ler depois não refaça a
 discussão.
 
-| # | Decisão | Alternativa descartada |
-| --- | --- | --- |
-| D1 | Arquitetura de informação espelhando o ATK Gear: home com galeria de devices → workspace com rail de seções, cada seção uma tela cheia. | Device persistente reagindo à seção editada; cockpit denso em tela única. |
-| D2 | Cada seção preenche a própria tela com conteúdo real. O render do mouse aparece só onde carrega informação. | Usar o render como preenchimento, que é o que produz as telas vazias da referência. |
-| D3 | `applyLive` no mouse enquanto edita + `writeSlot` explícito para persistir. Dois conceitos distintos de "sujo". | Tudo live sem salvar; rascunho que não toca o mouse até aplicar. |
-| D4 | Render genérico paramétrico (`renderId` + registry com fallback), hotspots vindos das capabilities. | SVG por modelo no v1. |
-| D5 | Primitivos de UI via `pnpm dlx shadcn@latest add` dentro de `packages/ui`. | Escrever à mão sobre `radix-ui`. |
-| D6 | Chrome inteiramente monocromático. Cor reservada a dado: estágios de DPI e vermelho de destrutivo. | Acento laranja de marca (`--primary: 29 89% 56%`). |
-| D7 | Dark-only no v1, com a camada de token preparada para receber o light depois. | Manter as duas paletas, o que empurra para gerar o dark invertindo o light. |
-| D8 | Tokens moram em `packages/ui`; o app importa. | Manter em `apps/web/src/styles.css`, o que inverte a dependência do design system. |
+| #   | Decisão                                                                                                                                 | Alternativa descartada                                                              |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| D1  | Arquitetura de informação espelhando o ATK Gear: home com galeria de devices → workspace com rail de seções, cada seção uma tela cheia. | Device persistente reagindo à seção editada; cockpit denso em tela única.           |
+| D2  | Cada seção preenche a própria tela com conteúdo real. O render do mouse aparece só onde carrega informação.                             | Usar o render como preenchimento, que é o que produz as telas vazias da referência. |
+| D3  | `applyLive` no mouse enquanto edita + `writeSlot` explícito para persistir. Dois conceitos distintos de "sujo".                         | Tudo live sem salvar; rascunho que não toca o mouse até aplicar.                    |
+| D4  | Render genérico paramétrico (`renderId` + registry com fallback), hotspots vindos das capabilities.                                     | SVG por modelo no v1.                                                               |
+| D5  | Primitivos de UI via `pnpm dlx shadcn@latest add` dentro de `packages/ui`.                                                              | Escrever à mão sobre `radix-ui`.                                                    |
+| D6  | Chrome inteiramente monocromático. Cor reservada a dado: estágios de DPI e vermelho de destrutivo.                                      | Acento laranja de marca (`--primary: 29 89% 56%`).                                  |
+| D7  | Dark-only no v1, com a camada de token preparada para receber o light depois.                                                           | Manter as duas paletas, o que empurra para gerar o dark invertindo o light.         |
+| D8  | Tokens moram em `packages/ui`; o app importa.                                                                                           | Manter em `apps/web/src/styles.css`, o que inverte a dependência do design system.  |
 
 ## 4. Arquitetura de informação
 
 Sete telas. O rail de seções é estado local (`section`), não rota — o projeto não tem
 router e o v1 não precisa de deep-link.
 
-| # | Tela | Conteúdo |
-| --- | --- | --- |
-| 0 | **Devices (home)** | Galeria de devices conectados. Estado vazio com chamada para conectar. |
-| 1 | **Buttons** | Render do mouse com um callout por botão. Clicar abre o picker de ação. |
-| 2 | **DPI** | Cards de estágio: cor, slider, valor editável, X/Y independente, adicionar e remover. |
-| 3 | **Performance** | Polling rate → bateria estimada recalculando em tempo real + modo do sensor. |
-| 4 | **Parameters** | Duas colunas: correções e debounce à esquerda; LOD e rotação do sensor à direita. |
-| 5 | **Profiles** | Slots onboard, importar e exportar, estado de alterações não salvas. |
-| 6 | **Device** | Firmware, pareamento, restauração de fábrica. |
+| #   | Tela               | Conteúdo                                                                              |
+| --- | ------------------ | ------------------------------------------------------------------------------------- |
+| 0   | **Devices (home)** | Galeria de devices conectados. Estado vazio com chamada para conectar.                |
+| 1   | **Buttons**        | Render do mouse com um callout por botão. Clicar abre o picker de ação.               |
+| 2   | **DPI**            | Cards de estágio: cor, slider, valor editável, X/Y independente, adicionar e remover. |
+| 3   | **Performance**    | Polling rate → bateria estimada recalculando em tempo real + modo do sensor.          |
+| 4   | **Parameters**     | Duas colunas: correções e debounce à esquerda; LOD e rotação do sensor à direita.     |
+| 5   | **Profiles**       | Slots onboard, importar e exportar, estado de alterações não salvas.                  |
+| 6   | **Device**         | Firmware, pareamento, restauração de fábrica.                                         |
 
 Duas telas divergem da referência de propósito:
 
@@ -133,7 +133,12 @@ Parameters tem uma linha a menos.
 ### 5.2 Tipos de apoio
 
 ```ts
-export interface DpiStage { id: string; x: number; y: number; color: DpiStageColor }
+export interface DpiStage {
+  id: string;
+  x: number;
+  y: number;
+  color: DpiStageColor;
+}
 
 // Sem amber, sem vermelho e sem laranja: ver decisão D6 e seção 7.
 export type DpiStageColor = 'green' | 'cyan' | 'blue' | 'violet' | 'magenta';
@@ -141,7 +146,7 @@ export type DpiStageColor = 'green' | 'cyan' | 'blue' | 'violet' | 'magenta';
 export interface MouseButton {
   id: string;
   label: string;
-  hotspot: { x: number; y: number };   // normalizado 0..1 no viewBox do render
+  hotspot: { x: number; y: number }; // normalizado 0..1 no viewBox do render
   remappable: boolean;
 }
 
@@ -151,7 +156,7 @@ export type ButtonAction =
   | { kind: 'keystroke'; keys: string[] }
   | { kind: 'scroll'; direction: 'up' | 'down' }
   | { kind: 'disabled' }
-  | { kind: 'macro'; macroId: string };   // reservado; nenhuma UI no v1
+  | { kind: 'macro'; macroId: string }; // reservado; nenhuma UI no v1
 
 export interface ParameterCapabilities {
   motionSync?: boolean;
@@ -175,7 +180,10 @@ export interface MouseParameters {
   sensorRotationDeg: number;
 }
 
-export interface ProfileSlot { index: number; profile: MouseProfile | null }
+export interface ProfileSlot {
+  index: number;
+  profile: MouseProfile | null;
+}
 
 // Identifica qual silhueta o registry de render deve desenhar. O conjunto cresce
 // quando chegarem SVGs por modelo; até lá as duas genéricas cobrem todo device.
@@ -193,7 +201,7 @@ export interface MouseSession {
   telemetry: MouseTelemetry;
   slots: ProfileSlot[];
   activeSlotIndex: number;
-  draft: MouseProfile;      // o que está na tela e no mouse
+  draft: MouseProfile; // o que está na tela e no mouse
 }
 ```
 
@@ -222,10 +230,10 @@ cada ~100 ms durante o arraste e uma vez no fim do gesto.
 
 ### Os dois "sujos", e por que têm feedback diferente
 
-| Estado | Significa | Feedback |
-| --- | --- | --- |
+| Estado     | Significa                            | Feedback                                                                                                                  |
+| ---------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
 | `applying` | O draft está indo para o mouse agora | Sutil e **global** (pulso no header). Nunca spinner por controle — arrastar um slider não pode acender quarenta spinners. |
-| `dirty` | `draft` diverge do slot ativo | Barra persistente: "alterações não salvas no slot ①" + ação de salvar. |
+| `dirty`    | `draft` diverge do slot ativo        | Barra persistente: "alterações não salvas no slot ①" + ação de salvar.                                                    |
 
 ## 7. Sistema visual
 
@@ -297,14 +305,14 @@ mesmo CSS sem exigir migração.
 
 O app fala com hardware. Os estados de falha são o produto, não um detalhe.
 
-| Situação | Comportamento |
-| --- | --- |
-| `applyLive` falha | O controle reverte para o último valor confirmado. Alerta não bloqueante. Otimismo com reversão, porque o usuário está sentindo o efeito na mão. |
-| Mouse desconecta durante a edição | O `draft` é preservado. Banner persistente e controles desabilitados. Ao reconectar, reaplica o `draft`. |
-| `writeSlot` falha | `dirty` permanece. O erro aparece na ação de salvar, não em um toast que some. |
-| Sair com `dirty` | Aviso antes de trocar de slot ou de device. |
-| Capability ausente | O controle não é renderizado. Nunca desabilitado, nunca cinza. |
-| Slot vazio | Estado explícito com ação de criar, não um card em branco. |
+| Situação                          | Comportamento                                                                                                                                    |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `applyLive` falha                 | O controle reverte para o último valor confirmado. Alerta não bloqueante. Otimismo com reversão, porque o usuário está sentindo o efeito na mão. |
+| Mouse desconecta durante a edição | O `draft` é preservado. Banner persistente e controles desabilitados. Ao reconectar, reaplica o `draft`.                                         |
+| `writeSlot` falha                 | `dirty` permanece. O erro aparece na ação de salvar, não em um toast que some.                                                                   |
+| Sair com `dirty`                  | Aviso antes de trocar de slot ou de device.                                                                                                      |
+| Capability ausente                | O controle não é renderizado. Nunca desabilitado, nunca cinza.                                                                                   |
+| Slot vazio                        | Estado explícito com ação de criar, não um card em branco.                                                                                       |
 
 O mock implementa latência, falha e desconexão para que esses caminhos sejam construídos
 e testados desde o primeiro dia — é por isso que a decisão foi "mock rico" e não "mock
@@ -362,12 +370,12 @@ ambíguo, a primeira etapa entra em conflito com os tipos antigos.
 Seguindo a skill `pragmatic-testing` do repositório: testar as decisões do projeto, não a
 biblioteca.
 
-| Camada | O que é testado |
-| --- | --- |
-| Domínio (puro, rápido) | Derivação de `dirty`; validação de estágio de DPI contra as capabilities; `ButtonAction` como união discriminada. |
-| Store | Throttle do arraste; reversão quando `applyLive` falha; preservação do `draft` na desconexão e reaplicação ao reconectar. |
-| Driver (fake) | Contrato da porta com um fake, incluindo os caminhos de falha. |
-| Componentes | Ausência de capability ⇒ controle ausente; posicionamento de hotspot a partir de coordenadas normalizadas. |
+| Camada                 | O que é testado                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Domínio (puro, rápido) | Derivação de `dirty`; validação de estágio de DPI contra as capabilities; `ButtonAction` como união discriminada.         |
+| Store                  | Throttle do arraste; reversão quando `applyLive` falha; preservação do `draft` na desconexão e reaplicação ao reconectar. |
+| Driver (fake)          | Contrato da porta com um fake, incluindo os caminhos de falha.                                                            |
+| Componentes            | Ausência de capability ⇒ controle ausente; posicionamento de hotspot a partir de coordenadas normalizadas.                |
 
 Não são testados: comportamento interno dos primitivos shadcn e valores de token.
 
@@ -376,14 +384,14 @@ Não são testados: comportamento interno dos primitivos shadcn e valores de tok
 Além do `pnpm verify` já existente (format, lint, test, build, audit), cada fase de
 implementação roda as skills de interface **sobre tela construída**:
 
-| Skill | Quando |
-| --- | --- |
-| `interfaces:better-colors` | Produz e mede os valores da paleta; reporta contraste medido, nunca estimado. |
-| `interfaces:better-accessibility` | Cada tela: foco, ordem de leitura, rótulos, alvos de toque. |
-| `interfaces:better-layout` | Agrupamento, alinhamento e hierarquia por tela. |
-| `interfaces:better-ui` | Raio concêntrico, alinhamento óptico, profundidade de superfície. |
-| `interfaces:better-writing` | Rótulos e descrições — as da referência são traduções mecânicas. |
-| `interfaces:better-interface` | Revisão combinada ao fim. |
+| Skill                             | Quando                                                                        |
+| --------------------------------- | ----------------------------------------------------------------------------- |
+| `interfaces:better-colors`        | Produz e mede os valores da paleta; reporta contraste medido, nunca estimado. |
+| `interfaces:better-accessibility` | Cada tela: foco, ordem de leitura, rótulos, alvos de toque.                   |
+| `interfaces:better-layout`        | Agrupamento, alinhamento e hierarquia por tela.                               |
+| `interfaces:better-ui`            | Raio concêntrico, alinhamento óptico, profundidade de superfície.             |
+| `interfaces:better-writing`       | Rótulos e descrições — as da referência são traduções mecânicas.              |
+| `interfaces:better-interface`     | Revisão combinada ao fim.                                                     |
 
 E `pnpm graph:update` após cada mudança estrutural, conforme o `AGENTS.md`.
 
