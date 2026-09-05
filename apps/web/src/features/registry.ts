@@ -1,9 +1,10 @@
 import type { ComponentType } from 'react';
-import { Crosshair, Gauge, MousePointerClick, SlidersHorizontal } from 'lucide-react';
+import { Crosshair, Gauge, Layers, MousePointerClick, SlidersHorizontal } from 'lucide-react';
 import { ButtonsSection } from './buttons/ButtonsSection';
 import { DpiSection } from './dpi/DpiSection';
 import { ParametersSection } from './parameters/ParametersSection';
 import { PerformanceSection } from './performance/PerformanceSection';
+import { ProfilesSection } from './profiles/ProfilesSection';
 
 export interface SectionDefinition {
   id: string;
@@ -17,4 +18,5 @@ export const sectionRegistry: SectionDefinition[] = [
   { id: 'dpi', label: 'DPI', icon: Crosshair, Component: DpiSection },
   { id: 'performance', label: 'Desempenho', icon: Gauge, Component: PerformanceSection },
   { id: 'parameters', label: 'Parâmetros', icon: SlidersHorizontal, Component: ParametersSection },
+  { id: 'profiles', label: 'Perfis', icon: Layers, Component: ProfilesSection },
 ];
