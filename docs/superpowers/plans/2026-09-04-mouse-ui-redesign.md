@@ -1388,7 +1388,7 @@ Não vem do shadcn: é um radiogroup de opções numéricas, usado por polling r
 Create `packages/ui/src/components/segmented.tsx`:
 
 ```tsx
-import { cn } from '../lib/utils';
+import { cn } from '#lib/utils';
 
 export function Segmented<T extends number | string>({
   label,
@@ -1439,7 +1439,7 @@ Create `packages/ui/src/components/panel.tsx`:
 
 ```tsx
 import type { ComponentProps, ElementType, ReactNode } from 'react';
-import { cn } from '../lib/utils';
+import { cn } from '#lib/utils';
 
 /** Superfície que agrupa controles relacionados. Elevação vem de bg + borda, nunca de sombra. */
 export function Panel({ className, ...props }: ComponentProps<'section'>) {
