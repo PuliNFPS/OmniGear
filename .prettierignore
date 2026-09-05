@@ -1,3 +1,4 @@
 graphify-out/
 .agents/skills/graphify/
 .cursor/rules/graphify.mdc
+pnpm-lock.yaml
