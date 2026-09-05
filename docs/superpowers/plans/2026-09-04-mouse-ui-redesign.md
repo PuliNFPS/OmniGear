@@ -1544,6 +1544,15 @@ Create `apps/web/src/test-setup.ts`:
 
 ```ts
 import '@testing-library/jest-dom/vitest';
+
+// O jsdom não implementa ResizeObserver, e o thumb do Slider do Radix chama
+// ele incondicionalmente ao montar. Sem isto, toda tela com slider (DPI,
+// Parameters) quebra no teste com ReferenceError.
+globalThis.ResizeObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
 ```
 
 - [ ] **Step 2: Escrever o teste que falha**
@@ -1667,7 +1676,7 @@ export interface SectionDefinition {
 }
 
 export const sectionRegistry: SectionDefinition[] = [
-  { id: 'performance', label: 'Desempenho', Component: PerformanceSection },
+  { id: 'performance', label: 'Desempenho', icon: Gauge, Component: PerformanceSection },
 ];
 ```
 
@@ -2206,8 +2215,8 @@ Modify `apps/web/src/features/registry.ts` — acrescentar o import e a entrada 
 import { DpiSection } from './dpi/DpiSection';
 
 export const sectionRegistry: SectionDefinition[] = [
-  { id: 'dpi', label: 'DPI', Component: DpiSection },
-  { id: 'performance', label: 'Desempenho', Component: PerformanceSection },
+  { id: 'dpi', label: 'DPI', icon: Crosshair, Component: DpiSection },
+  { id: 'performance', label: 'Desempenho', icon: Gauge, Component: PerformanceSection },
 ];
 ```
 
@@ -2578,9 +2587,9 @@ Modify `apps/web/src/features/registry.ts` — `buttons` vai **primeiro**:
 import { ButtonsSection } from './buttons/ButtonsSection';
 
 export const sectionRegistry: SectionDefinition[] = [
-  { id: 'buttons', label: 'Botões', Component: ButtonsSection },
-  { id: 'dpi', label: 'DPI', Component: DpiSection },
-  { id: 'performance', label: 'Desempenho', Component: PerformanceSection },
+  { id: 'buttons', label: 'Botões', icon: MousePointerClick, Component: ButtonsSection },
+  { id: 'dpi', label: 'DPI', icon: Crosshair, Component: DpiSection },
+  { id: 'performance', label: 'Desempenho', icon: Gauge, Component: PerformanceSection },
 ];
 ```
 
@@ -2880,7 +2889,7 @@ Modify `apps/web/src/features/registry.ts` — acrescentar após `performance`:
 import { ParametersSection } from './parameters/ParametersSection';
 
 // … dentro do array, após performance:
-{ id: 'parameters', label: 'Parâmetros', Component: ParametersSection },
+{ id: 'parameters', label: 'Parâmetros', icon: SlidersHorizontal, Component: ParametersSection },
 ```
 
 - [ ] **Step 6: Rodar o teste e confirmar que passa**
@@ -3035,7 +3044,7 @@ Modify `apps/web/src/features/registry.ts` — acrescentar após `parameters`:
 import { ProfilesSection } from './profiles/ProfilesSection';
 
 // … dentro do array, após parameters:
-{ id: 'profiles', label: 'Perfis', Component: ProfilesSection },
+{ id: 'profiles', label: 'Perfis', icon: Layers, Component: ProfilesSection },
 ```
 
 - [ ] **Step 5: Rodar o teste e confirmar que passa**
@@ -3211,7 +3220,7 @@ Modify `apps/web/src/features/registry.ts` — acrescentar por último:
 import { DeviceSection } from './device/DeviceSection';
 
 // … dentro do array, ao final:
-{ id: 'device', label: 'Dispositivo', Component: DeviceSection },
+{ id: 'device', label: 'Dispositivo', icon: Cpu, Component: DeviceSection },
 ```
 
 - [ ] **Step 5: Rodar o teste e confirmar que passa**
