@@ -2,7 +2,7 @@ import { DeviceDisconnectedError, type MouseProfile, type MouseSession } from '@
 import { create } from 'zustand';
 import { createMockDriver, type MockMouseDriver } from '../hardware/mockDriver';
 
-export type Feedback = { type: 'success' | 'error'; title: string; message: string };
+type Feedback = { type: 'success' | 'error'; title: string; message: string };
 
 /** Janela de agrupamento do arraste. Um gesto não pode virar quarenta escritas. */
 const APPLY_THROTTLE_MS = 100;

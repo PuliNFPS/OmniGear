@@ -32,10 +32,13 @@ export function DeviceWorkspace() {
               aria-current={entry.id === sectionId ? 'page' : undefined}
               className={
                 entry.id === sectionId
-                  ? 'w-full rounded-md bg-fill-solid px-3 py-2 text-left text-sm font-semibold text-fill-solid-text'
-                  : 'w-full rounded-md px-3 py-2 text-left text-sm text-text-muted hover:bg-bg-hover hover:text-text-primary'
+                  ? 'flex w-full items-center gap-2 rounded-md bg-fill-solid px-3 py-2 text-left text-sm font-semibold text-fill-solid-text'
+                  : 'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-text-muted hover:bg-bg-hover hover:text-text-primary'
               }
             >
+              <span aria-hidden className="shrink-0">
+                <entry.icon className="size-4" />
+              </span>
               {entry.label}
             </button>
           ))}
