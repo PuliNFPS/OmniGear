@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
-import { Gauge } from 'lucide-react';
+import { Crosshair, Gauge } from 'lucide-react';
+import { DpiSection } from './dpi/DpiSection';
 import { PerformanceSection } from './performance/PerformanceSection';
 
 export interface SectionDefinition {
@@ -10,5 +11,6 @@ export interface SectionDefinition {
 }
 
 export const sectionRegistry: SectionDefinition[] = [
+  { id: 'dpi', label: 'DPI', icon: Crosshair, Component: DpiSection },
   { id: 'performance', label: 'Desempenho', icon: Gauge, Component: PerformanceSection },
 ];
