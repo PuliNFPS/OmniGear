@@ -790,6 +790,7 @@ Concentra as decisões de aplicação: throttle do arraste, reversão em falha, 
 Create `apps/web/src/store/mouseStore.test.ts`:
 
 ```ts
+import { DeviceDisconnectedError } from '@gearhub/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMockDriver } from '../hardware/mockDriver';
 import { useMouseStore } from './mouseStore';
@@ -858,6 +859,25 @@ describe('mouseStore', () => {
 
     expect(useMouseStore.getState().disconnected).toBe(false);
     expect(spy.mock.calls[0]![0].pollingRate).toBe(8000);
+  });
+
+  it('trata desconexão durante o apply sem mostrar toast de erro', async () => {
+    await open();
+    const before = useMouseStore.getState().session!.draft.pollingRate;
+    vi.spyOn(useMouseStore.getState().driver!, 'applyLive').mockRejectedValue(
+      new DeviceDisconnectedError(),
+    );
+
+    useMouseStore.getState().patchDraft((draft) => {
+      draft.pollingRate = 8000;
+    });
+    await vi.runAllTimersAsync();
+
+    // As três asserções importam: é `feedback` nulo que separa "sumiu" de "falhou".
+    const state = useMouseStore.getState();
+    expect(state.disconnected).toBe(true);
+    expect(state.feedback).toBeNull();
+    expect(state.session!.draft.pollingRate).toBe(before);
   });
 
   it('limpa o dirty ao gravar no slot', async () => {
@@ -963,6 +983,14 @@ export const useMouseStore = create<MouseStore>((set, get) => {
     feedback: null,
 
     openMouse: async (id) => {
+      // Um mouse novo começa com a bancada limpa. Sem isto, um `flushApply` do
+      // mouse anterior ainda em voo pode sobrescrever `lastConfirmed` depois que
+      // a sessão já trocou — e uma falha seguinte reverteria o draft para o
+      // perfil de OUTRO dispositivo. O store não pode depender de o chamador
+      // lembrar de fechar antes de abrir.
+      if (applyTimer) clearTimeout(applyTimer);
+      applyTimer = null;
+      lastConfirmed = null;
       set({ loading: true, feedback: null });
       const driver = createMockDriver(id);
       const [identity, capabilities, telemetry, slots] = await Promise.all([
