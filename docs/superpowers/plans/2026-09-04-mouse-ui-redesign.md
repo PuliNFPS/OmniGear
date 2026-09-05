@@ -3207,10 +3207,36 @@ git commit -m "feat: add device section with guarded factory reset"
 - Modify: `README.md`
 - Modify: `graphify-out/**` (gerado)
 
-- [ ] **Step 1: Rodar o gate completo**
+- [ ] **Step 1: Fazer o `format:check` tolerar a ausência do Rust**
+
+Esta máquina não tem `cargo`, `wasm-pack`, `uv` nem `graphify` — as ferramentas fixadas em `docs/code-quality.md` foram instaladas em outro ambiente. **Não instale nada.** O repositório já foi construído para degradar: `scripts/run-rust-tool.mjs` detecta a ausência do cargo e sai com 0, e `scripts/prepare-core.mjs` cai no dev bridge versionado.
+
+A exceção é o `format:check`, que chama o `cargo` cru enquanto todo o resto do Rust passa pelo wrapper. É a única razão pela qual `pnpm verify` não roda aqui.
+
+Modify `scripts/run-rust-tool.mjs` — acrescentar o modo ao mapa `commands`:
+
+```js
+const commands = {
+  audit: ['machete', '.'],
+  format: ['fmt', '--all'],
+  'format:check': ['fmt', '--all', '--check'],
+  lint: ['clippy', '--all-targets', '--', '-D', 'warnings'],
+  test: ['test', '--all-targets'],
+};
+```
+
+Modify `package.json` (raiz) — a perna Rust do `format:check` passa pelo wrapper:
+
+```json
+"format:check": "prettier --check . && node scripts/run-rust-tool.mjs format:check"
+```
+
+Onde o cargo existe, o comportamento é idêntico (`cargo fmt --all --check`). Onde não existe, pula em vez de derrubar o gate inteiro.
+
+- [ ] **Step 2: Rodar o gate completo**
 
 Run: `pnpm verify`
-Expected: PASS em format, lint, test, build e audit.
+Expected: PASS em format, lint, test, build e audit. A saída deve conter `[core] Rust is not installed; skipping format:check` e o mesmo para `audit` — isso é sucesso, não falha.
 
 Se `knip` (`audit:ts`) reportar exports não usados, remover o export — não adicionar exceção ao `knip.jsonc` sem motivo declarado.
 
