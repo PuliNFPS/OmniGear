@@ -1146,6 +1146,29 @@ Create `packages/ui/src/styles/tokens.css`:
   --color-stage-blue: var(--stage-blue-value);
   --color-stage-violet: var(--stage-violet-value);
   --color-stage-magenta: var(--stage-magenta-value);
+
+  /*
+   * Camada de compatibilidade com o contrato do shadcn.
+   * Os primitivos gerados (button, alert, badge, select, slider, switch,
+   * dialog) consomem estes nomes — sem eles, todos renderizam sem estilo.
+   * Nenhum componente NOSSO usa esta camada: ela existe só para os
+   * primitivos, e é aqui que o `accent` do shadcn (que significa "fundo de
+   * hover") fica isolado do nosso vocabulário.
+   */
+  --shadcn-background: var(--color-bg-canvas);
+  --shadcn-foreground: var(--color-text-primary);
+  --shadcn-card: var(--color-bg-surface);
+  --shadcn-popover: var(--color-bg-raised);
+  --shadcn-primary: var(--color-fill-solid);
+  --shadcn-primary-foreground: var(--color-fill-solid-text);
+  --shadcn-secondary: var(--color-bg-raised);
+  --shadcn-muted: var(--color-bg-raised);
+  --shadcn-muted-foreground: var(--color-text-muted);
+  --shadcn-accent: var(--color-bg-hover);
+  --shadcn-destructive: var(--color-danger);
+  --shadcn-border: var(--color-border-subtle);
+  --shadcn-input: var(--color-border-strong);
+  --shadcn-ring: var(--color-fill-solid);
 }
 
 @theme inline {
@@ -1166,9 +1189,38 @@ Create `packages/ui/src/styles/tokens.css`:
   --color-stage-blue: hsl(var(--color-stage-blue));
   --color-stage-violet: hsl(var(--color-stage-violet));
   --color-stage-magenta: hsl(var(--color-stage-magenta));
+
+  /* contrato shadcn — gera bg-primary, text-foreground, border-input, ring-ring… */
+  --color-background: hsl(var(--shadcn-background));
+  --color-foreground: hsl(var(--shadcn-foreground));
+  --color-card: hsl(var(--shadcn-card));
+  --color-card-foreground: hsl(var(--shadcn-foreground));
+  --color-popover: hsl(var(--shadcn-popover));
+  --color-popover-foreground: hsl(var(--shadcn-foreground));
+  --color-primary: hsl(var(--shadcn-primary));
+  --color-primary-foreground: hsl(var(--shadcn-primary-foreground));
+  --color-secondary: hsl(var(--shadcn-secondary));
+  --color-secondary-foreground: hsl(var(--shadcn-foreground));
+  --color-muted: hsl(var(--shadcn-muted));
+  --color-muted-foreground: hsl(var(--shadcn-muted-foreground));
+  --color-accent: hsl(var(--shadcn-accent));
+  --color-accent-foreground: hsl(var(--shadcn-foreground));
+  --color-destructive: hsl(var(--shadcn-destructive));
+  --color-border: hsl(var(--shadcn-border));
+  --color-input: hsl(var(--shadcn-input));
+  --color-ring: hsl(var(--shadcn-ring));
+
   --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 ```
+
+**Verificação obrigatória deste step:** os 24 nomes que os primitivos existentes consomem estão todos cobertos. Conferir com:
+
+```bash
+grep -ohE '\b(bg|text|border|ring)-(background|foreground|card|popover|primary|secondary|muted|accent|destructive|border|input|ring)(-foreground)?\b' packages/ui/src/components/*.tsx | sort -u
+```
+
+Todo nome que sair dessa lista precisa ter um `--color-*` correspondente no bloco `@theme inline`. Se faltar algum, o primitivo renderiza sem estilo em silêncio — o Tailwind não emite erro para utilitário desconhecido.
 
 - [ ] **Step 2: Importar os tokens no app, sem remover nada ainda**
 
@@ -1228,12 +1280,12 @@ Seguindo a skill `shadcn-modular-ui` do repositório: inspecionar antes de rodar
 - Create: `packages/ui/src/components/slider.tsx`
 - Create: `packages/ui/src/components/switch.tsx`
 - Create: `packages/ui/src/components/dialog.tsx`
-- Create: `packages/ui/src/components/tooltip.tsx`
+<!-- tooltip removido no scan de pré-voo: nenhuma tarefa o consome -->
 - Create: `packages/ui/src/components/segmented.tsx`
 
 **Interfaces:**
 - Consumes: Task 4.
-- Produces: `Slider`, `Switch`, `Dialog` + subcomponentes, `Tooltip` + subcomponentes, e `Segmented` (composto próprio, não shadcn).
+- Produces: `Slider`, `Switch`, `Dialog` + subcomponentes, e `Segmented` (composto próprio, não shadcn).
 
 - [ ] **Step 1: Inspecionar a configuração existente**
 
@@ -1246,7 +1298,7 @@ Confirmar que o `components.json` de `packages/ui` aponta para `src/components` 
 - [ ] **Step 2: Adicionar os primitivos**
 
 ```bash
-cd packages/ui && pnpm dlx shadcn@latest add slider switch dialog tooltip
+cd packages/ui && pnpm dlx shadcn@latest add slider switch dialog
 ```
 
 Revisar o diff antes de seguir. Se algum arquivo existente for tocado, parar e reportar.
@@ -1315,7 +1367,7 @@ Expected: sem erros
 
 ```bash
 git add packages/ui
-git commit -m "feat: add slider, switch, dialog, tooltip and segmented primitives"
+git commit -m "feat: add slider, switch, dialog and segmented primitives"
 ```
 
 ---
