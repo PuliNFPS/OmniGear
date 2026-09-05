@@ -1,5 +1,5 @@
 import type { ComponentProps, ElementType, ReactNode } from 'react';
-import { cn } from '../lib/utils';
+import { cn } from '#lib/utils';
 
 /** Superfície que agrupa controles relacionados. Elevação vem de bg + borda, nunca de sombra. */
 export function Panel({ className, ...props }: ComponentProps<'section'>) {
