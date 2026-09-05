@@ -80,6 +80,19 @@ Cria os tipos do spec §5 e as duas funções de domínio que o store vai precis
 }
 ```
 
+Create `packages/shared/vitest.config.ts`. O pacote não tem nenhuma config de Vite ou Vitest hoje — `apps/web` herda a dele do `vite.config.ts`. Sem isto o executor fica dependendo de defaults implícitos:
+
+```ts
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    environment: 'node',
+    include: ['src/**/*.test.ts'],
+  },
+});
+```
+
 Depois: `pnpm install`
 
 - [ ] **Step 2: Escrever o teste que falha**
@@ -880,6 +893,8 @@ interface MouseStore {
 
 let applyTimer: ReturnType<typeof setTimeout> | null = null;
 let lastConfirmed: MouseProfile | null = null;
+/** `onDisconnect` devolve o cancelamento; sem guardá-lo, cada abertura vaza um closure. */
+let unsubscribeDisconnect: (() => void) | null = null;
 
 export const useMouseStore = create<MouseStore>((set, get) => {
   async function flushApply(): Promise<void> {
@@ -933,7 +948,8 @@ export const useMouseStore = create<MouseStore>((set, get) => {
       const activeSlot = slots.find((slot) => slot.profile) ?? slots[0]!;
       const draft = structuredClone(activeSlot.profile ?? emptyProfile());
       lastConfirmed = structuredClone(draft);
-      driver.onDisconnect(() => set({ disconnected: true }));
+      unsubscribeDisconnect?.();
+      unsubscribeDisconnect = driver.onDisconnect(() => set({ disconnected: true }));
       set({
         driver,
         loading: false,
@@ -955,6 +971,8 @@ export const useMouseStore = create<MouseStore>((set, get) => {
       if (applyTimer) clearTimeout(applyTimer);
       applyTimer = null;
       lastConfirmed = null;
+      unsubscribeDisconnect?.();
+      unsubscribeDisconnect = null;
       set({ session: null, driver: null, disconnected: false, feedback: null });
     },
 
@@ -1180,6 +1198,12 @@ Modify `packages/ui/package.json` — acrescentar ao bloco `exports`:
 "./styles/*": "./src/styles/*"
 ```
 
+Modify `packages/ui/components.json` — o campo `tailwind.css` aponta hoje para `"../../apps/web/src/styles.css"`. Com os tokens morando no pacote, o shadcn passaria a escrever variáveis no arquivo errado na Task 5. Corrigir para:
+
+```json
+"css": "src/styles/tokens.css"
+```
+
 - [ ] **Step 4: Verificar que o app ainda compila**
 
 Run: `pnpm --filter @gearhub/web build`
@@ -1226,6 +1250,11 @@ cd packages/ui && pnpm dlx shadcn@latest add slider switch dialog tooltip
 ```
 
 Revisar o diff antes de seguir. Se algum arquivo existente for tocado, parar e reportar.
+
+Duas conferências no diff, ambas de coisas que o `components.json` já deveria acertar sozinho:
+
+1. Os imports gerados devem sair como `import { cn } from '#lib/utils'`, porque o alias `utils` do `components.json` já é `#lib/utils`. Conferir contra `packages/ui/src/components/button.tsx`, que é a convenção do repositório. Se algum arquivo vier com `@/lib/utils`, corrigir para `#lib/utils` — não trocar a convenção do repositório para acomodar o gerador.
+2. Nenhuma variável de cor nova deve ter sido escrita em `apps/web/src/styles.css`. Se foi, o Step 3 da Task 4 não foi salvo.
 
 - [ ] **Step 3: Escrever o composto `Segmented`**
 
