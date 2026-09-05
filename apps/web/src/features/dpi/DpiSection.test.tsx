@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useMouseStore } from '../../store/mouseStore';
 import { DpiSection } from './DpiSection';
@@ -21,7 +21,26 @@ describe('DpiSection', () => {
   it('renderiza um card por estágio do perfil', async () => {
     await open('mock-vanguard');
     render(<DpiSection />);
+    expect(screen.getByRole('slider', { name: 'DPI do estágio 1' })).toBeInTheDocument();
     expect(screen.getAllByRole('slider')).toHaveLength(4);
+  });
+
+  it('mostra os eixos X e Y separados quando o X/Y independente está ativo', async () => {
+    await open('mock-vanguard');
+    render(<DpiSection />);
+
+    expect(screen.getByRole('slider', { name: 'DPI do estágio 1' })).toBeInTheDocument();
+    expect(screen.queryByRole('slider', { name: 'DPI X do estágio 1' })).not.toBeInTheDocument();
+
+    act(() => {
+      useMouseStore.getState().patchDraft((draft) => {
+        draft.dpi.independentXY = true;
+      });
+    });
+
+    expect(screen.getByRole('slider', { name: 'DPI X do estágio 1' })).toBeInTheDocument();
+    expect(screen.getByRole('slider', { name: 'DPI Y do estágio 1' })).toBeInTheDocument();
+    expect(screen.queryByRole('slider', { name: 'DPI do estágio 1' })).not.toBeInTheDocument();
   });
 
   it('omite o controle de X/Y quando o mouse não suporta eixos independentes', async () => {

@@ -56,24 +56,55 @@ export function DpiSection() {
                   />
                   Estágio {index + 1}
                 </span>
-                <span className="tnum text-sm font-semibold text-text-primary">{stage.x}</span>
+                <span className="tnum text-sm font-semibold text-text-primary">
+                  {draft.dpi.independentXY ? `${stage.x} × ${stage.y}` : stage.x}
+                </span>
               </div>
 
-              <div className="mt-3">
-                <Slider
-                  aria-label={`DPI do estágio ${index + 1}`}
-                  min={capabilities.dpi.min}
-                  max={capabilities.dpi.max}
-                  step={capabilities.dpi.step}
-                  value={[stage.x]}
-                  onValueChange={([next]) =>
-                    patchDraft((profile) => {
-                      const target = profile.dpi.stages[index]!;
-                      target.x = next!;
-                      if (!profile.dpi.independentXY) target.y = next!;
-                    })
-                  }
-                />
+              <div className="mt-3 space-y-3">
+                {draft.dpi.independentXY ? (
+                  <>
+                    <Slider
+                      aria-label={`DPI X do estágio ${index + 1}`}
+                      min={capabilities.dpi.min}
+                      max={capabilities.dpi.max}
+                      step={capabilities.dpi.step}
+                      value={[stage.x]}
+                      onValueChange={([next]) =>
+                        patchDraft((profile) => {
+                          profile.dpi.stages[index]!.x = next!;
+                        })
+                      }
+                    />
+                    <Slider
+                      aria-label={`DPI Y do estágio ${index + 1}`}
+                      min={capabilities.dpi.min}
+                      max={capabilities.dpi.max}
+                      step={capabilities.dpi.step}
+                      value={[stage.y]}
+                      onValueChange={([next]) =>
+                        patchDraft((profile) => {
+                          profile.dpi.stages[index]!.y = next!;
+                        })
+                      }
+                    />
+                  </>
+                ) : (
+                  <Slider
+                    aria-label={`DPI do estágio ${index + 1}`}
+                    min={capabilities.dpi.min}
+                    max={capabilities.dpi.max}
+                    step={capabilities.dpi.step}
+                    value={[stage.x]}
+                    onValueChange={([next]) =>
+                      patchDraft((profile) => {
+                        const target = profile.dpi.stages[index]!;
+                        target.x = next!;
+                        if (!profile.dpi.independentXY) target.y = next!;
+                      })
+                    }
+                  />
+                )}
               </div>
 
               <div className="mt-3 flex items-center justify-between text-xs">
