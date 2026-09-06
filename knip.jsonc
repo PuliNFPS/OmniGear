@@ -1,8 +1,9 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   "ignoreBinaries": ["graphify", "wasm-pack"],
-  // Agent skill runtimes and the design gallery are tooling, not application code.
-  "ignore": [".agents/skills/**", ".claude/skills/**", "apps/web/.impeccable/**"],
+  // The design gallery is tooling, not application code. Skill runtimes no longer
+  // need an entry here: .gitignore keeps them out of the tree knip walks.
+  "ignore": ["apps/web/.impeccable/**"],
   "workspaces": {
     "apps/web": {
       // Second Vite HTML entry: the read-only RAWM probe. index.html is detected.
