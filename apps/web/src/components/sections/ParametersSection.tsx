@@ -13,6 +13,7 @@ import { MouseSideArt } from '../devices/MouseSideArt';
 import { RotationDial } from '../devices/RotationDial';
 import { OptionGroup } from '../OptionGroup';
 import { SectionHeader } from './SectionHeader';
+import { formatLiftOffDistance } from '../../hardware/rawm/leviathanV4Lod';
 
 type ToggleId = Extract<
   MouseParameterId,
@@ -113,9 +114,7 @@ export function ParametersSection({ device }: { device: MousePeripheral }) {
               help={mouseParameterLabels.liftOffDistance.help}
               range={supported.liftOffDistance}
               value={draft.parameters.liftOffDistance}
-              format={(value) =>
-                `${value.toLocaleString('pt-BR', { minimumFractionDigits: 1 })} mm`
-              }
+              format={formatLiftOffDistance}
               onChange={(value) => setParameter('liftOffDistance', value)}
               art={
                 <MouseSideArt

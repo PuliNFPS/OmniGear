@@ -50,6 +50,22 @@ const failedWrites = new Map<string, ProfileWrite>();
 const savedTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
 /**
+ * A drag over a slider produces an edit per pixel, and on the Leviathan V4 each
+ * apply is a config reset plus the parameter block plus the whole mapping set.
+ * Sending that per event floods the HID endpoint hard enough to stall input on
+ * the machine, so edits coalesce and only the last one is written.
+ */
+const APPLY_DEBOUNCE_MS = 180;
+const pendingApplies = new Map<string, ReturnType<typeof setTimeout>>();
+
+function cancelPendingApply(deviceId: string) {
+  const timer = pendingApplies.get(deviceId);
+  if (timer === undefined) return;
+  clearTimeout(timer);
+  pendingApplies.delete(deviceId);
+}
+
+/**
  * The device store is the authority on connection state and profiles: a device
  * captured while rendering may already be disconnected when the action runs.
  */
@@ -84,6 +100,7 @@ export const useEditorStore = create<EditorStore>((set, get) => {
   }
 
   async function applyToSession(device: Peripheral, draft: PeripheralSettings) {
+    cancelPendingApply(device.id);
     const token = Symbol();
     applyTokens.set(device.id, token);
     try {
@@ -98,6 +115,8 @@ export const useEditorStore = create<EditorStore>((set, get) => {
   }
 
   async function writeProfile(device: Peripheral, operation: ProfileWrite): Promise<boolean> {
+    // A queued apply would land after the save and overwrite what was written.
+    cancelPendingApply(device.id);
     if (
       writes.has(device.id) ||
       device.status === 'desconectado' ||
@@ -158,7 +177,15 @@ export const useEditorStore = create<EditorStore>((set, get) => {
       clearSavedTimer(device.id);
       failedWrites.delete(device.id);
       put(device.id, { draft, status: offline ? 'ocioso' : 'aplicando' }, entry);
-      if (!offline) void applyToSession(device, draft);
+      if (offline) return;
+      cancelPendingApply(device.id);
+      pendingApplies.set(
+        device.id,
+        setTimeout(() => {
+          pendingApplies.delete(device.id);
+          void applyToSession(device, draft);
+        }, APPLY_DEBOUNCE_MS),
+      );
     },
 
     discard: (input) => {
@@ -248,6 +275,7 @@ export const useEditorStore = create<EditorStore>((set, get) => {
     forget: (deviceIds) => {
       for (const deviceId of deviceIds) {
         clearSavedTimer(deviceId);
+        cancelPendingApply(deviceId);
         applyTokens.delete(deviceId);
         writes.delete(deviceId);
         failedWrites.delete(deviceId);
