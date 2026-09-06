@@ -13,6 +13,7 @@ import {
   buildQueryEvent,
   decodeReportChunk,
   frameEvent,
+  isQueryResult,
   parseQueryJson,
 } from './protocol';
 
@@ -174,9 +175,13 @@ export function captureQuery(
       if (!vendor) return;
       try {
         const chunk = decodeReportChunk(report, virtualMouse);
-        if (chunk.length === 0) return;
-        const event = assembler.push(chunk);
-        if (event) finish({ raw: parseQueryJson(event), error: null, fonte: 'resposta' });
+        if (chunk === null || chunk.length === 0) return;
+        for (const event of assembler.push(chunk)) {
+          if (isQueryResult(event)) {
+            finish({ raw: parseQueryJson(event), error: null, fonte: 'resposta' });
+            return;
+          }
+        }
       } catch (error) {
         lastError = messageOf(error);
         assembler.reset();
