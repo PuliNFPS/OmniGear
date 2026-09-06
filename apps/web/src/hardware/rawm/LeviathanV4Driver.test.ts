@@ -10,7 +10,7 @@ const raw = {
   vi: 0x1915,
   crc: 0,
   cpi: 1600,
-  polling_rate: 1000,
+  polling: 1000,
   light: 0x30,
   cpi_l: [400, 800, 1600, 3200],
   cpi_l_c: [1, 2, 3, 4],

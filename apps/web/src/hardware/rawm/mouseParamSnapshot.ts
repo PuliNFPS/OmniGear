@@ -44,6 +44,8 @@ function integers(
   allowEmpty = false,
 ): number[] {
   const value = raw[key];
+  // The firmware sends "" rather than [] for an unset calibration table.
+  if (allowEmpty && value === '') return [];
   if (
     !Array.isArray(value) ||
     (!allowEmpty && value.length === 0) ||
@@ -69,9 +71,10 @@ function glassMode(raw: Record<string, unknown>): number {
 export function parseMouseParamState(raw: Record<string, unknown>): RawmMouseParamState {
   return {
     resolution: integer(raw, 'cpi', 1, 0xffffffff),
-    pollingRate: integer(raw, 'polling_rate', 1, 0xffff),
+    pollingRate: integer(raw, 'polling', 1, 0xffff),
     light: integer(raw, 'light', 0, 0xff),
-    cpiLevels: integers(raw, 'cpi_l', 1, 0xffffffff),
+    // Unused DPI slots come back as zeros; the array is fixed width.
+    cpiLevels: integers(raw, 'cpi_l', 0, 0xffffffff),
     onboard: integer(raw, 'ob', 0, 0xff),
     powerMode: integer(raw, 'pm', 0, 0xff),
     liftOffDistance: integer(raw, 'lod', 0, 0xff),
@@ -82,7 +85,7 @@ export function parseMouseParamState(raw: Record<string, unknown>): RawmMousePar
     rippleControl: integer(raw, 'rctrl', 0, 1),
     cpiLevelColors: integers(raw, 'cpi_l_c', 0, 7, true),
     txOutputPower: integer(raw, 'top', 0, 0xff),
-    batteryLevels: integers(raw, 'co', 0, 0xffff),
+    batteryLevels: integers(raw, 'co', 0, 0xffff, true),
     autoTxPower: integer(raw, 'atp', 0, 1),
     onboardStatus: integers(raw, 'ocs', 0, 0xff),
     glassMode: glassMode(raw),

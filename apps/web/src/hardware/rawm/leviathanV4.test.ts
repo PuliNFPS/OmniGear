@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { leviathanV4QueryFixture } from './leviathanV4Fixture';
 import { createLeviathanV4Peripheral } from './leviathanV4';
 
 const query = {
@@ -8,7 +9,7 @@ const query = {
   r: '1.2.3',
   battery: 76,
   cpi: 800,
-  polling_rate: 1000,
+  polling: 1000,
   cpi_l: [400, 800, 1600, 3200],
   ob: 0,
   pm: 3,
@@ -57,5 +58,41 @@ describe('Leviathan V4 peripheral projection', () => {
 
   it('rejects a query missing settings required by the editor', () => {
     expect(() => createLeviathanV4Peripheral({ dn: 'Leviathan V4' }, 'id')).toThrow('incompleta');
+  });
+});
+
+describe('createLeviathanV4Peripheral on the real capture', () => {
+  it('reads the model, firmware and battery the firmware reports', () => {
+    const mouse = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real');
+
+    expect(mouse.name).toBe('LEVIATHAN V4');
+    expect(mouse.firmware).toBe('G-1.2.3');
+    expect(mouse.battery).toBe(31);
+  });
+
+  it('reflects the state the mouse was actually in', () => {
+    const mouse = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real');
+
+    expect(mouse.defaults.pollingRate).toBe(4000);
+    expect(mouse.defaults.performanceMode).toBe('gaming-plus');
+    expect(mouse.defaults.parameters.wirelessTurbo).toBe(true);
+    expect(mouse.defaults.parameters.motionSync).toBe(true);
+  });
+
+  // `ocs` carries one entry per onboard slot and `ocn` states how many. `st` is
+  // a scalar (60) on this firmware, so the previous reading of it as a slot
+  // array silently collapsed four profiles into one.
+  it('sizes the onboard profiles from the onboard config fields', () => {
+    const mouse = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real');
+
+    expect(mouse.capabilities.profileSlots).toBe(4);
+    expect(mouse.profiles).toHaveLength(4);
+  });
+
+  // Only the four populated slots are real DPI stages.
+  it('drops the zero padding from the DPI stages', () => {
+    const mouse = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real');
+
+    expect(mouse.defaults.dpiStages.map((stage) => stage.x)).toEqual([400, 800, 1600, 3200]);
   });
 });

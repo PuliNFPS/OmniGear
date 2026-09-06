@@ -5,6 +5,7 @@ import type { BrowserHidDevice } from '../deviceDiscovery';
 import type { HidInputReportEvent } from '../WebHidTransport';
 import { frameEvent, withProtocolEnvelope } from './protocol';
 import { connectLeviathanV4 } from './connectLeviathanV4';
+import { leviathanV4QueryFixture, rawmReceiverQueryFixture } from './leviathanV4Fixture';
 
 const receiver = { dn: 'RAWM HS Receiver', pi: 0x2346, vi: 0x1915, crc: 1 };
 const mouse = {
@@ -13,7 +14,7 @@ const mouse = {
   vi: 0x1915,
   crc: 1,
   cpi: 1600,
-  polling_rate: 1000,
+  polling: 1000,
   light: 0x30,
   cpi_l: [400, 800, 1600, 3200],
   cpi_l_c: [1, 2, 3, 4],
@@ -39,7 +40,10 @@ function queryReports(value: Record<string, unknown>, virtual: boolean): Uint8Ar
   return frameEvent(Uint8Array.from([0xff, 0xff, 0xff, 0xff, ...event]), virtual);
 }
 
-function fakeDevice(): BrowserHidDevice {
+function fakeDevice(
+  receiverRaw: Record<string, unknown> = receiver,
+  mouseRaw: Record<string, unknown> = mouse,
+): BrowserHidDevice {
   const listeners = new Set<(event: HidInputReportEvent) => void>();
   return {
     vendorId: 0x1915,
@@ -59,7 +63,7 @@ function fakeDevice(): BrowserHidDevice {
     },
     async sendReport(_reportId, data) {
       const sent = new Uint8Array(data as ArrayBuffer);
-      const responses = queryReports(sent[0] === 0xc0 ? mouse : receiver, sent[0] === 0xc0);
+      const responses = queryReports(sent[0] === 0xc0 ? mouseRaw : receiverRaw, sent[0] === 0xc0);
       queueMicrotask(() =>
         responses.forEach((report) => {
           const copied = report.slice();
@@ -87,6 +91,21 @@ describe('connectLeviathanV4', () => {
         demo: false,
       });
       expect(driverFor(peripheral)).toBeDefined();
+    } finally {
+      unregisterDeviceDriver(peripheral.id);
+    }
+  });
+
+  // End to end against the payloads a real receiver and mouse actually sent.
+  it('connects using the captured firmware responses', async () => {
+    const peripheral = await connectLeviathanV4(
+      fakeDevice(rawmReceiverQueryFixture, leviathanV4QueryFixture),
+      deviceDefinitions[0],
+    );
+    try {
+      expect(peripheral).toMatchObject({ name: 'LEVIATHAN V4', manufacturer: 'RAWM' });
+      expect(peripheral.capabilities.profileSlots).toBe(4);
+      expect(peripheral.defaults.pollingRate).toBe(4000);
     } finally {
       unregisterDeviceDriver(peripheral.id);
     }

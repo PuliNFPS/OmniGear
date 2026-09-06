@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { leviathanV4QueryFixture } from './leviathanV4Fixture';
 import { createLeviathanV4Peripheral } from './leviathanV4';
 import {
   applySettingsToMouseParam,
@@ -9,7 +10,7 @@ import {
 const raw = {
   dn: 'Leviathan V4',
   cpi: 1600,
-  polling_rate: 1000,
+  polling: 1000,
   light: 0x30,
   cpi_l: [400, 800, 1600, 3200],
   cpi_l_c: [1, 2, 3, 4],
@@ -64,5 +65,40 @@ describe('RAWM mouse parameter snapshot', () => {
 
   it('rejects incomplete snapshots instead of filling protocol defaults', () => {
     expect(() => parseMouseParamState({ ...raw, kd: undefined })).toThrow('incompleto');
+  });
+});
+
+// Captured from a real Leviathan V4. Every field below is what the firmware
+// actually sends, and each one broke a different assumption in the parser.
+describe('parseMouseParamState on the real capture', () => {
+  it('parses the firmware response as sent', () => {
+    const state = parseMouseParamState(leviathanV4QueryFixture);
+
+    expect(state.pollingRate).toBe(4000);
+    expect(state.resolution).toBe(800);
+    expect(state.powerMode).toBe(3);
+    expect(state.liftOffDistance).toBe(2);
+    expect(state.txOutputPower).toBe(8);
+    expect(state.motionSync).toBe(1);
+  });
+
+  // Unused DPI slots come back as zeros, not as a shorter array.
+  it('keeps the zero padding of the DPI level arrays', () => {
+    const state = parseMouseParamState(leviathanV4QueryFixture);
+
+    expect(state.cpiLevels).toEqual([400, 800, 1600, 3200, 0, 0, 0, 0]);
+    expect(state.cpiLevelColors).toEqual([1, 2, 6, 4, 0, 0, 0, 0]);
+  });
+
+  // `co` is an empty string on this firmware, not the int array we assumed.
+  it('accepts an empty battery-calibration field', () => {
+    expect(parseMouseParamState(leviathanV4QueryFixture).batteryLevels).toEqual([]);
+  });
+
+  it('still rejects a snapshot that is genuinely missing a field', () => {
+    const incomplete = { ...leviathanV4QueryFixture };
+    delete incomplete.lod;
+
+    expect(() => parseMouseParamState(incomplete)).toThrow('lod');
   });
 });
