@@ -37,7 +37,10 @@ describe('RAWM query and HID framing', () => {
   });
 
   it('uses 63-byte physical chunks and pads each 64-byte report', () => {
-    const reports = frameEvent(Uint8Array.from({ length: 70 }, (_, index) => index), false);
+    const reports = frameEvent(
+      Uint8Array.from({ length: 70 }, (_, index) => index),
+      false,
+    );
     expect(reports).toHaveLength(2);
     expect(reports[0]).toHaveLength(64);
     expect(reports[0][0]).toBe(0xbf);
@@ -48,7 +51,10 @@ describe('RAWM query and HID framing', () => {
   });
 
   it('reserves the first byte for the virtual mouse channel', () => {
-    const reports = frameEvent(Uint8Array.from({ length: 63 }, (_, index) => index), true);
+    const reports = frameEvent(
+      Uint8Array.from({ length: 63 }, (_, index) => index),
+      true,
+    );
     expect(reports).toHaveLength(2);
     expect([...reports[0].slice(0, 3)]).toEqual([0xc0, 0xbe, 0]);
     expect([...decodeReportChunk(reports[0], true)]).toEqual(
@@ -68,9 +74,7 @@ describe('RAWM query and HID framing', () => {
 
   it('rejects a response without the four-byte preamble', () => {
     const assembler = new RawEventAssembler();
-    expect(() => assembler.push(Uint8Array.from([0, 0, 0, 0, 0x02, 0x02]))).toThrow(
-      'preâmbulo',
-    );
+    expect(() => assembler.push(Uint8Array.from([0, 0, 0, 0, 0x02, 0x02]))).toThrow('preâmbulo');
   });
 
   it('extracts JSON only from a complete query-result command', () => {

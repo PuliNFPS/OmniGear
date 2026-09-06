@@ -13,6 +13,7 @@
 ### Task 1: Register the approved UI decisions
 
 **Files:**
+
 - Modify: `apps/web/.impeccable/design-catalog.json`
 - Modify: `apps/web/.impeccable/mocks/leviathan-v4/*.json`
 - Modify: `apps/web/.impeccable/design-handoff.md`
@@ -24,6 +25,7 @@
 ### Task 2: Extend the shared mouse contract
 
 **Files:**
+
 - Modify: `packages/shared/src/mouse.ts`
 - Modify: `apps/web/src/hardware/demoDevices.ts`
 - Test: `apps/web/src/domain/mouseCapabilities.test.ts`
@@ -36,6 +38,7 @@
 ### Task 3: Add a per-model driver registry
 
 **Files:**
+
 - Create: `apps/web/src/hardware/deviceRegistry.ts`
 - Create: `apps/web/src/hardware/rawm/leviathanV4.ts`
 - Test: `apps/web/src/hardware/deviceRegistry.test.ts`
@@ -48,6 +51,7 @@
 ### Task 4: Implement RAWM framing and validated query
 
 **Files:**
+
 - Modify: `apps/web/src/hardware/WebHidTransport.ts`
 - Create: `apps/web/src/hardware/rawm/protocol.ts`
 - Test: `apps/web/src/hardware/rawm/protocol.test.ts`
@@ -60,6 +64,7 @@
 ### Task 5: Encode settings in the protocol core
 
 **Files:**
+
 - Modify: `packages/core/src/lib.rs`
 - Modify: `packages/core/pkg/index.js`
 - Modify: `packages/core/pkg/index.d.ts`
@@ -75,6 +80,7 @@
 ### Task 6: Connect discovery and driver lifecycle
 
 **Files:**
+
 - Modify: `apps/web/src/hardware/deviceDiscovery.ts`
 - Modify: `apps/web/src/hardware/deviceDriver.ts`
 - Modify: `apps/web/src/store/deviceStore.ts`
@@ -90,6 +96,7 @@
 ### Task 7: Implement the approved generic UI
 
 **Files:**
+
 - Modify: `apps/web/src/components/sections/PerformanceSection.tsx`
 - Modify: `apps/web/src/components/sections/ParametersSection.tsx`
 - Modify: `apps/web/src/components/sections/MouseButtonsSection.tsx`
@@ -105,6 +112,7 @@
 ### Task 8: Verify and maintain project metadata
 
 **Files:**
+
 - Modify: `graphify-out/*` via project command when available
 
 1. Run focused Vitest suites after each green step.
@@ -112,4 +120,3 @@
 3. Run `pnpm graph:update`; if Graphify remains unavailable, report the exact blocker without hiding it.
 4. Perform a WebHID smoke test with the physical receiver when the user can select it in the browser.
 5. Remove temporary vendor-script analysis artifacts.
-

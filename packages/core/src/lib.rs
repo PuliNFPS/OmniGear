@@ -60,13 +60,7 @@ pub fn encode_mouse_key(
     let mut payload = Vec::with_capacity(7 + key_ids.len());
     payload.push(key_ids.len() as u8);
     payload.extend_from_slice(key_ids);
-    payload.extend_from_slice(&[
-        modifier_one,
-        key_type,
-        key_code,
-        modifier_two,
-        0,
-    ]);
+    payload.extend_from_slice(&[modifier_one, key_type, key_code, modifier_two, 0]);
     config_event(CONFIG_TYPE_MOUSE_KEY, &payload)
 }
 
@@ -129,7 +123,9 @@ mod tests {
     fn encodes_mouse_key_in_rawm_field_order() {
         assert_eq!(
             encode_mouse_key(&[0x12, 0x34], 0x56, 0x78, 0x01, 0x9a),
-            vec![0x03, 0x00, 0x16, 0x02, 0x12, 0x34, 0x56, 0x01, 0x9a, 0x78, 0x00]
+            vec![
+                0x03, 0x00, 0x16, 0x02, 0x12, 0x34, 0x56, 0x01, 0x9a, 0x78, 0x00
+            ]
         );
     }
 
@@ -138,8 +134,7 @@ mod tests {
         assert_eq!(
             encode_mouse_function(&[0xaa], 0x02, 0x10, 0x1234, b"F"),
             vec![
-                0x03, 0x00, 0x18, 0x01, 0xaa, 0x02, 0x10, 0x34, 0x12, 0x00, 0x01, 0x00,
-                0x46
+                0x03, 0x00, 0x18, 0x01, 0xaa, 0x02, 0x10, 0x34, 0x12, 0x00, 0x01, 0x00, 0x46
             ]
         );
     }

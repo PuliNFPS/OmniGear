@@ -51,7 +51,10 @@ const actions: Record<MouseActionId, EncodedAction> = {
   desativado: { kind: 'disabled' },
 };
 
-export function encodeLeviathanAction(keyIds: number[], actionId: MouseActionId): Uint8Array | null {
+export function encodeLeviathanAction(
+  keyIds: number[],
+  actionId: MouseActionId,
+): Uint8Array | null {
   const action = actions[actionId];
   if (action.kind === 'disabled') return null;
   if (action.kind === 'function') {
@@ -87,7 +90,8 @@ function mappingEvents(settings: MouseSettings): Uint8Array[] {
 }
 
 function mouseSettings(settings: PeripheralSettings): MouseSettings {
-  if (!isMouseSettings(settings)) throw new TypeError('O Leviathan V4 requer configuracao de mouse.');
+  if (!isMouseSettings(settings))
+    throw new TypeError('O Leviathan V4 requer configuracao de mouse.');
   return settings;
 }
 

@@ -97,9 +97,8 @@ function mouseFits(settings: unknown, device: MousePeripheral): settings is Mous
       performanceModes.some((mode) => mode.id === settings.performanceMode)
     : settings.performanceMode === device.defaults.performanceMode;
   const rPlusValue = settings.rPlus;
-  const rPlusButtons = isRecord(rPlusValue) && isRecord(rPlusValue.buttons)
-    ? rPlusValue.buttons
-    : null;
+  const rPlusButtons =
+    isRecord(rPlusValue) && isRecord(rPlusValue.buttons) ? rPlusValue.buttons : null;
   const rPlusActivator = isRecord(rPlusValue) ? rPlusValue.activatorButtonId : null;
   const rPlusValid = rPlus
     ? isRecord(rPlusValue) &&

@@ -7,4 +7,3 @@ export function mouseFeatureVisibility(device: MousePeripheral) {
     rPlus: (device.capabilities.rPlus?.activatorButtonIds.length ?? 0) > 0,
   };
 }
-

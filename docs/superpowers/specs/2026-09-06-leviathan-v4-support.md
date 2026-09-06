@@ -77,4 +77,3 @@ fazem parte desta implementação.
 6. Nenhuma escrita ocorre sem uma consulta validada do estado do dispositivo.
 7. Testes cobrem registro, enquadramento, CRC, parsing, capacidades e invariantes
    de R-Plus; build e lint permanecem verdes.
-

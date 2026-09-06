@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createDemoMouse } from '../hardware/demoDevices';
-import {
-  assignRPlusAction,
-  createRPlusSettings,
-  selectRPlusActivator,
-} from './mouseCapabilities';
+import { assignRPlusAction, createRPlusSettings, selectRPlusActivator } from './mouseCapabilities';
 
 describe('optional mouse capabilities', () => {
   it('does not add Leviathan-only controls to a model that does not declare them', () => {
