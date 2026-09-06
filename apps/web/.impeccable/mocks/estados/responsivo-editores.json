@@ -1,0 +1,11 @@
+{
+  "id": "responsivo-editores",
+  "refs": [
+    "C:/Users/Paulo/Documents/claude/OmniGear/apps/web/.impeccable/mocks/revised/botoes-contextual-geral-icone-tema.png",
+    "C:/Users/Paulo/Documents/claude/OmniGear/apps/web/.impeccable/mocks/teclas/teclas-1-contextual.png"
+  ],
+  "prompt": "High fidelity OmniGear responsive settings HANDOFF board, TWO columns darkLEFT/lightRIGHT, TWO rows: Mouse Botões mobile at top, Keyboard Teclas mobile at bottom. Each sample is a full narrow mobile-width web view without hardware phone frame. Header OmniGear +single current-theme moon/sun icon. Second compact bar has back arrow, device abbreviated name and MENU button; sidebar is collapsed. Mouse screen title Botões, realistic black mouse with5 numbered selectable points, selected5; contextual editor adapted into accessible bottom sheet below image with Lateral traseiro, action Voltar, Restaurar botão. Keyboard screen title Teclas, compact full keyboard overview with selected CapsLock; clear 'Ampliar teclado' control to open zoom/pan view; no microscopic clickable-only targets, selected key editor below with CapsLock, action Ctrl esquerdo, Restaurar tecla. Both footers show1alteração não salva and full-width Salvar no perfil plus secondary Descartar. Main content scrolls naturally, footer not overlapping fields. Preserve blackwhite design; no desktop sidebar squeezed into mobile, no columns forcing text overflow. Render at high resolution so Portuguese labels readable.",
+  "tool": "image_gen",
+  "approved": false,
+  "kind": "state-extension"
+}

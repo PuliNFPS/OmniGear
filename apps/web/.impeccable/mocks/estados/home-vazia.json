@@ -1,0 +1,10 @@
+{
+  "id": "home-vazia",
+  "refs": [
+    "C:/Users/Paulo/Documents/claude/OmniGear/apps/web/.impeccable/mocks/revised/home-icone-tema.png"
+  ],
+  "prompt": "Create the EMPTY initial state of the supplied approved OmniGear HOME. Preserve two stacked desktop viewports DARK top and LIGHT bottom, header wordmark and ONE moon icon dark / ONE sun icon light, typography and spacing. Remove Demonstração badge and all device cards and product previews. Keep main heading 'Seus dispositivos', subtitle 'Conecte um periférico para começar.', primary '+ Adicionar dispositivo' upper right. Below, in roomy empty content area, small clean outlined mouse and keyboard icons, title 'Nenhum dispositivo adicionado', sentence 'Adicione seu mouse ou teclado para acessar as configurações.', quiet outlined button 'Explorar demonstração'. Bottom help link 'Precisa de ajuda para conectar?'. Not a marketing hero, no loading spinner. Calm purposeful empty app screen with strong add action, same blackwhite style. Square comparison board, crisp Portuguese.",
+  "tool": "image_gen",
+  "approved": false,
+  "kind": "state-extension"
+}

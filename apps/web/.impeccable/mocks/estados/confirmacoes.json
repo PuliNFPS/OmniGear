@@ -1,0 +1,10 @@
+{
+  "id": "confirmacoes",
+  "refs": [
+    "C:/Users/Paulo/Documents/claude/OmniGear/apps/web/.impeccable/mocks/adicionar/adicionar-1-modal.png"
+  ],
+  "prompt": "High-fidelity OmniGear UI STATE SHEET, using supplied approved reference only for visual identity: neutral black/white palette, clean sans typography, thin borders and restrained corners. This is a handoff sheet of cropped real UI states, not a dashboard containing all states simultaneously. TWO equal columns labeled 'Escuro' and 'Claro' on the sheet only; left column dark UI, right column light UI, identical state content per row. Generous gaps between independent examples. Crisp readable Brazilian Portuguese. All in-app headers, when present, have ONE moon icon in dark, ONE sun icon in light; NEVER a theme switch. White primary button dark, black primary light. No decorative RGB, gradient UI, fake brands or claimed physical compatibility. Use large enough resolution for readable text. FOUR rows of confirmation dialog crops. Row1 'Descartar': heading 'Descartar alterações?', copy 'Os ajustes não salvos serão perdidos.', secondary 'Continuar editando', primary 'Descartar'. Row2 'Restaurar': heading 'Restaurar o perfil atual?', copy 'Os ajustes padrão serão carregados para revisão. Os demais perfis serão mantidos.', helper 'A gravação acontece somente ao salvar.', secondary 'Cancelar', primary 'Restaurar'. Row3 'Trocar perfil': heading 'Carregar FPS?', copy 'Há alterações não salvas no Perfil 1.', secondary 'Cancelar', outlined 'Salvar e carregar', primary 'Descartar e carregar'. Row4 'Importar': heading 'Importar configurações?', small filename 'perfil-exemplo.json', summary 'Destino: Perfil 1', copy 'O arquivo foi validado. Os ajustes serão carregados para revisão antes de salvar.', secondary 'Cancelar', primary 'Importar'. Distinct dialog boxes with closeX, safe cancel options always visible, enough width for three actions in row3 (stack if needed). No fake upload complete claim outside sheet context.",
+  "tool": "image_gen",
+  "approved": false,
+  "kind": "state-extension"
+}

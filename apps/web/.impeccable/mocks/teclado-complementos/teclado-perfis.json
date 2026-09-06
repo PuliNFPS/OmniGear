@@ -1,0 +1,10 @@
+{
+  "id": "teclado-perfis",
+  "references": [
+    "C:/Users/Paulo/Documents/claude/OmniGear/apps/web/.impeccable/mocks/perfis/perfis-3-slots.png"
+  ],
+  "prompt": "Adapt the supplied APPROVED OmniGear mouse Perfis comparison to KEYBOARD profiles. Precise structural preservation: retain the two stacked dark/light desktop screens, 2x2 slot grid, header, single moon icon in dark / single sun icon in light, typography, blackwhite palette, spacing and all profile actions. Change sidebar device name to 'Teclado de demonstração'; menu contains ONLY 'Teclas', 'Iluminação', 'Perfis' SELECTED, 'Geral'. Remove mouse Botões/DPI/Desempenho/Parâmetros entries. Keep title Perfis, subtitle Organize e salve suas configurações, Importar/Exportar top right, names Perfil1/FPS/Trabalho/Slot vazio, numbered slots1-4, Em uso badge onslot1, rename fields/icons, Carregar slots2/3, Gravar aqui slot4. Replace mouse DPI/Hz summaries with keyboard summaries: slot1 '1 tecla remapeada · Estático'; slot2 '4 teclas remapeadas · Onda'; slot3 '2 teclas remapeadas · Desligado'. These are demonstration examples. No mouse rates anywhere. Keep header Demonstração badge. Keep '3 de 4 slots ocupados', dirty footer '1 alteração não salva', secondary Descartar and primary 'Salvar no perfil 1'. Preserve helper about unsaved changes. No new features or re-composition. High fidelity finished UI mockup, crisp Brazilian Portuguese.",
+  "tool": "image_gen",
+  "approved": false,
+  "inheritsApprovedLayout": true
+}
