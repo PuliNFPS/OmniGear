@@ -86,14 +86,31 @@ function performanceMode(rawMode: number): string {
   return leviathanV4PerformanceModes[rawMode]?.id ?? 'office';
 }
 
+/**
+ * Onboard slots: `ocs` carries one status byte per slot and `ocn` states how
+ * many. Both agreed on the captured firmware. If they ever disagree, fall back
+ * to a single slot rather than sizing the profiles UI on a guess.
+ *
+ * `st` used to be read as this array; on real firmware it is the scalar 60.
+ */
+function onboardSlotCount(raw: Record<string, unknown>): number {
+  const statuses = raw.ocs;
+  if (!Array.isArray(statuses) || statuses.length === 0) return 1;
+  const declared = raw.ocn;
+  if (typeof declared === 'number' && declared !== statuses.length) return 1;
+  return Math.min(statuses.length, 16);
+}
+
 export function createLeviathanV4Peripheral(
   raw: Record<string, unknown>,
   id: string,
 ): MousePeripheral {
   const name = typeof raw.dn === 'string' && raw.dn.trim() ? raw.dn.trim() : 'Leviathan V4';
-  const dpiLevels = numericArray(raw, 'cpi_l');
+  // Unused DPI slots are reported as zeros in a fixed-width array. The snapshot
+  // parser keeps them for the round trip; the UI only shows populated stages.
+  const dpiLevels = numericArray(raw, 'cpi_l').filter((level) => level > 0);
   const activeDpi = finiteNumber(raw, 'cpi');
-  const pollingRate = finiteNumber(raw, 'polling_rate');
+  const pollingRate = finiteNumber(raw, 'polling');
   const onboardIndex = finiteNumber(raw, 'ob');
   const rawMode = finiteNumber(raw, 'pm');
   const lod = finiteNumber(raw, 'lod');
@@ -128,7 +145,7 @@ export function createLeviathanV4Peripheral(
     },
     rPlus,
   };
-  const profileCount = Array.isArray(raw.st) && raw.st.length > 0 ? raw.st.length : 1;
+  const profileCount = onboardSlotCount(raw);
   const activeProfileSlot = Math.min(profileCount, Math.max(1, onboardIndex + 1));
 
   return {
