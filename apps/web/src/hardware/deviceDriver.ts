@@ -1,5 +1,8 @@
 import type { Peripheral, PeripheralSettings } from '@gearhub/shared';
 
+/** A change the device made on its own, without the app asking for it. */
+export type DeviceReport = { kind: 'dpi'; value: number };
+
 /**
  * Port used by the editor. Applying to the session and writing a profile are
  * distinct results: only a confirmed write changes what the device keeps.
@@ -7,6 +10,12 @@ import type { Peripheral, PeripheralSettings } from '@gearhub/shared';
 export interface DeviceDriver {
   applyToSession(settings: PeripheralSettings): Promise<void>;
   writeProfile(slotIndex: number, name: string, settings: PeripheralSettings): Promise<void>;
+  /**
+   * Present only for devices that report their own changes. Cycling DPI with a
+   * button is the case that matters: without it the screen keeps showing the
+   * stage the mouse has already left.
+   */
+  onDeviceReport?(listener: (report: DeviceReport) => void): () => void;
 }
 
 const APPLY_DELAY_MS = 260;

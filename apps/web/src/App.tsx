@@ -3,6 +3,7 @@ import { exitDemonstration } from './app/demo';
 import { homeRoute } from './app/routes';
 import { navigate, useRoute } from './app/useRoute';
 import { useTheme } from './app/useTheme';
+import { useDeviceReports } from './app/useDeviceReports';
 import { AddDeviceDialog } from './components/AddDeviceDialog';
 import { AppHeader } from './components/AppHeader';
 import { DeviceWorkspace } from './components/DeviceWorkspace';
@@ -39,6 +40,8 @@ export function App() {
   useEffect(() => {
     void restoreSession();
   }, [restoreSession]);
+
+  useDeviceReports(devices);
 
   useEffect(
     () => onDeviceDisconnected((deviceId) => useDeviceStore.getState().markDisconnected(deviceId)),
