@@ -1,0 +1,9 @@
+{
+  "prompt": "Precise localized edit of the supplied approved OmniGear UI comparison. Preserve original dimensions, two stacked dark and light desktop screens, layout, typography, device renders, labels, buttons, panels, spacing, and all other content. CHANGE the theme control in the top right of BOTH screens: completely remove the sun + pill switch + moon group. Replace it with a SINGLE small clickable outline icon, right aligned with the previous group right edge, centered vertically in header. Dark upper screen: ONE offwhite crescent MOON icon. Light lower screen: ONE dark SUN icon. No pill track, no thumb, no second icon, no visible text label, no surrounding filled button. Same clean stroke style and about 24px icon size with generous hit-area whitespace. This icon represents current theme and clicking swaps both theme and icon. All other content remains unchanged.",
+  "tool": "image_gen",
+  "sourceImage": "C:/Users/Paulo/Documents/claude/OmniGear/apps/web/.impeccable/mocks/decision/lista-previa-toggle.png",
+  "approved": false,
+  "compositionApproved": true,
+  "approvalSource": "User selected home option 1 and mouse buttons option 3; requested label Geral and replacing switch with one sun/moon icon.",
+  "requestedRevision": true
+}

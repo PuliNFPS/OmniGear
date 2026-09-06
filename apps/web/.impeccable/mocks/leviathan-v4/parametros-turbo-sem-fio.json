@@ -1,0 +1,10 @@
+{
+  "prompt": "Use case: ui-mockup\nAsset type: approved OmniGear desktop web-app design board extension\nPrimary request: Edit the supplied approved Parâmetros board while preserving its exact OmniGear design system, proportions, sidebar, typography character, sensor drawings, monochrome materials, and two complete stacked desktop viewports (dark theme above, light theme below). In the Energia group, replace only the incorrect row Alcance estendido and its old sensor-related description with a capability-gated setting named Turbo sem fio. Use helper text: Melhora a conexão 2,4 GHz em longas distâncias ou ambientes com interferência. Pode aumentar o consumo. Keep the existing switch and state label Desativado. Add a neutral badge Receptor 2,4 GHz and keep all other controls unchanged.",
+  "tool": "image_gen",
+  "title": "Turbo sem fio",
+  "description": "Correção do significado de Alcance estendido para a otimização real da conexão 2,4 GHz.",
+  "approved": true,
+  "approvalSource": "Aprovado pelo usuário em 2026-09-06",
+  "reference": "../parametros/parametros-1-paineis.png",
+  "notes": "Não chamar de Wi-Fi e não sugerir alteração do alcance do sensor óptico. Exibir apenas em dispositivos sem fio que declarem a capacidade."
+}

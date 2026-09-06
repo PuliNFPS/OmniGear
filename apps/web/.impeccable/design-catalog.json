@@ -1,0 +1,202 @@
+[
+  {
+    "id": "home",
+    "group": "Início",
+    "title": "Seus dispositivos",
+    "image": "mocks/revised/home-icone-tema.png",
+    "description": "Home com lista de dispositivos e prévia do periférico selecionado. Composição 1 escolhida, com tema por ícone.",
+    "status": "Composição escolhida"
+  },
+  {
+    "id": "home-vazia",
+    "group": "Início",
+    "title": "Primeiro acesso",
+    "image": "mocks/estados/home-vazia.png",
+    "description": "Home sem dispositivos, com adicionar dispositivo e acesso à demonstração.",
+    "status": "Estado complementar"
+  },
+  {
+    "id": "adicionar",
+    "group": "Início",
+    "title": "Adicionar dispositivo",
+    "image": "mocks/adicionar/adicionar-1-modal.png",
+    "description": "Opção 1 escolhida: janela central com instruções antes da seleção nativa do navegador.",
+    "status": "Composição escolhida"
+  },
+  {
+    "id": "botoes",
+    "group": "Mouse",
+    "title": "Botões",
+    "image": "mocks/revised/botoes-contextual-geral-icone-tema.png",
+    "description": "Opção 3: seleção no mouse e edição contextual da atribuição.",
+    "status": "Composição escolhida"
+  },
+  {
+    "id": "dpi",
+    "group": "Mouse",
+    "title": "DPI",
+    "image": "mocks/dpi/dpi-2-linhas.png",
+    "description": "Opção 2: estágios organizados em linhas para comparar e ajustar a sensibilidade.",
+    "status": "Composição escolhida"
+  },
+  {
+    "id": "desempenho",
+    "group": "Mouse",
+    "title": "Desempenho",
+    "image": "mocks/desempenho/desempenho-3-mouse.png",
+    "description": "Opção 3: periférico em destaque com controles de desempenho ao redor.",
+    "status": "Composição escolhida"
+  },
+  {
+    "id": "parametros",
+    "group": "Mouse",
+    "title": "Parâmetros",
+    "image": "mocks/parametros/parametros-1-paineis.png",
+    "description": "Opção 1: ajustes em painéis, com controle visual de rotação do sensor.",
+    "status": "Composição escolhida"
+  },
+  {
+    "id": "leviathan-desempenho-modos",
+    "group": "Mouse · Leviathan V4",
+    "title": "Modos de desempenho",
+    "image": "mocks/leviathan-v4/desempenho-modos.png",
+    "description": "Tela atual preservada, adicionando Modo de desempenho ao lado da taxa de reporte e sem divisória.",
+    "status": "Composição aprovada"
+  },
+  {
+    "id": "leviathan-turbo-sem-fio",
+    "group": "Mouse · Leviathan V4",
+    "title": "Turbo sem fio",
+    "image": "mocks/leviathan-v4/parametros-turbo-sem-fio.png",
+    "description": "Proposta que corrige Alcance estendido e explicita a otimização do receptor 2,4 GHz.",
+    "status": "Composição aprovada"
+  },
+  {
+    "id": "leviathan-r-plus",
+    "group": "Mouse · Leviathan V4",
+    "title": "Camada R-Plus",
+    "image": "mocks/leviathan-v4/botoes-r-plus.png",
+    "description": "Proposta de R-Plus dentro de Botões, com seleção do ativador e edição da camada secundária.",
+    "status": "Composição aprovada"
+  },
+  {
+    "id": "mouse-perfis",
+    "group": "Mouse",
+    "title": "Perfis do mouse",
+    "image": "mocks/perfis/perfis-3-slots.png",
+    "description": "Opção 3: slots em grade, com distinção entre perfil em uso e perfis disponíveis.",
+    "status": "Composição escolhida"
+  },
+  {
+    "id": "mouse-geral",
+    "group": "Mouse",
+    "title": "Geral do mouse",
+    "image": "mocks/geral/geral-1-mouse.png",
+    "description": "Opção 1: mouse à esquerda e informações e ações à direita.",
+    "status": "Composição escolhida"
+  },
+  {
+    "id": "teclas",
+    "group": "Teclado",
+    "title": "Teclas",
+    "image": "mocks/teclas/teclas-1-contextual.png",
+    "description": "Opção 1: seleção de tecla na prévia e edição contextual da atribuição.",
+    "status": "Composição escolhida"
+  },
+  {
+    "id": "iluminacao",
+    "group": "Teclado",
+    "title": "Iluminação",
+    "image": "mocks/iluminacao/iluminacao-3-efeitos.png",
+    "description": "Opção 3: lista de efeitos à esquerda e ajustes de iluminação global.",
+    "status": "Composição escolhida"
+  },
+  {
+    "id": "teclado-perfis",
+    "group": "Teclado",
+    "title": "Perfis do teclado",
+    "image": "mocks/teclado-complementos/teclado-perfis-corrigido.png",
+    "description": "Adaptação da grade escolhida para mouse, com resumo de remapeamentos e iluminação.",
+    "status": "Adaptação da composição"
+  },
+  {
+    "id": "teclado-geral",
+    "group": "Teclado",
+    "title": "Geral do teclado",
+    "image": "mocks/teclado-complementos/teclado-geral.png",
+    "description": "Adaptação da composição de Geral para a proporção horizontal do teclado.",
+    "status": "Adaptação da composição"
+  },
+  {
+    "id": "home-estados",
+    "group": "Estados",
+    "title": "Carregamento e desconexão",
+    "image": "mocks/estados/home-estados.png",
+    "description": "Carregamento da lista e dispositivo desconectado com ação de reconexão.",
+    "status": "Estado complementar"
+  },
+  {
+    "id": "conexao-resultados",
+    "group": "Estados",
+    "title": "Resultados da conexão",
+    "image": "mocks/estados/conexao-resultados.png",
+    "description": "Conectando, dispositivo conectado e seleção cancelada.",
+    "status": "Estado complementar"
+  },
+  {
+    "id": "conexao-erros",
+    "group": "Estados",
+    "title": "Erros de conexão",
+    "image": "mocks/estados/conexao-erros.png",
+    "description": "Permissão negada, modelo não suportado e navegador sem recurso necessário.",
+    "status": "Estado complementar"
+  },
+  {
+    "id": "salvamento",
+    "group": "Estados",
+    "title": "Aplicação e salvamento",
+    "image": "mocks/estados/salvamento-conexao.png",
+    "description": "Aplicando, salvando, salvo, falha ao salvar e perda de conexão com rascunho preservado.",
+    "status": "Estado complementar"
+  },
+  {
+    "id": "confirmacoes",
+    "group": "Estados",
+    "title": "Confirmações",
+    "image": "mocks/estados/confirmacoes.png",
+    "description": "Descartar alterações, restaurar perfil atual, trocar perfil e revisar importação.",
+    "status": "Estado complementar"
+  },
+  {
+    "id": "validacao",
+    "group": "Estados",
+    "title": "Validação dos ajustes",
+    "image": "mocks/estados/ajustes-validacao-final.png",
+    "description": "Eixos X/Y independentes, DPI inválido, efeito animado e iluminação desligada.",
+    "status": "Estado complementar"
+  },
+  {
+    "id": "arquivos",
+    "group": "Estados",
+    "title": "Arquivos e nomes de perfis",
+    "image": "mocks/estados/arquivos-perfis-final.png",
+    "description": "Arquivo incompatível, escolha do conteúdo a exportar e nome de perfil inválido.",
+    "status": "Estado complementar"
+  },
+  {
+    "id": "responsivo-home",
+    "group": "Telas menores",
+    "title": "Home em tela menor",
+    "image": "mocks/estados/responsivo-home.png",
+    "description": "Lista e prévia empilhadas, com ações de conexão acessíveis.",
+    "status": "Adaptação responsiva"
+  },
+  {
+    "id": "responsivo-editores",
+    "group": "Telas menores",
+    "title": "Editores em tela menor",
+    "image": "mocks/estados/responsivo-editores.png",
+    "description": "Menu recolhido, periférico acima do editor e ampliação da prévia do teclado.",
+    "status": "Adaptação responsiva"
+  }
+]

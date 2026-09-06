@@ -1,0 +1,10 @@
+{
+  "id": "ajustes-validacao-final",
+  "refs": [
+    "C:/Users/Paulo/.codex/generated_images/01a06fe8-aa4f-73a2-bc1f-70ed04617a8a/exec-31c5225d-2966-4745-af5d-c08af190ed98.png"
+  ],
+  "prompt": "Localized corrections to supplied OmniGear state sheet, preserve all layouts and four dark/light rows. FIRST top row DPI independent axes: replace incorrect helper 'Use a mesma sensibilidade nos dois eixos.' with 'Ajuste a sensibilidade de cada eixo separadamente.' in BOTH themes. Keep X800 and Y1000 fields; slider endpoints100and6400 require X thumb about11% of track and Y about14% of track so Y slightly farther right thanX, accurately matching numerical values. SECOND remove ALL moon/sun icons inside individual panel upper-right corners, leave empty same background; these are section crops, global theme control does not repeat in every settings panel. Keep outside Escuro/Claro column labels. Preserve all other rows, state labels, errors, selected Respiração/Desligado, enabled/disabled controls and all other content. No new content.",
+  "tool": "image_gen",
+  "kind": "state-correction",
+  "approved": false
+}

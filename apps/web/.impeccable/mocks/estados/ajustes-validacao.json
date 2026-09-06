@@ -1,0 +1,11 @@
+{
+  "id": "ajustes-validacao",
+  "refs": [
+    "C:/Users/Paulo/Documents/claude/OmniGear/apps/web/.impeccable/mocks/dpi/dpi-2-linhas.png",
+    "C:/Users/Paulo/Documents/claude/OmniGear/apps/web/.impeccable/mocks/iluminacao/iluminacao-3-efeitos.png"
+  ],
+  "prompt": "High-fidelity OmniGear UI STATE SHEET, using supplied approved reference only for visual identity: neutral black/white palette, clean sans typography, thin borders and restrained corners. This is a handoff sheet of cropped real UI states, not a dashboard containing all states simultaneously. TWO equal columns labeled 'Escuro' and 'Claro' on the sheet only; left column dark UI, right column light UI, identical state content per row. Generous gaps between independent examples. Crisp readable Brazilian Portuguese. All in-app headers, when present, have ONE moon icon in dark, ONE sun icon in light; NEVER a theme switch. White primary button dark, black primary light. No decorative RGB, gradient UI, fake brands or claimed physical compatibility. Use large enough resolution for readable text. FOUR rows of narrow configuration panel crops. Row1 'DPI por eixo': heading 'Estágio 2', CHECKED 'Eixos X/Y independentes', two separately labeled numeric controls 'Eixo X'800 DPI and 'Eixo Y'1000 DPI, each with slim slider. Row2 'Valor inválido': heading 'DPI', field value0, inline error 'Informe um valor dentro do intervalo permitido pelo dispositivo.', disabled 'Salvar no perfil'. No fabricated numeric min/max. Row3 'Efeito animado': effect list Respiração SELECTED, Cor#FFFFFF, Intensidade70%, Velocidade50% ENABLED slider, note 'Prévia simulada'. Row4 'Iluminação desligada': effect Desligado SELECTED, Cor/Intensidade/Velocidade controls all visibly disabled, helper 'Ative um efeito para ajustar a iluminação.' No other features or full keyboard required. Error visible beyond color through icon and text.",
+  "tool": "image_gen",
+  "approved": false,
+  "kind": "state-extension"
+}

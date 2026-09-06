@@ -1,0 +1,10 @@
+{
+  "id": "responsivo-home",
+  "refs": [
+    "C:/Users/Paulo/Documents/claude/OmniGear/apps/web/.impeccable/mocks/revised/home-icone-tema.png"
+  ],
+  "prompt": "High fidelity responsive OmniGear HOME comparison, TWO phone-width browser content viewports side by side, dark LEFT and light RIGHT. No hardware phone frames. Same chosen master-detail layout RESPONSIVELY STACKED: header OmniGear left and ONE moon icon dark /ONE sun light right; compact Demonstração badge. Heading Seus dispositivos, short subtitle, full width Adicionar dispositivo. Below compact list with Mouse de demonstração selected and Teclado de demonstração, thumbnails. Beneath list selected mouse preview card with realistic black mouse, name and full width Configurar. Help link bottom. Show entire content with natural vertical scrolling indication if necessary. Desktop left-list/right-preview becomes vertical list-above-preview. Large readable mobile type, tap areas44px or more, no horizontal overflow. Both themes equal. No invented real connection status. Portrait board of two tall narrow web screens.",
+  "tool": "image_gen",
+  "approved": false,
+  "kind": "state-extension"
+}

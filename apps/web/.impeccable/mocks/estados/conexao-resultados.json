@@ -1,0 +1,10 @@
+{
+  "id": "conexao-resultados",
+  "refs": [
+    "C:/Users/Paulo/Documents/claude/OmniGear/apps/web/.impeccable/mocks/adicionar/adicionar-1-modal.png"
+  ],
+  "prompt": "High-fidelity OmniGear UI STATE SHEET, using supplied approved reference only for visual identity: neutral black/white palette, clean sans typography, thin borders and restrained corners. This is a handoff sheet of cropped real UI states, not a dashboard containing all states simultaneously. TWO equal columns labeled 'Escuro' and 'Claro' on the sheet only; left column dark UI, right column light UI, identical state content per row. Generous gaps between independent examples. Crisp readable Brazilian Portuguese. All in-app headers, when present, have ONE moon icon in dark, ONE sun icon in light; NEVER a theme switch. White primary button dark, black primary light. No decorative RGB, gradient UI, fake brands or claimed physical compatibility. Use large enough resolution for readable text. Three rows, TWO standalone MODAL crops per row, not full underlying home. Each modal has title/closeX, concise status and actions, same width. Row1 label 'Conectando': modal heading 'Conectando dispositivo', small spinner, text 'Aguarde enquanto verificamos o dispositivo.', Cancelar secondary button; no success check. Row2 label 'Conectado': heading 'Dispositivo adicionado', outlined check icon, text 'O dispositivo está pronto para configurar.', sample device name 'Mouse de exemplo' with small mouse outline, label 'Exemplo de estado conectado' to make this an illustrative state not actual hardware evidence; primary 'Configurar', secondary 'Voltar à home'. Row3 label 'Seleção cancelada': title 'Adicionar dispositivo', small neutral info icon, text 'Nenhum dispositivo foi selecionado.', helper 'Você pode tentar novamente quando quiser.', primary 'Selecionar dispositivo', secondary 'Fechar'. Do not render browser permission chooser. No persistence or cloud claims.",
+  "tool": "image_gen",
+  "approved": false,
+  "kind": "state-extension"
+}

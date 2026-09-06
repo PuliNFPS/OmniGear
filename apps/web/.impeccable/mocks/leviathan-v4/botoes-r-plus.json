@@ -1,0 +1,10 @@
+{
+  "prompt": "Use case: ui-mockup\nAsset type: approved OmniGear desktop web-app design board extension\nPrimary request: Edit the supplied approved Botões board while preserving its exact OmniGear design system, proportions, sidebar, realistic black mouse, numbered hotspots, contextual assignment card, monochrome materials, and two complete stacked desktop viewports (dark theme above, light theme below). Add a compact R-Plus configuration strip below the page title with a Botão R-Plus select set to Lateral dianteiro, helper Segure este botão para usar uma segunda camada de ações., and a Camada editada selector with Principal and R-Plus. Select R-Plus, mark hotspot 4 as the activator, and show the selected hotspot editor as Lateral traseiro · camada R-Plus.",
+  "tool": "image_gen",
+  "title": "Camada R-Plus",
+  "description": "R-Plus integrado à tela de Botões como ativador e camada secundária de atribuições.",
+  "approved": true,
+  "approvalSource": "Aprovado pelo usuário em 2026-09-06",
+  "reference": "../revised/botoes-contextual-geral-icone-tema.png",
+  "notes": "O botão ativador não recebe uma ação secundária na própria camada R-Plus. A capacidade é opcional por modelo."
+}

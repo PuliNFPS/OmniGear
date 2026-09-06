@@ -1,0 +1,10 @@
+{
+  "id": "arquivos-perfis",
+  "refs": [
+    "C:/Users/Paulo/Documents/claude/OmniGear/apps/web/.impeccable/mocks/perfis/perfis-3-slots.png"
+  ],
+  "prompt": "High-fidelity OmniGear UI STATE SHEET, using supplied approved reference only for visual identity: neutral black/white palette, clean sans typography, thin borders and restrained corners. This is a handoff sheet of cropped real UI states, not a dashboard containing all states simultaneously. TWO equal columns labeled 'Escuro' and 'Claro' on the sheet only; left column dark UI, right column light UI, identical state content per row. Generous gaps between independent examples. Crisp readable Brazilian Portuguese. All in-app headers, when present, have ONE moon icon in dark, ONE sun icon in light; NEVER a theme switch. White primary button dark, black primary light. No decorative RGB, gradient UI, fake brands or claimed physical compatibility. Use large enough resolution for readable text. THREE rows of profile file-operation dialog crops. Row1 'Arquivo incompatível': heading 'Não foi possível importar', filename perfil-exemplo.json, message 'O arquivo não é compatível com este dispositivo.', helper 'As configurações atuais foram mantidas.', primary 'Escolher outro arquivo', secondary 'Cancelar'. Row2 'Exportar rascunho': heading 'Exportar Perfil 1', copy 'O perfil tem alterações ainda não salvas.', TWO radio options 'Configurações atuais (inclui alterações)' SELECTED and 'Última versão salva', primary 'Exportar arquivo', secondary 'Cancelar'. Row3 'Nome inválido': heading 'Renomear perfil', field label 'Nome do perfil', empty field with error icon and text 'Digite um nome para o perfil.', disabled Salvar button, Cancelar secondary. Preserve neutral palette readable states, no invented exact filename formats or proprietary compatibility claims beyond illustrative .json example.",
+  "tool": "image_gen",
+  "approved": false,
+  "kind": "state-extension"
+}
