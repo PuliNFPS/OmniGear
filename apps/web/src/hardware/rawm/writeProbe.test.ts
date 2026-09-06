@@ -13,10 +13,11 @@ function queryReports(value: Record<string, unknown>): Uint8Array[] {
 }
 
 /** Answers queries from `state`, and records everything that is not a query. */
-function fakeMouse(onWrite?: (event: Uint8Array) => void) {
+function fakeMouse(options: { ignoreWrites?: boolean } = {}) {
   const listeners = new Set<(event: HidInputReportEvent) => void>();
   let state: Record<string, unknown> = { ...leviathanV4QueryFixture };
   const writes: Uint8Array[] = [];
+  let stream = new Uint8Array();
 
   const device = {
     vendorId: 0x1915,
@@ -43,7 +44,15 @@ function fakeMouse(onWrite?: (event: Uint8Array) => void) {
         return;
       }
       writes.push(payload);
-      onWrite?.(payload);
+      stream = Uint8Array.from([...stream, ...payload]);
+      const declared = ((stream[0] & 0xf0) << 4) | stream[1];
+      if (!options.ignoreWrites && stream.length >= declared) {
+        // Outer CRC envelope (5 bytes) + inner config header (3), then the body:
+        // u16 resolution, u16 polling. Decoding it here is what proves the
+        // encoder puts the polling rate where the firmware reads it.
+        state = { ...state, polling: stream[10] | (stream[11] << 8) };
+        stream = new Uint8Array();
+      }
     },
     addEventListener(_type: 'inputreport', listener: (event: HidInputReportEvent) => void) {
       listeners.add(listener);
@@ -56,30 +65,41 @@ function fakeMouse(onWrite?: (event: Uint8Array) => void) {
   return {
     device: device as unknown as BrowserHidDevice,
     writes,
-    applyPolling(value: number) {
-      state = { ...state, polling: value };
-    },
   };
 }
 
 describe('probePollingWrite', () => {
   it('confirms the round trip when the mouse reports the new value', async () => {
     const mouse = fakeMouse();
-    mouse.applyPolling(1000);
 
     const report = await probePollingWrite(mouse.device, 1000, { settleMs: 0 });
 
     expect(report.erro).toBeNull();
+    expect(report.alvo.de).toBe(4000);
     expect(report.alvo).toMatchObject({ campo: 'pollingRate', para: 1000 });
     expect(report.depois?.pollingRate).toBe(1000);
     expect(report.divergencias).toEqual([]);
     expect(report.confirmado).toBe(true);
+    expect(report.conclusivo).toBe(true);
+  });
+
+  // Writing the value the mouse already holds reads back clean whether or not
+  // the event was accepted, so it must not be reported as evidence.
+  it('marks a write of the current value as inconclusive', async () => {
+    const mouse = fakeMouse();
+
+    const report = await probePollingWrite(mouse.device, 4000, { settleMs: 0 });
+
+    expect(report.divergencias).toEqual([]);
+    expect(report.confirmado).toBe(true);
+    expect(report.conclusivo).toBe(false);
+    expect(report.erro).toContain('já estava em 4000 Hz');
   });
 
   // The point of the probe: a wrong byte layout must surface as a named field,
   // not as a mouse quietly behaving differently.
   it('names every field that moved when the write does not land', async () => {
-    const mouse = fakeMouse();
+    const mouse = fakeMouse({ ignoreWrites: true });
 
     const report = await probePollingWrite(mouse.device, 1000, { settleMs: 0 });
 
@@ -94,7 +114,6 @@ describe('probePollingWrite', () => {
   // Nothing may reach flash: a power cycle has to undo this test.
   it('sends one parameter event, with no reset and no save to flash', async () => {
     const mouse = fakeMouse();
-    mouse.applyPolling(1000);
 
     await probePollingWrite(mouse.device, 1000, { settleMs: 0 });
 
