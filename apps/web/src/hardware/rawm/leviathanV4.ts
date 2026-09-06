@@ -34,23 +34,33 @@ const leviathanV4ParameterCapabilities: MouseParameterCapabilities = {
   sensorRotation: { min: -30, max: 30, step: 1 },
 };
 
+/**
+ * Positions are fractions of the photo, which is cropped to the mouse itself:
+ * any transparent margin would shift every marker away from its button.
+ *
+ * Read off the 213x420 render. The wheel sits at the top centre and the click
+ * pads either side of it. The side buttons are flush with the body, so the
+ * silhouette does not show them; the seam between them is a brightness spike at
+ * y 0.447, and they straddle it. The DPI key is underneath, where a top view
+ * cannot show it, so its marker sits low on the body by convention.
+ */
 const buttons: MouseButtonSpot[] = [
-  { id: 'esquerdo', label: 'Clique esquerdo', position: { x: 0.28, y: 0.25 }, callout: 'esquerda' },
-  { id: 'direito', label: 'Clique direito', position: { x: 0.72, y: 0.25 }, callout: 'direita' },
-  { id: 'central', label: 'Clique central', position: { x: 0.5, y: 0.18 }, callout: 'direita' },
+  { id: 'esquerdo', label: 'Clique esquerdo', position: { x: 0.28, y: 0.2 }, callout: 'esquerda' },
+  { id: 'direito', label: 'Clique direito', position: { x: 0.72, y: 0.2 }, callout: 'direita' },
+  { id: 'central', label: 'Clique central', position: { x: 0.5, y: 0.19 }, callout: 'direita' },
   {
     id: 'lateral-traseiro',
     label: 'Lateral traseiro',
-    position: { x: 0.12, y: 0.48 },
+    position: { x: 0.04, y: 0.48 },
     callout: 'esquerda',
   },
   {
     id: 'lateral-dianteiro',
     label: 'Lateral dianteiro',
-    position: { x: 0.12, y: 0.39 },
+    position: { x: 0.04, y: 0.42 },
     callout: 'esquerda',
   },
-  { id: 'dpi', label: 'Botão de DPI', position: { x: 0.5, y: 0.84 }, callout: 'direita' },
+  { id: 'dpi', label: 'Botão de DPI', position: { x: 0.5, y: 0.78 }, callout: 'direita' },
 ];
 
 const actions: MouseActionId[] = [
@@ -166,7 +176,7 @@ export function createLeviathanV4Peripheral(
       typeof raw.battery === 'number' && raw.battery >= 0 && raw.battery <= 100
         ? raw.battery
         : null,
-    photo: { src: '/dispositivos/leviathan-v4.png', aspect: 0.58 },
+    photo: { src: '/dispositivos/leviathan-v4.png', aspect: 213 / 420 },
     capabilities: {
       dpi: {
         min: Math.min(...dpiLevels),
