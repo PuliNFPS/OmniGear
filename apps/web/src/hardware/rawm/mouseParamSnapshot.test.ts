@@ -102,3 +102,19 @@ describe('parseMouseParamState on the real capture', () => {
     expect(() => parseMouseParamState(incomplete)).toThrow('lod');
   });
 });
+
+describe('applySettingsToMouseParam array widths', () => {
+  // The device declares cpi_l at a fixed width and pads unused slots. The UI
+  // only shows populated stages, so a write must pad back to the width the
+  // device reported instead of narrowing the array under it.
+  it('pads the DPI arrays back to the width the snapshot reported', () => {
+    const snapshot = parseMouseParamState(leviathanV4QueryFixture);
+    const settings = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real').defaults;
+
+    const next = applySettingsToMouseParam(snapshot, settings);
+
+    expect(next.cpiLevels).toHaveLength(snapshot.cpiLevels.length);
+    expect(next.cpiLevels).toEqual([400, 800, 1600, 3200, 0, 0, 0, 0]);
+    expect(next.cpiLevelColors).toHaveLength(next.cpiLevels.length);
+  });
+});
