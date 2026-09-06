@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
+import { leviathanV4QueryFixture } from './leviathanV4Fixture';
 import type { HidCommand } from '@gearhub/shared';
 import type { HardwareTransport } from '../WebHidTransport';
 import { createLeviathanV4Peripheral } from './leviathanV4';
-import { encodeLeviathanAction, LeviathanV4Driver } from './LeviathanV4Driver';
+import { encodeLeviathanAction, LeviathanV4Driver, mappingEvents } from './LeviathanV4Driver';
 
 const raw = {
   dn: 'Leviathan V4',
@@ -61,5 +62,54 @@ describe('LeviathanV4Driver', () => {
     expect(io.send).toHaveBeenCalled();
     const reports = io.send.mock.calls.map(([command]) => (command as HidCommand).data);
     expect(reports.every((report: Uint8Array) => report[0] === 0xc0)).toBe(true);
+  });
+});
+
+// Confirmed on hardware: CONFIG_RESET clears every mapping the mouse holds, and
+// a reset followed by a single mapping left the scroll wheel dead until a power
+// cycle. The mapping set below cannot restore it, so it must not be sent.
+describe('mapping set completeness', () => {
+  it('covers no wheel key id, which is why mappings stay unsent', () => {
+    const settings = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real').defaults;
+
+    const events = mappingEvents(settings);
+
+    // Every event is a mouse-key or mouse-function type, none of them a wheel.
+    const wheelEvents = events.filter((event) => event[2] === 0x16 && event[6] === 0x03);
+    expect(wheelEvents).toHaveLength(0);
+  });
+
+  it('applies a parameter change without resetting the configuration', async () => {
+    const sent: Uint8Array[] = [];
+    const transport = {
+      open: async () => undefined,
+      send: async (command: { data: Uint8Array }) => {
+        sent.push(command.data);
+      },
+      onInputReport: () => () => undefined,
+    };
+    const driver = new LeviathanV4Driver(transport, leviathanV4QueryFixture, true);
+    const settings = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real').defaults;
+
+    await driver.applyToSession({ ...settings, pollingRate: 1000 });
+
+    const stream = Uint8Array.from(sent.flatMap((report) => [...report.slice(2)]));
+    // The parameter type only; no config reset (inner type 0x03) was sent.
+    expect(stream[7]).toBe(0x15);
+    expect(sent.length).toBeGreaterThan(0);
+  });
+
+  it('refuses to write a profile until the sequence is verified', async () => {
+    const transport = {
+      open: async () => undefined,
+      send: async () => undefined,
+      onInputReport: () => () => undefined,
+    };
+    const driver = new LeviathanV4Driver(transport, leviathanV4QueryFixture, true);
+    const settings = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real').defaults;
+
+    await expect(driver.writeProfile(1, 'Perfil 1', settings)).rejects.toThrow(
+      'nao foi verificada',
+    );
   });
 });

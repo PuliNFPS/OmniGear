@@ -128,3 +128,28 @@ Procedimento, um id por vez:
 Nada vai para a flash, então o power cycle sempre restaura. Deixe o id 1 (clique esquerdo)
 por último: se ele estiver errado e o clique esquerdo parar de funcionar, você vai precisar
 do teclado até religar o mouse.
+
+## O que o hardware ensinou sobre mapeamentos
+
+Duas execuções, com um byte de diferença entre elas:
+
+| tentativa                         | resultado                                      |
+| --------------------------------- | ---------------------------------------------- |
+| mapeamento isolado                | evento aceito, nenhum efeito                   |
+| `CONFIG_RESET` + mesmo mapeamento | scroll parou; o botão não virou clique direito |
+
+Disso decorrem três conclusões.
+
+**Mapeamentos só valem dentro do bloco aberto pelo `CONFIG_RESET`.** Isolado, o evento é
+aceito e ignorado. Parâmetros, ao contrário, valem imediatamente.
+
+**`CONFIG_RESET` apaga todos os mapeamentos.** Não é um "prepare-se para receber um": é uma
+limpeza. Por isso a sequência oficial reenvia o conjunto inteiro depois dele. Uma escrita
+parcial de mapeamento não existe.
+
+**O conjunto do driver está incompleto.** `mappingEvents` cobre só os seis botões; a roda
+não tem key id, e o id 4 nunca é usado. Aplicar esse conjunto depois de um reset apagaria a
+roda sem restaurá-la — foi exatamente o que matou o scroll no teste.
+
+Por isso `applyToSession` passou a escrever **apenas o bloco de parâmetros**, que está
+confirmado, e `writeProfile` recusa: ele gravaria na flash, e aí o power cycle não desfaz.
