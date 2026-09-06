@@ -19,13 +19,22 @@ const TOUCH_TYPE_PRESS = 0x02;
 const MOUSE_KEY_TYPE_MKEY = 0x01;
 const MOUSE_KEY_TYPE_WHEEL = 0x03;
 
+/**
+ * Key ids as the mouse reports them in its own MOUSE_CONFIG dump: 0x0a left,
+ * 0x0b right, 0x0c middle, 0x0e M4, 0x0f M5, 0x10 the DPI key. 0x0d is a
+ * seventh key bound to FUNCTION_SHOW_POWER, which the official UI leaves
+ * unlabelled, and the seven together match the seven debounce delays in `kd`.
+ *
+ * Earlier values here were 1 to 7, which are not key ids at all. That is why
+ * every mapping written from this driver was accepted and ignored.
+ */
 const physicalKeyIds: Record<string, number> = {
-  esquerdo: 1,
-  central: 2,
-  direito: 3,
-  'lateral-traseiro': 5,
-  'lateral-dianteiro': 6,
-  dpi: 7,
+  esquerdo: 0x0a,
+  direito: 0x0b,
+  central: 0x0c,
+  'lateral-traseiro': 0x0e,
+  'lateral-dianteiro': 0x0f,
+  dpi: 0x10,
 };
 
 type EncodedAction =
@@ -39,8 +48,9 @@ const actions: Record<MouseActionId, EncodedAction> = {
   'clique-central': { kind: 'key', keyType: MOUSE_KEY_TYPE_MKEY, keyCode: 3 },
   voltar: { kind: 'key', keyType: MOUSE_KEY_TYPE_MKEY, keyCode: 4 },
   avancar: { kind: 'key', keyType: MOUSE_KEY_TYPE_MKEY, keyCode: 5 },
-  'rolagem-cima': { kind: 'key', keyType: MOUSE_KEY_TYPE_WHEEL, keyCode: 0x41 },
-  'rolagem-baixo': { kind: 'key', keyType: MOUSE_KEY_TYPE_WHEEL, keyCode: 0x3f },
+  // MOUSE_KEY_WHEEL_UP and _DOWN in the vendor library, not 0x41 and 0x3f.
+  'rolagem-cima': { kind: 'key', keyType: MOUSE_KEY_TYPE_WHEEL, keyCode: 0x07 },
+  'rolagem-baixo': { kind: 'key', keyType: MOUSE_KEY_TYPE_WHEEL, keyCode: 0x08 },
   'dpi-ciclo': { kind: 'function', functionId: 1 },
   'dpi-aumentar': { kind: 'function', functionId: 2 },
   'dpi-diminuir': { kind: 'function', functionId: 3 },

@@ -40,17 +40,24 @@ function transport(): HardwareTransport & { send: ReturnType<typeof vi.fn> } {
 }
 
 describe('LeviathanV4Driver', () => {
-  it('encodes confirmed mouse, wheel, DPI and R-Plus action shapes', () => {
-    expect([...encodeLeviathanAction([1], 'clique-esquerdo')!]).toEqual([
-      3, 0, 0x16, 1, 1, 0, 1, 1, 0, 0,
+  // Byte for byte against send_event_mouse_key and send_event_mouse_function in
+  // the vendor library, using the key ids the mouse reports for itself.
+  it('encodes mouse, wheel, DPI and R-Plus actions as the vendor does', () => {
+    expect([...encodeLeviathanAction([0x0a], 'clique-esquerdo')!]).toEqual([
+      3, 0, 0x16, 1, 0x0a, 0, 1, 1, 0, 0,
     ]);
-    expect([...encodeLeviathanAction([7], 'dpi-ciclo')!]).toEqual([
-      3, 0, 0x18, 1, 7, 2, 1, 0, 0, 0, 0, 0,
+    expect([...encodeLeviathanAction([0x10], 'dpi-ciclo')!]).toEqual([
+      3, 0, 0x18, 1, 0x10, 2, 1, 0, 0, 0, 0, 0,
     ]);
-    expect([...encodeLeviathanAction([6, 1], 'rolagem-cima')!]).toEqual([
-      3, 0, 0x16, 2, 6, 1, 0, 3, 0x41, 0, 0,
+    // MOUSE_KEY_WHEEL_UP is 0x07, not the 0x41 assumed before.
+    expect([...encodeLeviathanAction([0x0c], 'rolagem-cima')!]).toEqual([
+      3, 0, 0x16, 1, 0x0c, 0, 3, 0x07, 0, 0,
     ]);
-    expect(encodeLeviathanAction([1], 'desativado')).toBeNull();
+    // R-Plus: activator first, target second, exactly as the mouse reports it.
+    expect([...encodeLeviathanAction([0x10, 0x0c], 'dpi-ciclo')!]).toEqual([
+      3, 0, 0x18, 2, 0x10, 0x0c, 2, 1, 0, 0, 0, 0, 0,
+    ]);
+    expect(encodeLeviathanAction([0x0a], 'desativado')).toBeNull();
   });
 
   it('serializes a complete live configuration through the virtual mouse channel', async () => {
