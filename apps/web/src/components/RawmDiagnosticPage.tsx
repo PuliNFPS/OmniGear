@@ -103,6 +103,22 @@ const KEY_IDS: { id: number; rotulo: string }[] = [
  */
 const MAPPING_SETS: { id: string; rotulo: string; entradas: MappingSetEntry[] }[] = [
   {
+    // Ids 1 and 2 are confirmed left and right, so they stay put and the mouse
+    // keeps working. Every other id gets a signature no other id shares, so one
+    // pass over the hardware names all of them at once.
+    id: 'descoberta',
+    rotulo: 'Descoberta: cada id com uma acao unica',
+    entradas: [
+      { keyIds: [1], acao: 'clique-esquerdo' },
+      { keyIds: [2], acao: 'clique-direito' },
+      { keyIds: [3], acao: 'voltar' },
+      { keyIds: [4], acao: 'avancar' },
+      { keyIds: [5], acao: 'clique-central' },
+      { keyIds: [6], acao: 'dpi-ciclo' },
+      { keyIds: [7], acao: 'rolagem-baixo' },
+    ],
+  },
+  {
     id: 'hid-roda-4',
     rotulo: 'HID padrao, roda no id 4',
     entradas: [
