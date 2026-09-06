@@ -75,18 +75,8 @@ describe('LeviathanV4Driver', () => {
 // Confirmed on hardware: CONFIG_RESET clears every mapping the mouse holds, and
 // a reset followed by a single mapping left the scroll wheel dead until a power
 // cycle. The mapping set below cannot restore it, so it must not be sent.
-describe('mapping set completeness', () => {
-  it('covers no wheel key id, which is why mappings stay unsent', () => {
-    const settings = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real').defaults;
-
-    const events = mappingEvents(settings);
-
-    // Every event is a mouse-key or mouse-function type, none of them a wheel.
-    const wheelEvents = events.filter((event) => event[2] === 0x16 && event[6] === 0x03);
-    expect(wheelEvents).toHaveLength(0);
-  });
-
-  it('applies a parameter change without resetting the configuration', async () => {
+describe('writing a configuration', () => {
+  function recordingDriver() {
     const sent: Uint8Array[] = [];
     const transport = {
       open: async () => undefined,
@@ -95,28 +85,70 @@ describe('mapping set completeness', () => {
       },
       onInputReport: () => () => undefined,
     };
-    const driver = new LeviathanV4Driver(transport, leviathanV4QueryFixture, true);
-    const settings = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real').defaults;
+    return {
+      sent,
+      driver: new LeviathanV4Driver(transport, leviathanV4QueryFixture, true),
+      settings: createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real').defaults,
+    };
+  }
+
+  // Report layout: [0] virtual channel, [1] chunk header, then the event.
+  // With the CRC envelope that is [2] cmd, [3] len, [4] 0x24, [5..6] crc,
+  // [7] inner cmd, [8] inner len, [9] inner type, [10..] payload.
+  const innerCommand = (report: Uint8Array) => report[7];
+  const innerType = (report: Uint8Array) => report[9];
+
+  it('opens with a config reset and resends the whole mapping set', async () => {
+    const { sent, driver, settings } = recordingDriver();
 
     await driver.applyToSession({ ...settings, pollingRate: 1000 });
+    const types = sent.map(innerType);
 
-    const stream = Uint8Array.from(sent.flatMap((report) => [...report.slice(2)]));
-    // The parameter type only; no config reset (inner type 0x03) was sent.
-    expect(stream[7]).toBe(0x15);
-    expect(sent.length).toBeGreaterThan(0);
+    expect(types).toContain(0x03); // config reset
+    expect(types).toContain(0x15); // parameters
+    expect(types.filter((type) => type === 0x16 || type === 0x18).length).toBeGreaterThan(5);
   });
 
-  it('refuses to write a profile until the sequence is verified', async () => {
-    const transport = {
-      open: async () => undefined,
-      send: async () => undefined,
-      onInputReport: () => () => undefined,
-    };
-    const driver = new LeviathanV4Driver(transport, leviathanV4QueryFixture, true);
-    const settings = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real').defaults;
+  // CONFIG_RESET clears it too, and no editor control would ever rebuild it.
+  it('rebuilds the seventh key the editor never exposes', async () => {
+    const { settings } = recordingDriver();
 
-    await expect(driver.writeProfile(1, 'Perfil 1', settings)).rejects.toThrow(
-      'nao foi verificada',
-    );
+    const events = mappingEvents(settings);
+    const showPower = events.find((event) => event[2] === 0x18 && event[4] === 0x0d);
+
+    expect(showPower).toBeDefined();
+    expect(showPower![6]).toBe(0x0e); // FUNCTION_SHOW_POWER
+  });
+
+  it('applies to the session without committing to flash', async () => {
+    const { sent, driver, settings } = recordingDriver();
+
+    await driver.applyToSession(settings);
+
+    // Action events carry command 0x06; a session apply sends none.
+    expect(sent.some((report) => innerCommand(report) === 0x06)).toBe(false);
+  });
+
+  it('brackets a profile write with the saves that commit it', async () => {
+    const { sent, driver, settings } = recordingDriver();
+
+    await driver.writeProfile(4, 'Perfil 4', settings);
+    const actions = sent.filter((report) => innerCommand(report) === 0x06);
+
+    expect(actions).toHaveLength(2);
+    // Inner action event: [9] the action id, [10..] its little-endian value.
+    expect(actions[0][9]).toBe(0x34); // ACTION_SAVE_CONFIG_TO_FDS
+    // The opening save names the slot: 1 | ((4 - 1) << 8) = 0x0301.
+    expect(actions[0][10]).toBe(0x01);
+    expect(actions[0][11]).toBe(0x03);
+    // The closing save commits with zero.
+    expect(actions[1][10]).toBe(0x00);
+    expect(actions[1][11]).toBe(0x00);
+  });
+
+  it('rejects a slot index outside the addressable range', async () => {
+    const { driver, settings } = recordingDriver();
+
+    await expect(driver.writeProfile(0, 'Perfil', settings)).rejects.toThrow('invalido');
   });
 });
