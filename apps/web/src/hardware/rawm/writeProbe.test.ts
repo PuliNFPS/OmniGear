@@ -4,7 +4,7 @@ import type { HidInputReportEvent } from '../WebHidTransport';
 import { leviathanV4QueryFixture } from './leviathanV4Fixture';
 import { parseMouseParamState } from './mouseParamSnapshot';
 import { frameEvent, withProtocolEnvelope } from './protocol';
-import { compareStates, probePollingWrite } from './writeProbe';
+import { compareStates, probeButtonMapping, probePollingWrite } from './writeProbe';
 
 function queryReports(value: Record<string, unknown>): Uint8Array[] {
   const json = new TextEncoder().encode(`${JSON.stringify(value)}\0`);
@@ -159,5 +159,55 @@ describe('compareStates', () => {
     expect(compareStates({ ...base, liftOffDistance: 3 }, base)).toEqual([
       { campo: 'liftOffDistance', esperado: 3, obtido: 2 },
     ]);
+  });
+});
+
+describe('probeButtonMapping', () => {
+  it('sends one mouse-key event and nothing else', async () => {
+    const mouse = fakeMouse({ ignoreWrites: true });
+
+    const report = await probeButtonMapping(mouse.device, 7, 'clique-central');
+
+    expect(report.enviado).toBe(true);
+    expect(report.erro).toBeNull();
+
+    const stream = Uint8Array.from(mouse.writes.flatMap((write) => [...write]));
+    expect(((stream[0] & 0xf0) << 4) | stream[1]).toBe(stream.length);
+    // Outer CRC envelope, inner config event of the mouse-key type.
+    expect(stream[2]).toBe(0x24);
+    expect(stream[7]).toBe(0x16);
+    // One key id, and it is the one asked for.
+    expect(stream[8]).toBe(1);
+    expect(stream[9]).toBe(7);
+    // No config reset and no action event reached the mouse.
+    expect(mouse.writes.some((write) => (write[0] & 0x0f) === 0x06)).toBe(false);
+  });
+
+  it('refuses an action that disables the button instead of sending nothing', async () => {
+    const mouse = fakeMouse({ ignoreWrites: true });
+
+    const report = await probeButtonMapping(mouse.device, 7, 'desativado');
+
+    expect(report.enviado).toBe(false);
+    expect(report.erro).toContain('desativa o botão');
+    expect(mouse.writes).toHaveLength(0);
+  });
+
+  it('does not write when the mouse is silent', async () => {
+    const device = {
+      vendorId: 0x1915,
+      productId: 0x2346,
+      opened: true,
+      collections: [{ usagePage: 0xff00, usage: 1 }],
+      open: vi.fn(async () => undefined),
+      sendReport: vi.fn(async () => undefined),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    } as unknown as BrowserHidDevice;
+
+    const report = await probeButtonMapping(device, 7, 'clique-central', { timeoutMs: 20 });
+
+    expect(report.enviado).toBe(false);
+    expect(report.erro).toContain('não respondeu');
   });
 });

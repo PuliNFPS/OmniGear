@@ -1,7 +1,9 @@
+import type { MouseActionId } from '@gearhub/shared';
 import { encodeMouseParamSnapshot } from '../../core/coreBridge';
 import type { BrowserHidDevice } from '../deviceDiscovery';
 import { WebHidTransport, type HardwareTransport } from '../WebHidTransport';
 import { captureQuery, type RawReportLog } from './diagnostics';
+import { encodeLeviathanAction } from './LeviathanV4Driver';
 import {
   encodeMouseParamBody,
   parseMouseParamState,
@@ -144,6 +146,75 @@ export async function probePollingWrite(
     if (report.confirmado && !report.conclusivo) {
       report.erro = `O mouse já estava em ${pollingRate} Hz. A releitura confere de qualquer jeito, então esta execução não distingue uma escrita aceita de uma ignorada. Escolha um valor diferente.`;
     }
+  } catch (error) {
+    report.erro = messageOf(error);
+  }
+
+  return report;
+}
+
+/**
+ * Single button-mapping write.
+ *
+ * Unlike the parameter probe, this one cannot confirm itself: the query
+ * response carries no mapping fields, so there is nothing to read back. The
+ * only verification is behavioural — press the button and see what it does.
+ *
+ * That matters because the physical key ids were read from the official
+ * software and never confirmed. A wrong id remaps a different button than
+ * intended, so the caller picks one id at a time and the mapping never reaches
+ * flash: powering the mouse off and on restores it.
+ */
+export interface MappingProbeReport {
+  geradoEm: string;
+  keyId: number;
+  acao: MouseActionId;
+  eventoHex: string;
+  enviado: boolean;
+  erro: string | null;
+}
+
+export async function probeButtonMapping(
+  device: BrowserHidDevice,
+  keyId: number,
+  acao: MouseActionId,
+  options: WriteProbeOptions = {},
+): Promise<MappingProbeReport> {
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const createTransport = options.createTransport ?? ((target) => new WebHidTransport(target));
+  const report: MappingProbeReport = {
+    geradoEm: new Date().toISOString(),
+    keyId,
+    acao,
+    eventoHex: '',
+    enviado: false,
+    erro: null,
+  };
+
+  try {
+    const transport = createTransport(device);
+    await transport.open();
+
+    // Queried first only to confirm the mouse is awake and to learn whether it
+    // wants the CRC envelope; nothing from the response is written back.
+    const alive = await captureQuery(transport, 'virtual', [], timeoutMs);
+    if (!alive.raw) {
+      report.erro = `O mouse não respondeu antes da escrita: ${alive.error ?? 'sem resposta'}.`;
+      return report;
+    }
+
+    const inner = encodeLeviathanAction([keyId], acao);
+    if (!inner) {
+      report.erro = 'A ação escolhida desativa o botão e não gera evento.';
+      return report;
+    }
+
+    const event = withProtocolEnvelope(inner, alive.raw.crc === 1);
+    report.eventoHex = hex(event);
+    for (const chunk of frameEvent(event, true)) {
+      await transport.send({ reportId: 0, data: chunk });
+    }
+    report.enviado = true;
   } catch (error) {
     report.erro = messageOf(error);
   }

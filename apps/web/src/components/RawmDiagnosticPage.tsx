@@ -10,7 +10,13 @@ import {
   type DiagnosticStage,
   type StageStatus,
 } from '../hardware/rawm/diagnostics';
-import { probePollingWrite, type WriteProbeReport } from '../hardware/rawm/writeProbe';
+import {
+  probeButtonMapping,
+  probePollingWrite,
+  type MappingProbeReport,
+  type WriteProbeReport,
+} from '../hardware/rawm/writeProbe';
+import type { MouseActionId } from '@gearhub/shared';
 import type { BrowserHidDevice } from '../hardware/deviceDiscovery';
 
 const statusStyles: Record<StageStatus, string> = {
@@ -74,6 +80,24 @@ function JsonBlock({ title, value }: { title: string; value: unknown }) {
 // writing it back reads clean whether or not the event was accepted.
 const WRITE_TARGETS = [500, 1000, 2000, 4000];
 
+/** Ids read from the official software, never confirmed against hardware. */
+const KEY_IDS: { id: number; rotulo: string }[] = [
+  { id: 7, rotulo: 'Botão de DPI (mais seguro)' },
+  { id: 5, rotulo: 'Lateral traseiro' },
+  { id: 6, rotulo: 'Lateral dianteiro' },
+  { id: 2, rotulo: 'Clique central' },
+  { id: 3, rotulo: 'Clique direito' },
+  { id: 1, rotulo: 'Clique esquerdo (arriscado)' },
+];
+
+const MAPPING_ACTIONS: { id: MouseActionId; rotulo: string }[] = [
+  { id: 'clique-central', rotulo: 'Clique central' },
+  { id: 'clique-direito', rotulo: 'Clique direito' },
+  { id: 'voltar', rotulo: 'Voltar' },
+  { id: 'avancar', rotulo: 'Avançar' },
+  { id: 'dpi-ciclo', rotulo: 'Ciclar DPI' },
+];
+
 export function RawmDiagnosticPage() {
   const [report, setReport] = useState<DiagnosticReport | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -81,6 +105,9 @@ export function RawmDiagnosticPage() {
   const [device, setDevice] = useState<BrowserHidDevice | null>(null);
   const [write, setWrite] = useState<WriteProbeReport | null>(null);
   const [armed, setArmed] = useState(false);
+  const [mapping, setMapping] = useState<MappingProbeReport | null>(null);
+  const [keyId, setKeyId] = useState(KEY_IDS[0].id);
+  const [action, setAction] = useState<MouseActionId>('clique-central');
 
   async function probe(allDevices: boolean) {
     const api = hidApi();
@@ -98,6 +125,7 @@ export function RawmDiagnosticPage() {
       }
       setDevice(chosen);
       setWrite(null);
+      setMapping(null);
       setArmed(false);
       setReport(await runReadOnlyDiagnostic(chosen));
     } catch (cause) {
@@ -259,6 +287,95 @@ export function RawmDiagnosticPage() {
                     onClick={() => downloadJson('escrita-rawm.json', write)}
                   >
                     Baixar relatório da escrita
+                  </Button>
+                </div>
+              )}
+            </section>
+          )}
+
+          {report.snapshot && device && (
+            <section className="mt-8 rounded-md border border-destructive/40 bg-destructive/5 p-4">
+              <h2 className="text-lg font-semibold">Teste de mapeamento de botão</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                <strong>Isto não se verifica sozinho.</strong> A consulta não devolve nenhum campo
+                de mapeamento, então não há o que reler: a única verificação é você apertar o botão
+                e ver o que acontece.
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Os ids de botão foram lidos do software oficial e nunca confirmados. Se o id estiver
+                errado, o botão remapeado será outro. Nada vai para a flash:{' '}
+                <strong>desligue e religue o mouse para reverter</strong>. Comece pelo botão de DPI,
+                que é o menos crítico.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <select
+                  className="rounded-md border border-border bg-card px-2 py-1 text-sm"
+                  value={keyId}
+                  onChange={(event) => setKeyId(Number(event.target.value))}
+                >
+                  {KEY_IDS.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.id} — {item.rotulo}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className="rounded-md border border-border bg-card px-2 py-1 text-sm"
+                  value={action}
+                  onChange={(event) => setAction(event.target.value as MouseActionId)}
+                >
+                  {MAPPING_ACTIONS.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.rotulo}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={!armed || busy}
+                  onClick={() => {
+                    setBusy(true);
+                    setError(null);
+                    probeButtonMapping(device, keyId, action)
+                      .then(setMapping)
+                      .catch((cause: unknown) =>
+                        setError(cause instanceof Error ? cause.message : String(cause)),
+                      )
+                      .finally(() => setBusy(false));
+                  }}
+                >
+                  Remapear
+                </Button>
+              </div>
+
+              {mapping && (
+                <div className="mt-4">
+                  <p className="text-sm">
+                    <span
+                      className={`rounded px-2 py-0.5 text-xs font-semibold ${
+                        mapping.enviado ? statusStyles.aviso : statusStyles.falha
+                      }`}
+                    >
+                      {mapping.enviado ? 'ENVIADO — VERIFIQUE APERTANDO' : 'NÃO ENVIADO'}
+                    </span>{' '}
+                    botão {mapping.keyId} → {mapping.acao}
+                  </p>
+                  {mapping.erro && <p className="mt-2 text-sm text-destructive">{mapping.erro}</p>}
+                  {mapping.enviado && (
+                    <p className="mt-2 text-sm">
+                      Aperte o botão. Se ele fizer <strong>{mapping.acao}</strong>, o id{' '}
+                      {mapping.keyId} está correto. Se outro botão mudou, anote qual. Religue o
+                      mouse para reverter.
+                    </p>
+                  )}
+                  <Button
+                    className="mt-3"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => downloadJson('mapeamento-rawm.json', mapping)}
+                  >
+                    Baixar relatório
                   </Button>
                 </div>
               )}
