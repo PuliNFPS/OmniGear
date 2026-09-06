@@ -1,7 +1,5 @@
 import type { MouseActionId, MouseSettings, PeripheralSettings } from '@gearhub/shared';
 import {
-  encodeAction,
-  encodeConfigReset,
   encodeMouseFunction,
   encodeMouseKey,
   encodeMouseParamSnapshot,
@@ -16,9 +14,7 @@ import {
   type RawmMouseParamState,
 } from './mouseParamSnapshot';
 import { frameEvent, withProtocolEnvelope } from './protocol';
-import { queryRawmDevice } from './session';
 
-const ACTION_SAVE_CONFIG_TO_FDS = 0x34;
 const TOUCH_TYPE_PRESS = 0x02;
 const MOUSE_KEY_TYPE_MKEY = 0x01;
 const MOUSE_KEY_TYPE_WHEEL = 0x03;
@@ -67,7 +63,15 @@ export function encodeLeviathanAction(
   return encodeMouseKey({ keyIds, keyType: action.keyType, keyCode: action.keyCode });
 }
 
-function mappingEvents(settings: MouseSettings): Uint8Array[] {
+/**
+ * Builds the button mapping events.
+ *
+ * Not sent yet. CONFIG_RESET clears every mapping the mouse holds, and this set
+ * covers only the six buttons: the scroll wheel has no key id here, so applying
+ * it would wipe the wheel and never restore it. Confirmed on hardware, where a
+ * reset plus a single mapping left the wheel dead until a power cycle.
+ */
+export function mappingEvents(settings: MouseSettings): Uint8Array[] {
   const events: Uint8Array[] = [];
   for (const [buttonId, action] of Object.entries(settings.buttons)) {
     const keyId = physicalKeyIds[buttonId];
@@ -111,33 +115,30 @@ export class LeviathanV4Driver implements DeviceDriver {
     this.snapshot = parseMouseParamState(rawSnapshot);
   }
 
+  /**
+   * Writes the parameter block only.
+   *
+   * The parameter body is confirmed against hardware; the mapping sequence is
+   * not, and sending it means a CONFIG_RESET that clears mappings this driver
+   * cannot rebuild. Until the key ids and the wheel are known, changing a
+   * parameter must not cost the user their scroll wheel.
+   */
   applyToSession(settings: PeripheralSettings): Promise<void> {
-    return this.enqueue(() => this.writeCompleteConfiguration(mouseSettings(settings)));
+    return this.enqueue(() => this.writeParameters(mouseSettings(settings)));
   }
 
+  /**
+   * Refused for now. Writing a profile means CONFIG_RESET, the unverified
+   * mapping set and ACTION_SAVE_CONFIG_TO_FDS, and that last one persists to
+   * flash: unlike everything else tried so far, a power cycle would not undo it.
+   */
   writeProfile(slotIndex: number, _name: string, settings: PeripheralSettings): Promise<void> {
-    if (!Number.isInteger(slotIndex) || slotIndex < 1 || slotIndex > 255) {
-      return Promise.reject(new RangeError('Indice de perfil RAWM invalido.'));
-    }
-    return this.enqueue(async () => {
-      const selected = mouseSettings(settings);
-      await this.sendEvent(encodeConfigReset());
-      await this.sendEvent(encodeAction(ACTION_SAVE_CONFIG_TO_FDS, 1 | ((slotIndex - 1) << 8)));
-      await this.writeConfigurationBody(selected);
-      await this.sendEvent(encodeAction(ACTION_SAVE_CONFIG_TO_FDS, 0));
-
-      const verified = await queryRawmDevice(this.transport, { virtualMouse: true });
-      const readBack = parseMouseParamState(verified.raw);
-      const expected = applySettingsToMouseParam(this.snapshot, selected);
-      if (
-        readBack.pollingRate !== expected.pollingRate ||
-        readBack.powerMode !== expected.powerMode ||
-        readBack.txOutputPower !== expected.txOutputPower
-      ) {
-        throw new Error('O Leviathan V4 nao confirmou a gravacao do perfil.');
-      }
-      this.snapshot = readBack;
-    });
+    void settings;
+    return Promise.reject(
+      new Error(
+        'A gravacao de perfil do Leviathan V4 ainda nao foi verificada em hardware e grava na memoria do mouse. Consulte docs/smoke-test-leviathan-v4.md.',
+      ),
+    );
   }
 
   private enqueue(operation: () => Promise<void>): Promise<void> {
@@ -146,15 +147,9 @@ export class LeviathanV4Driver implements DeviceDriver {
     return current;
   }
 
-  private async writeCompleteConfiguration(settings: MouseSettings): Promise<void> {
-    await this.sendEvent(encodeConfigReset());
-    await this.writeConfigurationBody(settings);
-  }
-
-  private async writeConfigurationBody(settings: MouseSettings): Promise<void> {
+  private async writeParameters(settings: MouseSettings): Promise<void> {
     const next = applySettingsToMouseParam(this.snapshot, settings);
     await this.sendEvent(encodeMouseParamSnapshot(encodeMouseParamBody(next)));
-    for (const event of mappingEvents(settings)) await this.sendEvent(event);
     this.snapshot = next;
   }
 
