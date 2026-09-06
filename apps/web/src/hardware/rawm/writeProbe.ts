@@ -234,3 +234,73 @@ export async function probeButtonMapping(
 
   return report;
 }
+
+/**
+ * Writes a complete mapping set inside one configuration block.
+ *
+ * CONFIG_RESET clears every mapping the mouse holds, so a mapping only survives
+ * as part of the full set sent after it. Anything left out of `entries` stops
+ * working until a power cycle — that is how the scroll wheel was lost.
+ *
+ * Multi-id entries are how the R-Plus layer is expressed: the activator id
+ * followed by the target id.
+ */
+export interface MappingSetEntry {
+  keyIds: number[];
+  acao: MouseActionId;
+}
+
+export interface MappingSetReport {
+  geradoEm: string;
+  entradas: MappingSetEntry[];
+  eventos: number;
+  enviado: boolean;
+  erro: string | null;
+}
+
+export async function probeMappingSet(
+  device: BrowserHidDevice,
+  entries: MappingSetEntry[],
+  options: WriteProbeOptions = {},
+): Promise<MappingSetReport> {
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const createTransport = options.createTransport ?? ((target) => new WebHidTransport(target));
+  const report: MappingSetReport = {
+    geradoEm: new Date().toISOString(),
+    entradas: entries,
+    eventos: 0,
+    enviado: false,
+    erro: null,
+  };
+
+  try {
+    const transport = createTransport(device);
+    await transport.open();
+
+    const alive = await captureQuery(transport, 'virtual', [], timeoutMs);
+    if (!alive.raw) {
+      report.erro = `O mouse não respondeu antes da escrita: ${alive.error ?? 'sem resposta'}.`;
+      return report;
+    }
+    const useCrc = alive.raw.crc === 1;
+
+    const events: Uint8Array[] = [withProtocolEnvelope(encodeConfigReset(), useCrc)];
+    for (const entry of entries) {
+      const inner = encodeLeviathanAction(entry.keyIds, entry.acao);
+      if (inner) events.push(withProtocolEnvelope(inner, useCrc));
+    }
+
+    for (const event of events) {
+      for (const chunk of frameEvent(event, true)) {
+        await transport.send({ reportId: 0, data: chunk });
+      }
+      await wait(8);
+    }
+    report.eventos = events.length;
+    report.enviado = true;
+  } catch (error) {
+    report.erro = messageOf(error);
+  }
+
+  return report;
+}
