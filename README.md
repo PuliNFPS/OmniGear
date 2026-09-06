@@ -43,6 +43,11 @@ to the session; writing it into a profile slot is a separate, explicit action.
 Real hardware still depends on a driver: choosing a device in the browser picker
 reports that the model is not supported yet instead of pretending to configure it.
 
+Bringing up a real device starts with a read-only probe at
+<http://localhost:5173/diagnostico.html> — a separate Vite entry that queries the
+receiver and shows the raw response without registering a driver or opening the editor.
+See [docs/smoke-test-leviathan-v4.md](docs/smoke-test-leviathan-v4.md).
+
 ## Architecture validation
 
 The tracked `.dependency-cruiser.cjs` was bootstrapped with Dependency Cruiser's
