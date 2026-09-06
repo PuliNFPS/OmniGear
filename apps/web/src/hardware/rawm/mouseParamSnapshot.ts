@@ -142,6 +142,17 @@ function packedDpi(x: number, y: number, independentAxes: boolean): number {
   return independentAxes ? ((x & 0xffff) | ((y & 0xffff) << 16)) >>> 0 : x;
 }
 
+/**
+ * Restores the width the device reported. `cpi_l` is fixed width with unused
+ * slots zeroed, and the editor only carries the populated stages, so a write
+ * built from settings alone would narrow the array under the firmware and
+ * leave it inconsistent with the same-width `cpi_l_c`.
+ */
+function padToWidth(values: number[], width: number): number[] {
+  if (values.length >= width) return values;
+  return [...values, ...Array<number>(width - values.length).fill(0)];
+}
+
 export function applySettingsToMouseParam(
   snapshot: RawmMouseParamState,
   settings: MouseSettings,
@@ -158,8 +169,9 @@ export function applySettingsToMouseParam(
     ...snapshot,
     resolution: packedDpi(activeStage.x, activeStage.y, settings.independentAxes),
     pollingRate: settings.pollingRate,
-    cpiLevels: settings.dpiStages.map((stage) =>
-      packedDpi(stage.x, stage.y, settings.independentAxes),
+    cpiLevels: padToWidth(
+      settings.dpiStages.map((stage) => packedDpi(stage.x, stage.y, settings.independentAxes)),
+      snapshot.cpiLevels.length,
     ),
     powerMode: mode,
     liftOffDistance: settings.parameters.liftOffDistance,
