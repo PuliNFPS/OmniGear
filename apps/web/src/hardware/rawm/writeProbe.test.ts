@@ -170,6 +170,7 @@ describe('probeButtonMapping', () => {
 
     expect(report.enviado).toBe(true);
     expect(report.erro).toBeNull();
+    expect(report.comConfigReset).toBe(false);
 
     const stream = Uint8Array.from(mouse.writes.flatMap((write) => [...write]));
     expect(((stream[0] & 0xf0) << 4) | stream[1]).toBe(stream.length);
@@ -209,5 +210,25 @@ describe('probeButtonMapping', () => {
 
     expect(report.enviado).toBe(false);
     expect(report.erro).toContain('não respondeu');
+  });
+
+  // An isolated mapping had no effect on hardware, so the probe can open the
+  // configuration block first. It still never saves, so flash stays untouched.
+  it('can precede the mapping with a config reset, and still never saves', async () => {
+    const mouse = fakeMouse({ ignoreWrites: true });
+
+    const report = await probeButtonMapping(mouse.device, 7, 'clique-central', {
+      comConfigReset: true,
+    });
+
+    expect(report.comConfigReset).toBe(true);
+    expect(report.eventosHex).toHaveLength(2);
+
+    const stream = Uint8Array.from(mouse.writes.flatMap((write) => [...write]));
+    // First event: config reset (inner type 0x03). Second: the mapping (0x16).
+    expect(stream[7]).toBe(0x03);
+    expect(stream.slice(8).some((_, index) => stream[8 + index] === 0x16)).toBe(true);
+    // No action event, so nothing is committed to flash.
+    expect(mouse.writes.some((write) => (write[0] & 0x0f) === 0x06)).toBe(false);
   });
 });

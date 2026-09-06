@@ -1,5 +1,5 @@
 import type { MouseActionId } from '@gearhub/shared';
-import { encodeMouseParamSnapshot } from '../../core/coreBridge';
+import { encodeConfigReset, encodeMouseParamSnapshot } from '../../core/coreBridge';
 import type { BrowserHidDevice } from '../deviceDiscovery';
 import { WebHidTransport, type HardwareTransport } from '../WebHidTransport';
 import { captureQuery, type RawReportLog } from './diagnostics';
@@ -169,7 +169,9 @@ export interface MappingProbeReport {
   geradoEm: string;
   keyId: number;
   acao: MouseActionId;
-  eventoHex: string;
+  /** Whether a CONFIG_RESET preceded the mapping. */
+  comConfigReset: boolean;
+  eventosHex: string[];
   enviado: boolean;
   erro: string | null;
 }
@@ -178,7 +180,7 @@ export async function probeButtonMapping(
   device: BrowserHidDevice,
   keyId: number,
   acao: MouseActionId,
-  options: WriteProbeOptions = {},
+  options: WriteProbeOptions & { comConfigReset?: boolean } = {},
 ): Promise<MappingProbeReport> {
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const createTransport = options.createTransport ?? ((target) => new WebHidTransport(target));
@@ -186,7 +188,8 @@ export async function probeButtonMapping(
     geradoEm: new Date().toISOString(),
     keyId,
     acao,
-    eventoHex: '',
+    comConfigReset: options.comConfigReset ?? false,
+    eventosHex: [],
     enviado: false,
     erro: null,
   };
@@ -209,10 +212,20 @@ export async function probeButtonMapping(
       return report;
     }
 
-    const event = withProtocolEnvelope(inner, alive.raw.crc === 1);
-    report.eventoHex = hex(event);
-    for (const chunk of frameEvent(event, true)) {
-      await transport.send({ reportId: 0, data: chunk });
+    const useCrc = alive.raw.crc === 1;
+    // An isolated mapping event had no effect on real hardware. The official
+    // sequence opens with CONFIG_RESET, so mappings may only be accepted inside
+    // the configuration block it starts. Still no save, so flash is untouched.
+    const events = options.comConfigReset
+      ? [withProtocolEnvelope(encodeConfigReset(), useCrc), withProtocolEnvelope(inner, useCrc)]
+      : [withProtocolEnvelope(inner, useCrc)];
+
+    for (const event of events) {
+      report.eventosHex.push(hex(event));
+      for (const chunk of frameEvent(event, true)) {
+        await transport.send({ reportId: 0, data: chunk });
+      }
+      await wait(8);
     }
     report.enviado = true;
   } catch (error) {
