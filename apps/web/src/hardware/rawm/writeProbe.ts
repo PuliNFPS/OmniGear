@@ -39,6 +39,12 @@ export interface WriteProbeReport {
   depois: RawmMouseParamState | null;
   divergencias: FieldDivergence[];
   confirmado: boolean;
+  /**
+   * False when the target already equalled the current value. The read back
+   * matches either way then, so the run cannot tell a working write from an
+   * ignored one and must not be read as evidence.
+   */
+  conclusivo: boolean;
   erro: string | null;
   relatorios: RawReportLog[];
 }
@@ -97,6 +103,7 @@ export async function probePollingWrite(
     depois: null,
     divergencias: [],
     confirmado: false,
+    conclusivo: false,
     erro: null,
     relatorios,
   };
@@ -133,6 +140,10 @@ export async function probePollingWrite(
     report.depois = depois;
     report.divergencias = compareStates(esperado, depois);
     report.confirmado = report.divergencias.length === 0;
+    report.conclusivo = antes.pollingRate !== pollingRate;
+    if (report.confirmado && !report.conclusivo) {
+      report.erro = `O mouse já estava em ${pollingRate} Hz. A releitura confere de qualquer jeito, então esta execução não distingue uma escrita aceita de uma ignorada. Escolha um valor diferente.`;
+    }
   } catch (error) {
     report.erro = messageOf(error);
   }

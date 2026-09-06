@@ -70,7 +70,9 @@ function JsonBlock({ title, value }: { title: string; value: unknown }) {
   );
 }
 
-const WRITE_TARGET_HZ = 1000;
+// Offered targets; the one the mouse already holds is disabled, because
+// writing it back reads clean whether or not the event was accepted.
+const WRITE_TARGETS = [500, 1000, 2000, 4000];
 
 export function RawmDiagnosticPage() {
   const [report, setReport] = useState<DiagnosticReport | null>(null);
@@ -181,10 +183,10 @@ export function RawmDiagnosticPage() {
             <section className="mt-8 rounded-md border border-amber-500/40 bg-amber-500/5 p-4">
               <h2 className="text-lg font-semibold">Teste de escrita</h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                Envia <strong>um único</strong> evento de parâmetros, com a taxa de reporte em{' '}
-                {WRITE_TARGET_HZ} Hz e todo o resto igual ao que acabou de ser lido. Não manda
-                CONFIG_RESET, não manda mapeamento de botão e não grava em flash — desligar e
-                religar o mouse desfaz. Depois relê e compara campo a campo.
+                Envia <strong>um único</strong> evento de parâmetros, com a taxa de reporte que você
+                escolher e todo o resto igual ao que acabou de ser lido. Não manda CONFIG_RESET, não
+                manda mapeamento de botão e não grava em flash — desligar e religar o mouse desfaz.
+                Depois relê e compara campo a campo.
               </p>
               <p className="mt-2 text-sm text-muted-foreground">
                 Atual: <strong>{report.snapshot.pollingRate} Hz</strong>.
@@ -198,21 +200,25 @@ export function RawmDiagnosticPage() {
                   />
                   Entendo que isto escreve no mouse
                 </label>
-                <Button
-                  disabled={!armed || busy}
-                  onClick={() => {
-                    setBusy(true);
-                    setError(null);
-                    probePollingWrite(device, WRITE_TARGET_HZ)
-                      .then(setWrite)
-                      .catch((cause: unknown) =>
-                        setError(cause instanceof Error ? cause.message : String(cause)),
-                      )
-                      .finally(() => setBusy(false));
-                  }}
-                >
-                  Escrever {WRITE_TARGET_HZ} Hz
-                </Button>
+                {WRITE_TARGETS.map((hz) => (
+                  <Button
+                    key={hz}
+                    size="sm"
+                    disabled={!armed || busy || hz === report.snapshot?.pollingRate}
+                    onClick={() => {
+                      setBusy(true);
+                      setError(null);
+                      probePollingWrite(device, hz)
+                        .then(setWrite)
+                        .catch((cause: unknown) =>
+                          setError(cause instanceof Error ? cause.message : String(cause)),
+                        )
+                        .finally(() => setBusy(false));
+                    }}
+                  >
+                    {hz} Hz
+                  </Button>
+                ))}
               </div>
 
               {write && (
@@ -220,10 +226,18 @@ export function RawmDiagnosticPage() {
                   <p className="text-sm">
                     <span
                       className={`rounded px-2 py-0.5 text-xs font-semibold ${
-                        write.confirmado ? statusStyles.ok : statusStyles.falha
+                        !write.conclusivo
+                          ? statusStyles.aviso
+                          : write.confirmado
+                            ? statusStyles.ok
+                            : statusStyles.falha
                       }`}
                     >
-                      {write.confirmado ? 'ROUND-TRIP CONFIRMADO' : 'NÃO CONFIRMADO'}
+                      {!write.conclusivo
+                        ? 'INCONCLUSIVO'
+                        : write.confirmado
+                          ? 'ROUND-TRIP CONFIRMADO'
+                          : 'NÃO CONFIRMADO'}
                     </span>{' '}
                     {write.alvo.de} Hz → {write.alvo.para} Hz
                   </p>
