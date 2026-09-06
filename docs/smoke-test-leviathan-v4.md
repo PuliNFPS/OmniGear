@@ -225,3 +225,35 @@ onde ser gravados, o que explicaria terem sido aceitos e ignorados em todas as v
 
 Isso grava na flash, e o power cycle deixa de desfazer. Escreva num slot que nao seja o
 ativo: o mouse declara quatro em `ocn` e esta no primeiro segundo `oci`.
+
+## Layout de teclas, lido do software oficial
+
+A tela do software oficial rotula as teclas assim:
+
+| id  | tecla                     |
+| --- | ------------------------- |
+| 1   | Left Button               |
+| 2   | Middle Button             |
+| 3   | Right Button              |
+| 5   | Back Button / M4          |
+| 6   | Fwd. Button / M5          |
+| 7   | Function - Toggle DPI/CPI |
+
+**Essa e a tabela que o driver sempre teve.** A hipotese anterior de que 2 e 3 estavam
+trocados para seguir a convencao HID estava errada, e a afirmacao de que os ids 1 e 2 tinham
+sido confirmados tambem: mapear um botao para a acao que ele ja fazia nao prova nada.
+
+## O que a gravacao no slot 4 revelou
+
+A sequencia com os dois `SAVE` **funciona**: o slot 4 foi gravado e aparece diferente do
+slot 1 no software oficial. Essa parte do protocolo esta resolvida.
+
+Mas do conjunto enviado, so uma coisa pegou: o clique do scroll passou a trocar de DPI.
+
+- Os cinco eventos de tecla (`0x16`) nao produziram mapeamento nenhum.
+- O evento de funcao (`0x18`) pegou, porem no **botao do meio**, e nao no id 7 que ele
+  nomeava.
+
+Ou seja, o que resta errado sao os **layouts de payload**, nao os ids. O evento de funcao
+carrega `[count, key_id, touch_type, function_id, ...]`, e o firmware aparentemente leu o
+key id de outra posicao — ou o campo e uma mascara de bits, e nao um indice.

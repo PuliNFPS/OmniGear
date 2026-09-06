@@ -103,13 +103,21 @@ const KEY_IDS: { id: number; rotulo: string }[] = [
  * driver's table uses six and skips 4, and puts middle before right, against the
  * HID convention where 1 is left, 2 is right and 3 is middle.
  */
+/**
+ * Key ids as the official software labels them, read off its own screen:
+ * 1 left, 2 middle, 3 right, 5 back/M4, 6 forward/M5, 7 the DPI toggle. That is
+ * the table this driver always had; an earlier guess that 2 and 3 were swapped
+ * to match the HID convention was wrong.
+ *
+ * The profile write reached slot 4, so the save sequence works. Only the
+ * mouse-function event landed, and on the middle button rather than the id it
+ * named, while every mouse-key event was ignored. So the payload layouts are
+ * what remain wrong, not the ids.
+ */
 const MAPPING_SETS: { id: string; rotulo: string; entradas: MappingSetEntry[] }[] = [
   {
-    // One unmistakable change: if mappings finally land, the right button
-    // middle-clicks. Everything else keeps a plausible default so the saved
-    // profile is usable rather than half empty.
-    id: 'perfil-teste',
-    rotulo: 'Perfil de teste: id 2 vira clique central',
+    id: 'oficial',
+    rotulo: 'Layout oficial (1 esq, 2 central, 3 dir, 5 M4, 6 M5, 7 DPI)',
     entradas: [
       { keyIds: [1], acao: 'clique-esquerdo' },
       { keyIds: [2], acao: 'clique-central' },
@@ -120,105 +128,19 @@ const MAPPING_SETS: { id: string; rotulo: string; entradas: MappingSetEntry[] }[
     ],
   },
   {
-    id: 'acao-central-no-2',
-    rotulo: 'Acao no id 2 (direito): clique central',
-    entradas: [
-      { keyIds: [1], acao: 'clique-esquerdo' },
-      { keyIds: [2], acao: 'clique-central' },
-    ],
+    // One mouse-key event alone, on a key whose identity the official software
+    // confirms. If the right button does not become middle click, the mouse-key
+    // payload is wrong rather than the id.
+    id: 'so-um-key',
+    rotulo: 'So um evento de tecla: id 3 (direito) vira clique central',
+    entradas: [{ keyIds: [3], acao: 'clique-central' }],
   },
   {
-    id: 'acao-voltar-no-2',
-    rotulo: 'Acao no id 2 (direito): voltar',
-    entradas: [
-      { keyIds: [1], acao: 'clique-esquerdo' },
-      { keyIds: [2], acao: 'voltar' },
-    ],
-  },
-  {
-    id: 'acao-dpi-no-2',
-    rotulo: 'Acao no id 2 (direito): ciclar DPI',
-    entradas: [
-      { keyIds: [1], acao: 'clique-esquerdo' },
-      { keyIds: [2], acao: 'dpi-ciclo' },
-    ],
-  },
-  {
-    id: 'acao-rolagem-no-2',
-    rotulo: 'Acao no id 2 (direito): rolagem para cima',
-    entradas: [
-      { keyIds: [1], acao: 'clique-esquerdo' },
-      { keyIds: [2], acao: 'rolagem-cima' },
-    ],
-  },
-  {
-    // Ids 1 and 2 are confirmed left and right, so they stay put and the mouse
-    // keeps working. Every other id gets a signature no other id shares, so one
-    // pass over the hardware names all of them at once.
-    id: 'descoberta',
-    rotulo: 'Descoberta: cada id com uma acao unica',
-    entradas: [
-      { keyIds: [1], acao: 'clique-esquerdo' },
-      { keyIds: [2], acao: 'clique-direito' },
-      { keyIds: [3], acao: 'voltar' },
-      { keyIds: [4], acao: 'avancar' },
-      { keyIds: [5], acao: 'clique-central' },
-      { keyIds: [6], acao: 'dpi-ciclo' },
-      { keyIds: [7], acao: 'rolagem-baixo' },
-    ],
-  },
-  {
-    id: 'hid-roda-4',
-    rotulo: 'HID padrao, roda no id 4',
-    entradas: [
-      { keyIds: [1], acao: 'clique-esquerdo' },
-      { keyIds: [2], acao: 'clique-direito' },
-      { keyIds: [3], acao: 'clique-central' },
-      { keyIds: [4], acao: 'rolagem-cima' },
-      { keyIds: [5], acao: 'voltar' },
-      { keyIds: [6], acao: 'avancar' },
-      { keyIds: [7], acao: 'dpi-ciclo' },
-    ],
-  },
-  {
-    id: 'hid-roda-4-ambas',
-    rotulo: 'HID padrao, roda no id 4 (cima e baixo)',
-    entradas: [
-      { keyIds: [1], acao: 'clique-esquerdo' },
-      { keyIds: [2], acao: 'clique-direito' },
-      { keyIds: [3], acao: 'clique-central' },
-      { keyIds: [4], acao: 'rolagem-cima' },
-      { keyIds: [4], acao: 'rolagem-baixo' },
-      { keyIds: [5], acao: 'voltar' },
-      { keyIds: [6], acao: 'avancar' },
-      { keyIds: [7], acao: 'dpi-ciclo' },
-    ],
-  },
-  {
-    id: 'driver-atual',
-    rotulo: 'Conjunto atual do driver (reproduz a falha)',
-    entradas: [
-      { keyIds: [1], acao: 'clique-esquerdo' },
-      { keyIds: [2], acao: 'clique-central' },
-      { keyIds: [3], acao: 'clique-direito' },
-      { keyIds: [5], acao: 'voltar' },
-      { keyIds: [6], acao: 'avancar' },
-      { keyIds: [7], acao: 'dpi-ciclo' },
-    ],
-  },
-  {
-    id: 'hid-rplus',
-    rotulo: 'HID padrao + R-Plus (dianteiro + direito = ciclar DPI)',
-    entradas: [
-      { keyIds: [1], acao: 'clique-esquerdo' },
-      { keyIds: [2], acao: 'clique-direito' },
-      { keyIds: [3], acao: 'clique-central' },
-      { keyIds: [4], acao: 'rolagem-cima' },
-      { keyIds: [5], acao: 'voltar' },
-      { keyIds: [6], acao: 'avancar' },
-      { keyIds: [7], acao: 'dpi-ciclo' },
-      { keyIds: [6, 2], acao: 'dpi-ciclo' },
-    ],
+    // The function event did land last time, so this checks whether the key id
+    // it carries is honoured: the DPI toggle should end up on the back button.
+    id: 'so-uma-funcao',
+    rotulo: 'So um evento de funcao: id 5 (M4) vira ciclar DPI',
+    entradas: [{ keyIds: [5], acao: 'dpi-ciclo' }],
   },
 ];
 
