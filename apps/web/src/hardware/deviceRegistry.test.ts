@@ -16,8 +16,23 @@ const leviathanReceiver = {
 };
 
 describe('device registry', () => {
-  it('offers a narrow picker filter for the RAWM vendor', () => {
-    expect(deviceRequestFilters()).toContainEqual({ vendorId: 0x1915 });
+  // A 2.4 GHz receiver exposes several HID interfaces under one product name,
+  // so a vendor-only filter fills the picker with rows the user cannot tell
+  // apart. Only the configuration collection can answer a query.
+  it('narrows the picker to the vendor configuration collection', () => {
+    expect(deviceRequestFilters()).toContainEqual({
+      vendorId: 0x1915,
+      usagePage: 0xff00,
+      usage: 0x0001,
+    });
+  });
+
+  it('rejects a sibling interface of the same receiver', () => {
+    const consumerControl = {
+      ...leviathanReceiver,
+      collections: [{ usagePage: 0x000c, usage: 0x0001, inputReports: [{ reportId: 0 }] }],
+    };
+    expect(matchDeviceDefinition(consumerControl)).toBeNull();
   });
 
   it('matches the Leviathan V4 receiver and required vendor collection', () => {

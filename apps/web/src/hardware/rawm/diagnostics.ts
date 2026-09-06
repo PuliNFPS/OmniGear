@@ -384,15 +384,29 @@ export async function runReadOnlyDiagnostic(
 }
 
 /**
- * Opens the picker filtered only by vendor, or unfiltered when `allDevices` is
- * set. A wrong product id is a plausible outcome of this test, so the probe
- * must not filter out the device it is meant to identify.
+ * Opens the picker on the vendor configuration collection, or unfiltered when
+ * `allDevices` is set.
+ *
+ * The receiver publishes several HID interfaces under one product name, so a
+ * vendor-only filter lists identical rows and selecting the wrong one yields an
+ * interface with no output reports. Naming the collection makes the picker show
+ * only the interface that can answer. The unfiltered escape stays for the case
+ * this filter finds nothing, which is what a different usage page would look
+ * like from here.
  */
 export async function requestDiagnosticDevice(
   api: BrowserHidApi,
   allDevices = false,
 ): Promise<BrowserHidDevice | null> {
-  const filters = allDevices ? [] : [{ vendorId: RAWM_VENDOR_ID }];
+  const filters = allDevices
+    ? []
+    : [
+        {
+          vendorId: RAWM_VENDOR_ID,
+          usagePage: RAWM_CONFIG_USAGE_PAGE,
+          usage: RAWM_CONFIG_USAGE,
+        },
+      ];
   const chosen = await api.requestDevice({ filters });
   return chosen[0] ?? null;
 }

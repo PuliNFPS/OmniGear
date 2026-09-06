@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { BrowserHidDevice } from '../deviceDiscovery';
 import type { HardwareTransport, HidInputReportEvent } from '../WebHidTransport';
-import { captureQuery, runReadOnlyDiagnostic } from './diagnostics';
+import { captureQuery, requestDiagnosticDevice, runReadOnlyDiagnostic } from './diagnostics';
 import { frameEvent, withProtocolEnvelope } from './protocol';
 
 const receiver = { dn: 'RAWM HS Receiver', pi: 0x2346, vi: 0x1915, crc: 1 };
@@ -230,5 +230,26 @@ describe('captureQuery', () => {
 
     expect(result.raw).toBeNull();
     expect(result.error).toContain('marcador de dados');
+  });
+});
+
+describe('requestDiagnosticDevice', () => {
+  // Selecting a sibling interface of the same receiver is what the first real
+  // bring-up hit: the picker showed identical rows and the consumer-control
+  // interface came back, with no output reports to answer on.
+  it('asks the picker for the vendor configuration collection', async () => {
+    const requestDevice = vi.fn(async () => []);
+    await requestDiagnosticDevice({ requestDevice } as never);
+
+    expect(requestDevice).toHaveBeenCalledWith({
+      filters: [{ vendorId: 0x1915, usagePage: 0xff00, usage: 0x0001 }],
+    });
+  });
+
+  it('drops every filter when asked to show all devices', async () => {
+    const requestDevice = vi.fn(async () => []);
+    await requestDiagnosticDevice({ requestDevice } as never, true);
+
+    expect(requestDevice).toHaveBeenCalledWith({ filters: [] });
   });
 });
