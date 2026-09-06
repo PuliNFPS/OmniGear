@@ -1,6 +1,11 @@
 import type { Peripheral, PeripheralSettings } from '@gearhub/shared';
 import { create } from 'zustand';
-import { activeSettings, profileSlots, withWrittenProfile } from '../domain/settings';
+import {
+  activeSettings,
+  isMouseSettings,
+  profileSlots,
+  withWrittenProfile,
+} from '../domain/settings';
 import { driverFor } from '../hardware/deviceDriver';
 import { useDeviceStore } from './deviceStore';
 
@@ -35,6 +40,12 @@ interface EditorStore {
   forget(deviceIds: string[]): void;
   /** Runs again the operation that failed, keeping the draft. */
   retry(device: Peripheral): void;
+  /**
+   * Follows a change the device made on its own, such as a DPI cycled with its
+   * button. It is not an edit, so it moves the baseline too and leaves nothing
+   * pending for the user to save.
+   */
+  syncActiveDpi(deviceId: string, dpi: number): void;
 }
 
 const SAVED_MESSAGE_MS = 2600;
@@ -285,6 +296,17 @@ export const useEditorStore = create<EditorStore>((set, get) => {
         for (const deviceId of deviceIds) delete entries[deviceId];
         return { entries };
       });
+    },
+
+    syncActiveDpi: (deviceId, dpi) => {
+      const entry = get().entries[deviceId];
+      if (!entry || !isMouseSettings(entry.draft)) return;
+      const stage = entry.draft.dpiStages.find((item) => item.x === dpi);
+      if (!stage || stage.id === entry.draft.activeStageId) return;
+
+      const follow = (settings: PeripheralSettings): PeripheralSettings =>
+        isMouseSettings(settings) ? { ...settings, activeStageId: stage.id } : settings;
+      put(deviceId, { draft: follow(entry.draft), saved: follow(entry.saved) }, entry);
     },
 
     retry: (input) => {

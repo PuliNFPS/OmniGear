@@ -7,7 +7,7 @@ import {
   encodeMouseParamSnapshot,
 } from '../../core/coreBridge';
 import { isMouseSettings } from '../../domain/settings';
-import type { DeviceDriver } from '../deviceDriver';
+import type { DeviceDriver, DeviceReport } from '../deviceDriver';
 import type { HardwareTransport } from '../WebHidTransport';
 import {
   applySettingsToMouseParam,
@@ -15,6 +15,7 @@ import {
   parseMouseParamState,
   type RawmMouseParamState,
 } from './mouseParamSnapshot';
+import { subscribeToNotifications } from './notifications';
 import { frameEvent, withProtocolEnvelope } from './protocol';
 
 const ACTION_SAVE_CONFIG_TO_FDS = 0x34;
@@ -147,6 +148,15 @@ export class LeviathanV4Driver implements DeviceDriver {
    * the mouse has saved. Mappings only survive inside the block CONFIG_RESET
    * opens, so the complete set goes with them every time.
    */
+  /** The mouse announces a DPI cycled by its own button; the editor follows. */
+  onDeviceReport(listener: (report: DeviceReport) => void): () => void {
+    return subscribeToNotifications(this.transport, (notification) => {
+      if (notification.kind === 'dpi' || notification.kind === 'dpi-xy') {
+        listener({ kind: 'dpi', value: notification.value });
+      }
+    });
+  }
+
   applyToSession(settings: PeripheralSettings): Promise<void> {
     return this.enqueue(async () => {
       const selected = mouseSettings(settings);
