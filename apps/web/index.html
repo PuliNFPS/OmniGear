@@ -1,14 +1,30 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#101110" />
+    <meta name="theme-color" content="#f2f1ef" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)" />
     <meta
       name="description"
-      content="Configure gaming mice and keyboards from different brands in one fast web app."
+      content="Configure mouses e teclados de marcas diferentes em um único aplicativo web."
     />
     <title>OmniGear</title>
+    <script>
+      // Applies the saved theme before the first paint. The key matches
+      // src/app/useTheme.ts, which owns the preference from then on.
+      (function () {
+        try {
+          var stored = localStorage.getItem('omnigear:tema');
+          var dark = stored
+            ? stored === 'escuro'
+            : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (dark) document.documentElement.classList.add('dark');
+        } catch (error) {
+          // Storage may be blocked; the app still sets the theme after loading.
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

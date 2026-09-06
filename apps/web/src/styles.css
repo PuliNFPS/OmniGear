@@ -1,50 +1,206 @@
 @import 'tailwindcss';
 @source "../../../packages/ui/src";
 
+/*
+ * OmniGear identity: black and white surfaces with hierarchy built from space,
+ * typography and elevation. Color stays functional — destructive actions,
+ * connection status and lighting samples.
+ */
 :root {
-  --background: 40 20% 98%;
-  --foreground: 240 6% 10%;
+  --background: 40 6% 95%;
+  --foreground: 0 0% 7%;
   --surface: 0 0% 100%;
   --card: 0 0% 100%;
-  --card-foreground: 240 6% 10%;
+  --card-foreground: 0 0% 7%;
   --popover: 0 0% 100%;
-  --popover-foreground: 240 6% 10%;
-  --muted-foreground: 240 4% 43%;
-  --border: 240 6% 89%;
-  --strong: 240 5% 72%;
-  --accent: 240 7% 94%;
-  --accent-foreground: 240 6% 10%;
-  --secondary: 240 7% 94%;
-  --secondary-foreground: 240 6% 10%;
-  --input: 240 6% 89%;
-  --destructive: 0 72% 51%;
-  --primary: 28 88% 48%;
+  --popover-foreground: 0 0% 7%;
+  --muted: 40 5% 91%;
+  --muted-foreground: 0 0% 40%;
+  --border: 40 4% 87%;
+  --strong: 0 0% 62%;
+  --accent: 40 5% 91%;
+  --accent-foreground: 0 0% 7%;
+  --secondary: 40 5% 91%;
+  --secondary-foreground: 0 0% 7%;
+  --input: 40 4% 84%;
+  --destructive: 0 70% 45%;
+  --primary: 0 0% 7%;
   --primary-foreground: 0 0% 100%;
-  --ring: 28 88% 48%;
-  --status: 151 56% 39%;
+  --ring: 0 0% 25%;
+  --status: 150 45% 32%;
+  --elevation: 0 0% 0%;
+  --elevation-strength: 0.06;
 }
+
 .dark {
-  --background: 60 3% 6%;
-  --foreground: 40 10% 94%;
-  --surface: 60 3% 9%;
-  --card: 60 3% 9%;
-  --card-foreground: 40 10% 94%;
-  --popover: 60 3% 11%;
-  --popover-foreground: 40 10% 94%;
-  --muted-foreground: 45 4% 58%;
-  --border: 60 3% 17%;
-  --strong: 60 3% 28%;
-  --accent: 60 3% 15%;
-  --accent-foreground: 40 10% 94%;
-  --secondary: 60 3% 15%;
-  --secondary-foreground: 40 10% 94%;
-  --input: 60 3% 17%;
-  --destructive: 0 63% 54%;
-  --primary: 29 89% 56%;
-  --primary-foreground: 30 20% 8%;
-  --ring: 29 89% 56%;
-  --status: 148 50% 51%;
+  --background: 0 0% 5%;
+  --foreground: 0 0% 96%;
+  --surface: 0 0% 0%;
+  --card: 0 0% 9%;
+  --card-foreground: 0 0% 96%;
+  --popover: 0 0% 11%;
+  --popover-foreground: 0 0% 96%;
+  --muted: 0 0% 13%;
+  --muted-foreground: 0 0% 64%;
+  --border: 0 0% 17%;
+  --strong: 0 0% 36%;
+  --accent: 0 0% 13%;
+  --accent-foreground: 0 0% 96%;
+  --secondary: 0 0% 13%;
+  --secondary-foreground: 0 0% 96%;
+  --input: 0 0% 22%;
+  --destructive: 0 72% 58%;
+  --primary: 0 0% 100%;
+  --primary-foreground: 0 0% 6%;
+  --ring: 0 0% 82%;
+  --status: 150 45% 55%;
+  --elevation: 0 0% 0%;
+  --elevation-strength: 0.5;
 }
+
+/*
+ * Motion tokens. The interface is a crisp utility tool, so motion is fast and
+ * restrained: hover uses `ease`, anything that enters or exits uses a strong
+ * ease-out, and nothing in the UI runs longer than 220ms.
+ */
+@theme {
+  --duration-fast: 120ms; /* hover, colour and focus feedback */
+  --duration-press: 160ms; /* press feedback */
+  --duration-popover: 180ms; /* selects, dropdowns, popovers */
+  --duration-modal: 220ms; /* dialogs */
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1); /* entering and exiting */
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); /* moving on screen */
+  --ease-hover: cubic-bezier(0.25, 0.1, 0.25, 1); /* the CSS `ease` curve */
+
+  --default-transition-duration: var(--duration-fast);
+  --default-transition-timing-function: var(--ease-hover);
+
+  --animate-overlay-in: overlay-in var(--duration-modal) var(--ease-out);
+  --animate-overlay-out: overlay-out var(--duration-fast) var(--ease-out);
+  --animate-dialog-in: dialog-in var(--duration-modal) var(--ease-out);
+  --animate-dialog-out: dialog-out var(--duration-fast) var(--ease-out);
+  --animate-popover-in: popover-in var(--duration-popover) var(--ease-out);
+  --animate-popover-out: popover-out var(--duration-fast) var(--ease-out);
+  --animate-fade-in: overlay-in var(--duration-fast) var(--ease-out);
+  --animate-fade-out: overlay-out var(--duration-fast) var(--ease-out);
+  --animate-bar-in: bar-in var(--duration-popover) var(--ease-out);
+
+  /*
+   * The change bar re-enters rather than crossfades: React swaps the block by key,
+   * so only one copy is ever in the DOM and the aria-live region announces once.
+   * 2px is all the lift needed to read as "this is new".
+   */
+  @keyframes bar-in {
+    from {
+      opacity: 0;
+      translate: 0 2px;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  --animate-key-breathe: key-breathe 1600ms var(--ease-hover) infinite;
+  --animate-key-spectrum: key-spectrum 1600ms linear infinite;
+  --animate-key-reactive: key-reactive 900ms var(--ease-out) both;
+
+  @keyframes key-reactive {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /*
+   * Lighting preview. A simulation of the keyboard's own behaviour, not interface
+   * motion, so it runs continuously — but only when the visitor has not asked for
+   * reduced motion. The duration is overridden inline from the Velocidade setting.
+   */
+  @keyframes key-breathe {
+    0%,
+    100% {
+      opacity: 0.22;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  @keyframes key-spectrum {
+    from {
+      filter: hue-rotate(0deg);
+    }
+    to {
+      filter: hue-rotate(360deg);
+    }
+  }
+
+  /*
+   * Panels scale from 0.96/0.98, never from 0 — nothing appears out of nothing.
+   * Only `scale` and `opacity` are animated: Tailwind centres the dialog with the
+   * separate `translate` property, so touching `transform` here would fight it.
+   */
+  @keyframes overlay-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes overlay-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      scale: 0.96;
+    }
+    to {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+  @keyframes dialog-out {
+    from {
+      opacity: 1;
+      scale: 1;
+    }
+    to {
+      opacity: 0;
+      scale: 0.96;
+    }
+  }
+  @keyframes popover-in {
+    from {
+      opacity: 0;
+      scale: 0.98;
+    }
+    to {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+  @keyframes popover-out {
+    from {
+      opacity: 1;
+      scale: 1;
+    }
+    to {
+      opacity: 0;
+      scale: 0.98;
+    }
+  }
+}
+
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -53,6 +209,7 @@
   --color-card-foreground: hsl(var(--card-foreground));
   --color-popover: hsl(var(--popover));
   --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
   --color-border: hsl(var(--border));
   --color-strong: hsl(var(--strong));
@@ -69,300 +226,182 @@
   --font-sans:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
+
 * {
   border-color: hsl(var(--border));
 }
+
 html {
+  scrollbar-color: hsl(var(--strong)) hsl(var(--background));
+  scroll-padding-top: 5rem;
   background: hsl(var(--background));
   color: hsl(var(--foreground));
+  color-scheme: light;
 }
+
+html.dark {
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
-  min-width: 320px;
+  min-width: 0;
   min-height: 100vh;
   background: hsl(var(--background));
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
+
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
+  caret-color: hsl(var(--foreground));
 }
-.app-frame {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 270px 1fr;
+
+::selection {
+  background: hsl(var(--foreground) / 0.18);
+  color: hsl(var(--foreground));
 }
-.sidebar {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid hsl(var(--border));
-  background: hsl(var(--surface));
+
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 1rem;
+  z-index: 100;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  translate: 0 -200%;
 }
-.sidebar-brand {
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid hsl(var(--border));
-  padding: 0 20px;
+.skip-link:focus {
+  translate: 0 0;
 }
+
+nav {
+  scrollbar-width: thin;
+}
+
+.device-preview-arrival {
+  animation: overlay-in var(--duration-modal) var(--ease-out);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .device-preview-arrival {
+    animation: device-arrival var(--duration-modal) var(--ease-out);
+  }
+  @keyframes device-arrival {
+    from {
+      opacity: 0.4;
+      scale: 0.97;
+    }
+    to {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+}
+
+/*
+ * The theme flips atomically. Without this the page background changes in a single
+ * frame while every element carrying `transition-colors` crossfades behind it —
+ * measured 126 of them on the Parâmetros screen — so the new theme arrives in two
+ * waves. The attribute is set by useTheme.ts and removed two frames later.
+ */
+[data-theme-switching],
+[data-theme-switching] *,
+[data-theme-switching] *::before,
+[data-theme-switching] *::after {
+  transition: none !important;
+}
+
+/* Shared elevation for cards and floating surfaces in both themes. */
+.panel-shadow {
+  box-shadow: 0 1px 2px hsl(var(--elevation) / calc(var(--elevation-strength) * 0.6));
+}
+
+.panel-shadow-lg {
+  box-shadow: 0 18px 48px hsl(var(--elevation) / var(--elevation-strength));
+}
+
+/* The devices are black: a soft halo keeps the photo readable on both themes. */
+.device-photo {
+  background: radial-gradient(closest-side, hsl(var(--foreground) / 0.09), transparent 76%);
+}
+
 .eyebrow {
-  font-size: 10px;
-  line-height: 1rem;
-  font-weight: 650;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-  color: hsl(var(--muted-foreground));
-}
-.device-nav-item {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 11px;
-  border-radius: 10px;
-  padding: 9px;
-  color: hsl(var(--muted-foreground));
-  transition:
-    background-color 0.15s,
-    color 0.15s;
-}
-.device-nav-item:hover {
-  background: hsl(var(--accent));
-  color: hsl(var(--foreground));
-}
-.device-nav-item:focus-visible {
-  outline: 2px solid hsl(var(--ring));
-  outline-offset: 2px;
-}
-.device-nav-item-active {
-  background: hsl(var(--accent));
-  color: hsl(var(--foreground));
-}
-.device-nav-icon {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  place-items: center;
-  border: 1px solid hsl(var(--border));
-  border-radius: 9px;
-  background: hsl(var(--background));
-}
-.main-panel {
-  min-width: 0;
-  min-height: 100vh;
-  position: relative;
-}
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid hsl(var(--border));
-  padding: 0 24px;
-  background: hsl(var(--background) / 0.86);
-  backdrop-filter: blur(16px);
-}
-.main-scroll {
-  min-height: calc(100vh - 64px);
-}
-.content-shell {
-  width: min(960px, calc(100% - 64px));
-  margin: 0 auto;
-  padding: 54px 0 80px;
-}
-.device-header {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  margin-bottom: 46px;
-}
-.device-hero-icon {
-  display: grid;
-  width: 64px;
-  height: 64px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid hsl(var(--border));
-  border-radius: 16px;
-  background: hsl(var(--surface));
-  box-shadow: 0 8px 24px hsl(0 0% 0% / 0.08);
-}
-.battery-pill {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  border: 1px solid hsl(var(--border));
-  border-radius: 999px;
-  background: hsl(var(--surface));
-  padding: 7px 11px;
-  font-size: 12px;
-  color: hsl(var(--muted-foreground));
-}
-.settings-group {
-  overflow: hidden;
-  border: 1px solid hsl(var(--border));
-  border-radius: 14px;
-  background: hsl(var(--surface));
-  box-shadow: 0 10px 36px hsl(0 0% 0% / 0.05);
-}
-.settings-group-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid hsl(var(--border));
-  padding: 12px 20px;
   font-size: 11px;
-  font-weight: 650;
+  line-height: 1rem;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: hsl(var(--muted-foreground));
 }
-.settings-group-title span:last-child {
-  font-weight: 400;
-  letter-spacing: normal;
-  text-transform: none;
-}
-.setting-row {
-  display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(280px, 380px);
-  align-items: center;
-  gap: 48px;
-  padding: 22px 24px;
-}
-.setting-row + .setting-row {
-  border-top: 1px solid hsl(var(--border));
-}
-.toggle {
-  display: inline-flex;
-  height: 40px;
-  align-items: center;
-  gap: 10px;
-  color: hsl(var(--muted-foreground));
-}
-.toggle > span {
-  display: flex;
-  width: 38px;
-  height: 22px;
-  align-items: center;
-  border: 1px solid hsl(var(--strong));
-  border-radius: 999px;
-  padding: 2px;
-  background: hsl(var(--background));
-  transition: 0.18s;
-}
-.toggle > span::after {
-  content: '';
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: hsl(var(--muted-foreground));
-  transition: transform 0.18s;
-}
-.toggle-on > span {
-  justify-content: flex-start;
-  border-color: hsl(var(--primary));
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-}
-.toggle-on > span::after {
-  transform: translateX(16px);
-  background: hsl(var(--primary-foreground));
-}
-.toggle-on > span svg {
-  display: none;
-}
-.toggle em {
-  font-size: 13px;
-  font-style: normal;
-  font-weight: 500;
-}
+
+/* Range inputs keep the monochrome identity in both themes. */
 .range {
   width: 100%;
-  accent-color: hsl(var(--primary));
+  min-width: 0;
+  height: 32px;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
 }
-.empty-state {
-  min-height: calc(100vh - 64px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32px;
-  text-align: center;
+
+.range::-webkit-slider-runnable-track {
+  height: 2px;
+  border-radius: 999px;
+  background: hsl(var(--strong));
 }
-.empty-icon {
-  display: grid;
-  width: 56px;
-  height: 56px;
-  place-items: center;
-  border: 1px solid hsl(var(--border));
-  border-radius: 15px;
-  background: hsl(var(--surface));
-  color: hsl(var(--muted-foreground));
-  box-shadow: 0 10px 30px hsl(0 0% 0% / 0.06);
+
+.range::-moz-range-track {
+  height: 2px;
+  border-radius: 999px;
+  background: hsl(var(--strong));
 }
-.alert-stack {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  z-index: 30;
-  width: min(380px, calc(100vw - 32px));
+
+.range::-webkit-slider-thumb {
+  appearance: none;
+  margin-top: -7px;
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: hsl(var(--foreground));
 }
-@media (max-width: 800px) {
-  .app-frame {
-    grid-template-columns: 1fr;
-  }
-  .sidebar {
-    position: static;
-    width: auto;
-    height: auto;
-    border-right: 0;
-    border-bottom: 1px solid hsl(var(--border));
-  }
-  .sidebar > div:nth-child(2) {
-    max-height: 240px;
-    overflow: auto;
-  }
-  .topbar {
-    top: 0;
-  }
-  .content-shell {
-    width: min(100% - 32px, 680px);
-    padding-top: 32px;
-  }
-  .setting-row {
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
+
+.range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: hsl(var(--foreground));
 }
-@media (max-width: 480px) {
-  .device-header {
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-  .battery-pill {
-    margin-left: 82px;
-  }
-  .setting-row {
-    padding: 20px 16px;
-  }
-  .settings-group-title span:last-child {
-    display: none;
-  }
+
+.range:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 4px;
+  border-radius: 999px;
 }
+
+.range:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+/*
+ * Reduced motion removes movement, not feedback. Colour and opacity transitions
+ * still explain what changed; loading remains explicit in the status text.
+ * Anything that moves an element is written with Tailwind's `motion-safe:` variant
+ * or inside `@media (prefers-reduced-motion: no-preference)`, so it disappears here
+ * on its own.
+ */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-pulse {
+    animation: none;
   }
 }

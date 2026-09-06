@@ -1,9 +1,10 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   "ignoreBinaries": ["graphify", "wasm-pack"],
+  // Agent skill runtimes and the design gallery are tooling, not application code.
+  "ignore": [".agents/skills/**", ".claude/skills/**", "apps/web/.impeccable/**"],
   "ignoreIssues": {
-    // Skeleton abstractions intentionally kept for the upcoming WebHID implementation.
-    "apps/web/src/hardware/ConnectedDevice.ts": ["files"],
+    // Skeleton kept for the upcoming WebHID implementation.
     "apps/web/src/hardware/WebHidTransport.ts": ["files"],
     // Public while the store API is still being shaped.
     "apps/web/src/store/deviceStore.ts": ["types"],
