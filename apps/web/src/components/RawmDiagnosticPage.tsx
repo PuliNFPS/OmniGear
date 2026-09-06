@@ -12,8 +12,11 @@ import {
 } from '../hardware/rawm/diagnostics';
 import {
   probeButtonMapping,
+  probeMappingSet,
   probePollingWrite,
   type MappingProbeReport,
+  type MappingSetEntry,
+  type MappingSetReport,
   type WriteProbeReport,
 } from '../hardware/rawm/writeProbe';
 import type { MouseActionId } from '@gearhub/shared';
@@ -90,6 +93,70 @@ const KEY_IDS: { id: number; rotulo: string }[] = [
   { id: 1, rotulo: 'Clique esquerdo (arriscado)' },
 ];
 
+/**
+ * Candidate complete sets. CONFIG_RESET clears every mapping, so only a full set
+ * survives it; anything omitted stops working until a power cycle.
+ *
+ * `kd` carries seven debounce delays, so there are seven keys, ids 1 to 7. The
+ * driver's table uses six and skips 4, and puts middle before right, against the
+ * HID convention where 1 is left, 2 is right and 3 is middle.
+ */
+const MAPPING_SETS: { id: string; rotulo: string; entradas: MappingSetEntry[] }[] = [
+  {
+    id: 'hid-roda-4',
+    rotulo: 'HID padrao, roda no id 4',
+    entradas: [
+      { keyIds: [1], acao: 'clique-esquerdo' },
+      { keyIds: [2], acao: 'clique-direito' },
+      { keyIds: [3], acao: 'clique-central' },
+      { keyIds: [4], acao: 'rolagem-cima' },
+      { keyIds: [5], acao: 'voltar' },
+      { keyIds: [6], acao: 'avancar' },
+      { keyIds: [7], acao: 'dpi-ciclo' },
+    ],
+  },
+  {
+    id: 'hid-roda-4-ambas',
+    rotulo: 'HID padrao, roda no id 4 (cima e baixo)',
+    entradas: [
+      { keyIds: [1], acao: 'clique-esquerdo' },
+      { keyIds: [2], acao: 'clique-direito' },
+      { keyIds: [3], acao: 'clique-central' },
+      { keyIds: [4], acao: 'rolagem-cima' },
+      { keyIds: [4], acao: 'rolagem-baixo' },
+      { keyIds: [5], acao: 'voltar' },
+      { keyIds: [6], acao: 'avancar' },
+      { keyIds: [7], acao: 'dpi-ciclo' },
+    ],
+  },
+  {
+    id: 'driver-atual',
+    rotulo: 'Conjunto atual do driver (reproduz a falha)',
+    entradas: [
+      { keyIds: [1], acao: 'clique-esquerdo' },
+      { keyIds: [2], acao: 'clique-central' },
+      { keyIds: [3], acao: 'clique-direito' },
+      { keyIds: [5], acao: 'voltar' },
+      { keyIds: [6], acao: 'avancar' },
+      { keyIds: [7], acao: 'dpi-ciclo' },
+    ],
+  },
+  {
+    id: 'hid-rplus',
+    rotulo: 'HID padrao + R-Plus (dianteiro + direito = ciclar DPI)',
+    entradas: [
+      { keyIds: [1], acao: 'clique-esquerdo' },
+      { keyIds: [2], acao: 'clique-direito' },
+      { keyIds: [3], acao: 'clique-central' },
+      { keyIds: [4], acao: 'rolagem-cima' },
+      { keyIds: [5], acao: 'voltar' },
+      { keyIds: [6], acao: 'avancar' },
+      { keyIds: [7], acao: 'dpi-ciclo' },
+      { keyIds: [6, 2], acao: 'dpi-ciclo' },
+    ],
+  },
+];
+
 const MAPPING_ACTIONS: { id: MouseActionId; rotulo: string }[] = [
   { id: 'clique-central', rotulo: 'Clique central' },
   { id: 'clique-direito', rotulo: 'Clique direito' },
@@ -108,6 +175,8 @@ export function RawmDiagnosticPage() {
   const [mapping, setMapping] = useState<MappingProbeReport | null>(null);
   const [keyId, setKeyId] = useState(KEY_IDS[0].id);
   const [withReset, setWithReset] = useState(true);
+  const [setId, setSetId] = useState(MAPPING_SETS[0].id);
+  const [conjunto, setConjunto] = useState<MappingSetReport | null>(null);
   const [action, setAction] = useState<MouseActionId>('clique-central');
 
   async function probe(allDevices: boolean) {
@@ -127,6 +196,7 @@ export function RawmDiagnosticPage() {
       setDevice(chosen);
       setWrite(null);
       setMapping(null);
+      setConjunto(null);
       setArmed(false);
       setReport(await runReadOnlyDiagnostic(chosen));
     } catch (cause) {
@@ -386,6 +456,86 @@ export function RawmDiagnosticPage() {
                     onClick={() => downloadJson('mapeamento-rawm.json', mapping)}
                   >
                     Baixar relatório
+                  </Button>
+                </div>
+              )}
+            </section>
+          )}
+
+          {report.snapshot && device && (
+            <section className="mt-8 rounded-md border border-destructive/40 bg-destructive/5 p-4">
+              <h2 className="text-lg font-semibold">Conjunto completo de mapeamentos</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                O <code>CONFIG_RESET</code> apaga todos os mapeamentos, entao so um conjunto
+                completo sobrevive a ele. O que ficar de fora para de funcionar ate voce religar o
+                mouse: foi assim que a roda se perdeu.
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Depois de enviar, teste <strong>tudo</strong>: os seis botoes e a rolagem nos dois
+                sentidos. Nada e gravado na flash.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <select
+                  className="rounded-md border border-border bg-card px-2 py-1 text-sm"
+                  value={setId}
+                  onChange={(event) => setSetId(event.target.value)}
+                >
+                  {MAPPING_SETS.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.rotulo}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={!armed || busy}
+                  onClick={() => {
+                    const chosen = MAPPING_SETS.find((item) => item.id === setId);
+                    if (!chosen) return;
+                    setBusy(true);
+                    setError(null);
+                    probeMappingSet(device, chosen.entradas)
+                      .then(setConjunto)
+                      .catch((cause: unknown) =>
+                        setError(cause instanceof Error ? cause.message : String(cause)),
+                      )
+                      .finally(() => setBusy(false));
+                  }}
+                >
+                  Enviar conjunto
+                </Button>
+              </div>
+
+              {conjunto && (
+                <div className="mt-4">
+                  <p className="text-sm">
+                    <span
+                      className={`rounded px-2 py-0.5 text-xs font-semibold ${
+                        conjunto.enviado ? statusStyles.aviso : statusStyles.falha
+                      }`}
+                    >
+                      {conjunto.enviado ? 'ENVIADO - TESTE TUDO' : 'NAO ENVIADO'}
+                    </span>{' '}
+                    {conjunto.eventos} eventos
+                  </p>
+                  {conjunto.erro && (
+                    <p className="mt-2 text-sm text-destructive">{conjunto.erro}</p>
+                  )}
+                  <ul className="mt-2 font-mono text-xs">
+                    {conjunto.entradas.map((entry, index) => (
+                      <li key={index}>
+                        [{entry.keyIds.join(' + ')}] to {entry.acao}
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    className="mt-3"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => downloadJson('conjunto-rawm.json', setReport)}
+                  >
+                    Baixar relatorio
                   </Button>
                 </div>
               )}

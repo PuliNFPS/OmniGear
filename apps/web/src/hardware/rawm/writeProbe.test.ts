@@ -4,7 +4,12 @@ import type { HidInputReportEvent } from '../WebHidTransport';
 import { leviathanV4QueryFixture } from './leviathanV4Fixture';
 import { parseMouseParamState } from './mouseParamSnapshot';
 import { frameEvent, withProtocolEnvelope } from './protocol';
-import { compareStates, probeButtonMapping, probePollingWrite } from './writeProbe';
+import {
+  compareStates,
+  probeButtonMapping,
+  probeMappingSet,
+  probePollingWrite,
+} from './writeProbe';
 
 function queryReports(value: Record<string, unknown>): Uint8Array[] {
   const json = new TextEncoder().encode(`${JSON.stringify(value)}\0`);
@@ -230,5 +235,42 @@ describe('probeButtonMapping', () => {
     expect(stream.slice(8).some((_, index) => stream[8 + index] === 0x16)).toBe(true);
     // No action event, so nothing is committed to flash.
     expect(mouse.writes.some((write) => (write[0] & 0x0f) === 0x06)).toBe(false);
+  });
+});
+
+describe('probeMappingSet', () => {
+  const conjunto = [
+    { keyIds: [1], acao: 'clique-esquerdo' as const },
+    { keyIds: [2], acao: 'clique-direito' as const },
+    { keyIds: [3], acao: 'clique-central' as const },
+    { keyIds: [5], acao: 'voltar' as const },
+  ];
+
+  it('opens with a config reset and then sends every entry', async () => {
+    const mouse = fakeMouse({ ignoreWrites: true });
+
+    const report = await probeMappingSet(mouse.device, conjunto);
+
+    expect(report.enviado).toBe(true);
+    // One reset plus one event per entry.
+    expect(report.eventos).toBe(conjunto.length + 1);
+    expect(mouse.writes.length).toBeGreaterThanOrEqual(conjunto.length + 1);
+    // First event is the reset: inner config type 0x03.
+    expect(mouse.writes[0][7]).toBe(0x03);
+    // Nothing is committed to flash.
+    expect(mouse.writes.some((write) => (write[0] & 0x0f) === 0x06)).toBe(false);
+  });
+
+  // The R-Plus layer is a mapping whose key id list is activator then target.
+  it('carries both key ids for an R-Plus entry', async () => {
+    const mouse = fakeMouse({ ignoreWrites: true });
+
+    await probeMappingSet(mouse.device, [{ keyIds: [6, 2], acao: 'dpi-ciclo' }]);
+
+    const mapping = mouse.writes[1];
+    expect(mapping[7]).toBe(0x18); // mouse-function type
+    expect(mapping[8]).toBe(2); // two key ids
+    expect(mapping[9]).toBe(6); // activator
+    expect(mapping[10]).toBe(2); // target
   });
 });
