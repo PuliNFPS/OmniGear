@@ -11,7 +11,7 @@ const mouse = {
   vi: 0x1915,
   crc: 1,
   cpi: 1600,
-  polling_rate: 1000,
+  polling: 1000,
   light: 0x30,
   cpi_l: [400, 800, 1600, 3200],
   cpi_l_c: [1, 2, 3, 4],
@@ -192,7 +192,9 @@ describe('captureQuery', () => {
       open: vi.fn(async () => undefined),
       send: vi.fn(async () => {
         queueMicrotask(() => {
-          listener?.(0, new Uint8Array(64).fill(0x11));
+          const malformed = new Uint8Array(64).fill(0x11);
+          malformed[0] = 0x8a;
+          listener?.(0, malformed);
           queryReports(receiver, false).forEach((report) => listener?.(0, report));
         });
       }),
@@ -216,7 +218,10 @@ describe('captureQuery', () => {
     const transport: HardwareTransport = {
       open: vi.fn(async () => undefined),
       send: vi.fn(async () => {
-        queueMicrotask(() => listener?.(0, new Uint8Array(64).fill(0x11)));
+        // Data marker set, so it reaches the assembler; body has no FF preamble.
+        const malformed = new Uint8Array(64).fill(0x11);
+        malformed[0] = 0x8a;
+        queueMicrotask(() => listener?.(0, malformed));
       }),
       onInputReport(next) {
         listener = next;
@@ -229,7 +234,7 @@ describe('captureQuery', () => {
     const result = await captureQuery(transport, 'fisico', [], 30);
 
     expect(result.raw).toBeNull();
-    expect(result.error).toContain('marcador de dados');
+    expect(result.error).toContain('preâmbulo');
   });
 });
 

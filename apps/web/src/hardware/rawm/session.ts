@@ -4,6 +4,7 @@ import {
   buildQueryEvent,
   decodeReportChunk,
   frameEvent,
+  isQueryResult,
   parseQueryJson,
 } from './protocol';
 
@@ -62,9 +63,11 @@ export async function queryRawmDevice(
       if (reportId !== 0) return;
       try {
         const chunk = decodeReportChunk(report, virtualMouse);
-        if (chunk.length === 0) return;
-        const event = assembler.push(chunk);
-        if (event) finish(validateRawmIdentity(parseQueryJson(event)));
+        if (chunk === null || chunk.length === 0) return;
+        for (const event of assembler.push(chunk)) {
+          // The stream also carries non-query events; only 0x02 answers us.
+          if (isQueryResult(event)) finish(validateRawmIdentity(parseQueryJson(event)));
+        }
       } catch (error) {
         finish(error instanceof Error ? error : new Error('Resposta RAWM inválida.'));
       }

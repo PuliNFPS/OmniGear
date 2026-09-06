@@ -74,14 +74,16 @@ export function frameEvent(event: Uint8Array, virtualMouse: boolean): Uint8Array
   return reports;
 }
 
-export function decodeReportChunk(report: Uint8Array, virtualMouse: boolean): Uint8Array {
+export function decodeReportChunk(report: Uint8Array, virtualMouse: boolean): Uint8Array | null {
   const headerIndex = virtualMouse ? 1 : 0;
   if (report.length !== REPORT_BYTES) throw new RangeError('Relatório RAWM deve ter 64 bytes.');
   if (virtualMouse && report[0] !== VIRTUAL_MOUSE_CHANNEL) {
     throw new Error('Relatório não pertence ao canal virtual do mouse.');
   }
   const header = report[headerIndex];
-  if ((header & 0x80) === 0) throw new Error('Relatório RAWM sem marcador de dados.');
+  // The receiver interleaves frames of its own without the data marker. They
+  // are not corruption, so they are skipped rather than failing the exchange.
+  if ((header & 0x80) === 0) return null;
   const length = header & 0x3f;
   if (length > report.length - headerIndex - 1) throw new Error('Relatório RAWM truncado.');
   return report.slice(headerIndex + 1, headerIndex + 1 + length);
@@ -89,36 +91,47 @@ export function decodeReportChunk(report: Uint8Array, virtualMouse: boolean): Ui
 
 export class RawEventAssembler {
   private bytes: number[] = [];
-  private expectedLength: number | null = null;
 
-  push(chunk: Uint8Array): Uint8Array | null {
+  /**
+   * Returns every event completed by this chunk, keeping leftover bytes for the
+   * next one. Events arrive packed back to back, so a chunk routinely ends in
+   * the middle of the following event; discarding that surplus loses it and
+   * leaves the buffer mid-payload, which surfaces as a missing preamble.
+   */
+  push(chunk: Uint8Array): Uint8Array[] {
     this.bytes.push(...chunk);
-    if (this.bytes.length >= 4 && this.bytes.slice(0, 4).some((byte) => byte !== 0xff)) {
-      this.reset();
-      throw new Error('Resposta RAWM sem preâmbulo válido.');
-    }
-    if (this.expectedLength === null && this.bytes.length >= 6) {
-      this.expectedLength = eventLength(Uint8Array.from(this.bytes.slice(4, 6)));
-      if (this.expectedLength < 2) {
+    const events: Uint8Array[] = [];
+
+    for (;;) {
+      if (this.bytes.length >= 4 && this.bytes.slice(0, 4).some((byte) => byte !== 0xff)) {
+        this.reset();
+        throw new Error('Resposta RAWM sem preâmbulo válido.');
+      }
+      if (this.bytes.length < 6) break;
+
+      const declared = eventLength(Uint8Array.from(this.bytes.slice(4, 6)));
+      if (declared < 2) {
         this.reset();
         throw new Error('Resposta RAWM declarou comprimento inválido.');
       }
+
+      const total = declared + 4;
+      if (this.bytes.length < total) break;
+      events.push(Uint8Array.from(this.bytes.slice(4, total)));
+      this.bytes = this.bytes.slice(total);
     }
-    const totalLength = this.expectedLength === null ? null : this.expectedLength + 4;
-    if (totalLength === null || this.bytes.length < totalLength) return null;
-    if (this.bytes.length > totalLength) {
-      this.reset();
-      throw new Error('Resposta RAWM contém bytes além do evento declarado.');
-    }
-    const event = Uint8Array.from(this.bytes.slice(4));
-    this.reset();
-    return event;
+
+    return events;
   }
 
   reset() {
     this.bytes = [];
-    this.expectedLength = null;
   }
+}
+
+/** Query results carry command 0x02; the stream also carries other events. */
+export function isQueryResult(event: Uint8Array): boolean {
+  return (event[0] & 0x0f) === 0x02;
 }
 
 export function parseQueryJson(event: Uint8Array): Record<string, unknown> {

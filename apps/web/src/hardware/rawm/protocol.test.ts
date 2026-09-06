@@ -44,7 +44,7 @@ describe('RAWM query and HID framing', () => {
     expect(reports).toHaveLength(2);
     expect(reports[0]).toHaveLength(64);
     expect(reports[0][0]).toBe(0xbf);
-    expect([...decodeReportChunk(reports[0], false)]).toEqual(
+    expect([...decodeReportChunk(reports[0], false)!]).toEqual(
       Array.from({ length: 63 }, (_, index) => index),
     );
     expect(reports[1][0]).toBe(0x87);
@@ -57,7 +57,7 @@ describe('RAWM query and HID framing', () => {
     );
     expect(reports).toHaveLength(2);
     expect([...reports[0].slice(0, 3)]).toEqual([0xc0, 0xbe, 0]);
-    expect([...decodeReportChunk(reports[0], true)]).toEqual(
+    expect([...decodeReportChunk(reports[0], true)!]).toEqual(
       Array.from({ length: 62 }, (_, index) => index),
     );
   });
@@ -67,9 +67,9 @@ describe('RAWM query and HID framing', () => {
     const response = Uint8Array.from([0xff, 0xff, 0xff, 0xff, ...event]);
     const assembler = new RawEventAssembler();
 
-    expect(assembler.push(response.slice(0, 3))).toBeNull();
-    expect(assembler.push(response.slice(3, 6))).toBeNull();
-    expect([...assembler.push(response.slice(6))!]).toEqual([...event]);
+    expect(assembler.push(response.slice(0, 3))).toEqual([]);
+    expect(assembler.push(response.slice(3, 6))).toEqual([]);
+    expect([...assembler.push(response.slice(6))[0]]).toEqual([...event]);
   });
 
   it('rejects a response without the four-byte preamble', () => {
@@ -81,5 +81,51 @@ describe('RAWM query and HID framing', () => {
     const json = new TextEncoder().encode('{"dn":"Leviathan V4","pi":9026}\u0000');
     const event = withProtocolEnvelope([0x02, 0, ...json], false);
     expect(parseQueryJson(event)).toMatchObject({ dn: 'Leviathan V4', pi: 9026 });
+  });
+});
+
+// Framing observed on real hardware: the receiver packs events back to back in
+// the byte stream, so a single 30-byte chunk can carry the tail of one event
+// and the head of the next. Dropping that surplus loses the following event and
+// leaves the assembler mid-JSON, which reads as a missing preamble.
+describe('RawEventAssembler with real receiver framing', () => {
+  function event(cmd: number, body: number[]): number[] {
+    const length = body.length + 2;
+    return [0xff, 0xff, 0xff, 0xff, (cmd & 0x0f) | ((length >> 4) & 0xf0), length & 0xff, ...body];
+  }
+
+  it('emits both events when one chunk spans the boundary', () => {
+    const stream = [...event(0x02, [1, 2, 3]), ...event(0x0b, [4, 5])];
+    const assembler = new RawEventAssembler();
+
+    const events = assembler.push(Uint8Array.from(stream));
+
+    expect(events).toHaveLength(2);
+    expect(events[0][0] & 0x0f).toBe(0x02);
+    expect([...events[0].slice(2)]).toEqual([1, 2, 3]);
+    expect(events[1][0] & 0x0f).toBe(0x0b);
+  });
+
+  it('carries a partial event across chunks', () => {
+    const stream = event(0x02, [9, 9, 9, 9, 9, 9]);
+    const assembler = new RawEventAssembler();
+
+    expect(assembler.push(Uint8Array.from(stream.slice(0, 5)))).toEqual([]);
+    const events = assembler.push(Uint8Array.from(stream.slice(5)));
+
+    expect(events).toHaveLength(1);
+    expect([...events[0].slice(2)]).toEqual([9, 9, 9, 9, 9, 9]);
+  });
+});
+
+describe('decodeReportChunk on non-data reports', () => {
+  // The receiver interleaves frames without the 0x80 marker. Three showed up in
+  // the real capture; they are its own traffic, not corruption.
+  it('returns null instead of throwing', () => {
+    const report = new Uint8Array(64);
+    report[0] = 0xc0;
+    report[1] = 0x52;
+
+    expect(decodeReportChunk(report, true)).toBeNull();
   });
 });
