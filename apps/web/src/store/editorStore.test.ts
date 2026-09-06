@@ -202,3 +202,48 @@ describe('loading another profile', () => {
     expect(countChanges(entry.saved, entry.draft)).toBe(0);
   });
 });
+
+describe('coalescing rapid edits', () => {
+  // A slider drag emits an edit per pixel, and each apply on real hardware is a
+  // config reset plus the parameter block plus every mapping. Sending one per
+  // event stalled input on the machine.
+  it('writes once for a burst of edits, with the final value', async () => {
+    const device = currentDevice();
+    const applyToSession = vi.fn(async () => undefined);
+    vi.spyOn({ driverFor }, 'driverFor');
+    const driver = driverFor(device);
+    const spy = vi.spyOn(driver, 'applyToSession').mockImplementation(applyToSession);
+
+    for (const rate of [125, 250, 500, 1000]) {
+      useEditorStore
+        .getState()
+        .edit(device, (draft) =>
+          isMouseSettings(draft) ? { ...draft, pollingRate: rate } : draft,
+        );
+    }
+
+    expect(spy).not.toHaveBeenCalled();
+    await vi.runAllTimersAsync();
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    const written = spy.mock.calls[0][0];
+    expect(isMouseSettings(written) && written.pollingRate).toBe(1000);
+    // The draft still reflects every edit as the user typed them.
+    expect(draftOf(device.id).pollingRate).toBe(1000);
+  });
+
+  it('does not let a queued apply land after a profile write', async () => {
+    const device = currentDevice();
+    const driver = driverFor(device);
+    const apply = vi.spyOn(driver, 'applyToSession').mockResolvedValue(undefined);
+    vi.spyOn(driver, 'writeProfile').mockResolvedValue(undefined);
+
+    useEditorStore
+      .getState()
+      .edit(device, (draft) => (isMouseSettings(draft) ? { ...draft, pollingRate: 500 } : draft));
+    await useEditorStore.getState().save(device);
+    await vi.runAllTimersAsync();
+
+    expect(apply).not.toHaveBeenCalled();
+  });
+});

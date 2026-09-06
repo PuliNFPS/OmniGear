@@ -6,6 +6,7 @@ import type {
   MousePeripheral,
   MouseSettings,
 } from '@gearhub/shared';
+import { LEVIATHAN_V4_LOD_LEVELS } from './leviathanV4Lod';
 import { createRPlusSettings } from '../../domain/mouseCapabilities';
 
 export const RAWM_VENDOR_ID = 0x1915;
@@ -25,7 +26,11 @@ const leviathanV4ParameterCapabilities: MouseParameterCapabilities = {
   angleSnapping: true,
   rippleControl: true,
   wirelessTurbo: true,
-  liftOffDistance: { min: 1, max: 3, step: 1 },
+  liftOffDistance: {
+    min: LEVIATHAN_V4_LOD_LEVELS[0].raw,
+    max: LEVIATHAN_V4_LOD_LEVELS[LEVIATHAN_V4_LOD_LEVELS.length - 1].raw,
+    step: 1,
+  },
   sensorRotation: { min: -30, max: 30, step: 1 },
 };
 
@@ -161,7 +166,7 @@ export function createLeviathanV4Peripheral(
       typeof raw.battery === 'number' && raw.battery >= 0 && raw.battery <= 100
         ? raw.battery
         : null,
-    photo: { src: '/dispositivos/leviathan-v4.svg', aspect: 0.58 },
+    photo: { src: '/dispositivos/leviathan-v4.png', aspect: 0.58 },
     capabilities: {
       dpi: {
         min: Math.min(...dpiLevels),
