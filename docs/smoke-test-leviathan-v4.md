@@ -291,3 +291,29 @@ ids, e por isso toda escrita de mapeamento foi aceita e ignorada.
 Tambem corrigido: `MOUSE_KEY_WHEEL_UP` e `_DOWN` valem `0x07` e `0x08`, nao `0x41` e `0x3f`.
 
 E a camada R-Plus e simplesmente dois key ids no mesmo evento, ativador primeiro.
+
+## Remapeamento confirmado em hardware
+
+Conjunto enviado com os ids reais, sem gravar em flash:
+
+```
+0x0a -> clique esquerdo
+0x0b -> clique central
+0x0c -> clique direito
+0x0e -> voltar     0x0f -> avancar     0x10 -> ciclar DPI
+```
+
+Resultado no mouse: o botao direito passou a dar clique de roda e o clique de roda passou a
+dar direito. Exatamente a troca enviada.
+
+Isso confirma de uma vez os key ids, os encoders e a regra de que um mapeamento so vale
+dentro do bloco aberto pelo `CONFIG_RESET`.
+
+Com isso o driver voltou a escrever mapeamentos:
+
+- `applyToSession` manda `CONFIG_RESET`, os parametros e **o conjunto completo**, sem nenhum
+  `SAVE`. Vale para a sessao e o power cycle restaura o que estiver na flash.
+- `writeProfile` acrescenta os dois `ACTION_SAVE_CONFIG_TO_FDS` em volta do corpo, e ai
+  persiste.
+- A setima tecla (`0x0d`, `FUNCTION_SHOW_POWER`) e reenviada sempre. O editor nao a expoe,
+  entao nada em `settings` a reconstruiria, e o reset a apagaria em silencio.
