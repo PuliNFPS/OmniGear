@@ -257,3 +257,37 @@ Mas do conjunto enviado, so uma coisa pegou: o clique do scroll passou a trocar 
 Ou seja, o que resta errado sao os **layouts de payload**, nao os ids. O evento de funcao
 carrega `[count, key_id, touch_type, function_id, ...]`, e o firmware aparentemente leu o
 key id de outra posicao — ou o campo e uma mascara de bits, e nao um indice.
+
+## O protocolo, confirmado na biblioteca do fabricante
+
+A versao web em `rawmtech.com/hub.html` carrega `hub.miracletek.net/hub/js/library.min.js`,
+que traz os encoders originais. Desobfuscados:
+
+```
+send_event_mouse_key:      [CMD_CONFIG, 0, 0x16, count, ...ids, mod1, key_type, key_code, mod2, 0]
+send_event_mouse_function: [CMD_CONFIG, 0, 0x18, count, ...ids, touch, func, val_lo, val_hi, 0, len_lo, len_hi, ...text]
+```
+
+**Os dois encoders deste projeto ja estavam corretos**, byte por byte. A conclusao anterior
+de que o payload tinha bytes sobrando estava errada: aqueles eventos vinham dentro de
+`CONFIG_TYPE_MOUSE_CONFIG` (`0x14`), um formato de relato mais compacto, nao o de escrita.
+
+O bug era so o **key id**. Do dump que o proprio mouse emite:
+
+| key id          | mapeamento de fabrica                     |
+| --------------- | ----------------------------------------- |
+| `0x0a`          | MKEY code 1, clique esquerdo              |
+| `0x0b`          | MKEY code 2, clique direito               |
+| `0x0c`          | MKEY code 3, clique central               |
+| `0x0d`          | `FUNCTION_SHOW_POWER`                     |
+| `0x0e`          | MKEY code 4, M4                           |
+| `0x0f`          | MKEY code 5, M5                           |
+| `0x10`          | `FUNCTION_TOGGLE_CPI`, botao de DPI       |
+| `0x10` + `0x0c` | `FUNCTION_TOGGLE_ESB_ADDR`, camada R-Plus |
+
+Sete teclas, batendo com as sete entradas de `kd`. Este driver usava 1 a 7, que nao sao key
+ids, e por isso toda escrita de mapeamento foi aceita e ignorada.
+
+Tambem corrigido: `MOUSE_KEY_WHEEL_UP` e `_DOWN` valem `0x07` e `0x08`, nao `0x41` e `0x3f`.
+
+E a camada R-Plus e simplesmente dois key ids no mesmo evento, ativador primeiro.

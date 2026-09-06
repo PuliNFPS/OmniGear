@@ -114,33 +114,50 @@ const KEY_IDS: { id: number; rotulo: string }[] = [
  * named, while every mouse-key event was ignored. So the payload layouts are
  * what remain wrong, not the ids.
  */
+/**
+ * Key ids read from the mouse's own MOUSE_CONFIG dump, cross-checked against
+ * the vendor library's encoders. Earlier presets used 1 to 7, which are not key
+ * ids, so nothing they sent could ever land.
+ */
 const MAPPING_SETS: { id: string; rotulo: string; entradas: MappingSetEntry[] }[] = [
   {
-    id: 'oficial',
-    rotulo: 'Layout oficial (1 esq, 2 central, 3 dir, 5 M4, 6 M5, 7 DPI)',
+    id: 'reais-um-teste',
+    rotulo: 'Ids reais: 0x0b (direito) vira clique central',
     entradas: [
-      { keyIds: [1], acao: 'clique-esquerdo' },
-      { keyIds: [2], acao: 'clique-central' },
-      { keyIds: [3], acao: 'clique-direito' },
-      { keyIds: [5], acao: 'voltar' },
-      { keyIds: [6], acao: 'avancar' },
-      { keyIds: [7], acao: 'dpi-ciclo' },
+      { keyIds: [0x0a], acao: 'clique-esquerdo' },
+      { keyIds: [0x0b], acao: 'clique-central' },
+      { keyIds: [0x0c], acao: 'clique-direito' },
+      { keyIds: [0x0e], acao: 'voltar' },
+      { keyIds: [0x0f], acao: 'avancar' },
+      { keyIds: [0x10], acao: 'dpi-ciclo' },
     ],
   },
   {
-    // One mouse-key event alone, on a key whose identity the official software
-    // confirms. If the right button does not become middle click, the mouse-key
-    // payload is wrong rather than the id.
-    id: 'so-um-key',
-    rotulo: 'So um evento de tecla: id 3 (direito) vira clique central',
-    entradas: [{ keyIds: [3], acao: 'clique-central' }],
+    id: 'reais-padrao',
+    rotulo: 'Ids reais: mapeamento padrao de fabrica',
+    entradas: [
+      { keyIds: [0x0a], acao: 'clique-esquerdo' },
+      { keyIds: [0x0b], acao: 'clique-direito' },
+      { keyIds: [0x0c], acao: 'clique-central' },
+      { keyIds: [0x0e], acao: 'voltar' },
+      { keyIds: [0x0f], acao: 'avancar' },
+      { keyIds: [0x10], acao: 'dpi-ciclo' },
+    ],
   },
   {
-    // The function event did land last time, so this checks whether the key id
-    // it carries is honoured: the DPI toggle should end up on the back button.
-    id: 'so-uma-funcao',
-    rotulo: 'So um evento de funcao: id 5 (M4) vira ciclar DPI',
-    entradas: [{ keyIds: [5], acao: 'dpi-ciclo' }],
+    // Activator first, target second, exactly as the mouse reports its own
+    // R-Plus entry: keys [0x10, 0x0c] carrying a function.
+    id: 'reais-rplus',
+    rotulo: 'Ids reais + R-Plus: DPI + lateral traseiro = ciclar DPI',
+    entradas: [
+      { keyIds: [0x0a], acao: 'clique-esquerdo' },
+      { keyIds: [0x0b], acao: 'clique-direito' },
+      { keyIds: [0x0c], acao: 'clique-central' },
+      { keyIds: [0x0e], acao: 'voltar' },
+      { keyIds: [0x0f], acao: 'avancar' },
+      { keyIds: [0x10], acao: 'dpi-ciclo' },
+      { keyIds: [0x10, 0x0e], acao: 'dpi-ciclo' },
+    ],
   },
 ];
 
