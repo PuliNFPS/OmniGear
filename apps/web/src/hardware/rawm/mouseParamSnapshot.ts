@@ -143,7 +143,8 @@ export function applySettingsToMouseParam(
   snapshot: RawmMouseParamState,
   settings: MouseSettings,
 ): RawmMouseParamState {
-  const mode = settings.performanceMode === null ? undefined : modeIds.get(settings.performanceMode);
+  const mode =
+    settings.performanceMode === null ? undefined : modeIds.get(settings.performanceMode);
   if (mode === undefined) throw new Error('Modo de desempenho RAWM invalido.');
   const activeStage = settings.dpiStages.find((stage) => stage.id === settings.activeStageId);
   if (!activeStage || settings.dpiStages.length === 0 || settings.dpiStages.length > 255) {

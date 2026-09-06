@@ -10,9 +10,11 @@ function fakeDevice() {
         this.opened = true;
       }),
       sendReport: vi.fn(async () => undefined),
-      addEventListener: vi.fn((_type: 'inputreport', next: (event: HidInputReportEvent) => void) => {
-        listener = next;
-      }),
+      addEventListener: vi.fn(
+        (_type: 'inputreport', next: (event: HidInputReportEvent) => void) => {
+          listener = next;
+        },
+      ),
       removeEventListener: vi.fn(() => {
         listener = null;
       }),

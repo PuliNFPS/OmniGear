@@ -41,8 +41,7 @@ export function App() {
   }, [restoreSession]);
 
   useEffect(
-    () =>
-      onDeviceDisconnected((deviceId) => useDeviceStore.getState().markDisconnected(deviceId)),
+    () => onDeviceDisconnected((deviceId) => useDeviceStore.getState().markDisconnected(deviceId)),
     [],
   );
 

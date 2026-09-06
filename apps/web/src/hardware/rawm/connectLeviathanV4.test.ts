@@ -8,11 +8,29 @@ import { connectLeviathanV4 } from './connectLeviathanV4';
 
 const receiver = { dn: 'RAWM HS Receiver', pi: 0x2346, vi: 0x1915, crc: 1 };
 const mouse = {
-  dn: 'Leviathan V4', pi: 0x9999, vi: 0x1915, crc: 1, cpi: 1600,
-  polling_rate: 1000, light: 0x30, cpi_l: [400, 800, 1600, 3200],
-  cpi_l_c: [1, 2, 3, 4], ob: 0, pm: 1, lod: 2, kd: [8, 8, 8, 8, 8, 8, 8],
-  ms: 1, at: 0, as: 1, rctrl: 1, top: 8, co: [100, 90], atp: 1,
-  ocs: [0x80], gm: [0, 0], st: [0x80],
+  dn: 'Leviathan V4',
+  pi: 0x9999,
+  vi: 0x1915,
+  crc: 1,
+  cpi: 1600,
+  polling_rate: 1000,
+  light: 0x30,
+  cpi_l: [400, 800, 1600, 3200],
+  cpi_l_c: [1, 2, 3, 4],
+  ob: 0,
+  pm: 1,
+  lod: 2,
+  kd: [8, 8, 8, 8, 8, 8, 8],
+  ms: 1,
+  at: 0,
+  as: 1,
+  rctrl: 1,
+  top: 8,
+  co: [100, 90],
+  atp: 1,
+  ocs: [0x80],
+  gm: [0, 0],
+  st: [0x80],
 };
 
 function queryReports(value: Record<string, unknown>, virtual: boolean): Uint8Array[] {
@@ -28,24 +46,34 @@ function fakeDevice(): BrowserHidDevice {
     productId: 0x2346,
     productName: 'RAWM HS Receiver',
     opened: false,
-    collections: [{
-      usagePage: 0xff00,
-      usage: 1,
-      inputReports: [{ reportId: 0 }],
-      outputReports: [{ reportId: 0 }],
-    }],
-    async open() { this.opened = true; },
+    collections: [
+      {
+        usagePage: 0xff00,
+        usage: 1,
+        inputReports: [{ reportId: 0 }],
+        outputReports: [{ reportId: 0 }],
+      },
+    ],
+    async open() {
+      this.opened = true;
+    },
     async sendReport(_reportId, data) {
       const sent = new Uint8Array(data as ArrayBuffer);
       const responses = queryReports(sent[0] === 0xc0 ? mouse : receiver, sent[0] === 0xc0);
-      queueMicrotask(() => responses.forEach((report) => {
-        const copied = report.slice();
-        const event = { reportId: 0, data: new DataView(copied.buffer) };
-        listeners.forEach((listener) => listener(event));
-      }));
+      queueMicrotask(() =>
+        responses.forEach((report) => {
+          const copied = report.slice();
+          const event = { reportId: 0, data: new DataView(copied.buffer) };
+          listeners.forEach((listener) => listener(event));
+        }),
+      );
     },
-    addEventListener(_type, listener) { listeners.add(listener); },
-    removeEventListener(_type, listener) { listeners.delete(listener); },
+    addEventListener(_type, listener) {
+      listeners.add(listener);
+    },
+    removeEventListener(_type, listener) {
+      listeners.delete(listener);
+    },
   };
 }
 

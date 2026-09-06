@@ -56,8 +56,6 @@ describe('Leviathan V4 peripheral projection', () => {
   });
 
   it('rejects a query missing settings required by the editor', () => {
-    expect(() => createLeviathanV4Peripheral({ dn: 'Leviathan V4' }, 'id')).toThrow(
-      'incompleta',
-    );
+    expect(() => createLeviathanV4Peripheral({ dn: 'Leviathan V4' }, 'id')).toThrow('incompleta');
   });
 });

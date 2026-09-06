@@ -5,11 +5,29 @@ import { createLeviathanV4Peripheral } from './leviathanV4';
 import { encodeLeviathanAction, LeviathanV4Driver } from './LeviathanV4Driver';
 
 const raw = {
-  dn: 'Leviathan V4', pi: 0x2346, vi: 0x1915, crc: 0, cpi: 1600,
-  polling_rate: 1000, light: 0x30, cpi_l: [400, 800, 1600, 3200],
-  cpi_l_c: [1, 2, 3, 4], ob: 0, pm: 1, lod: 2, kd: [8, 8, 8, 8, 8, 8, 8],
-  ms: 1, at: 0, as: 1, rctrl: 1, top: 8, co: [100, 90], atp: 1,
-  ocs: [0x80], gm: [0, 0], st: [0x80],
+  dn: 'Leviathan V4',
+  pi: 0x2346,
+  vi: 0x1915,
+  crc: 0,
+  cpi: 1600,
+  polling_rate: 1000,
+  light: 0x30,
+  cpi_l: [400, 800, 1600, 3200],
+  cpi_l_c: [1, 2, 3, 4],
+  ob: 0,
+  pm: 1,
+  lod: 2,
+  kd: [8, 8, 8, 8, 8, 8, 8],
+  ms: 1,
+  at: 0,
+  as: 1,
+  rctrl: 1,
+  top: 8,
+  co: [100, 90],
+  atp: 1,
+  ocs: [0x80],
+  gm: [0, 0],
+  st: [0x80],
 };
 
 function transport(): HardwareTransport & { send: ReturnType<typeof vi.fn> } {

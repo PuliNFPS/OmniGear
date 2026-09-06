@@ -94,9 +94,7 @@ export function PerformanceSection({ device }: { device: MousePeripheral }) {
               label="Modo de desempenho"
               value={selectedMode}
               options={modes.map((mode) => ({ value: mode.id, label: mode.label }))}
-              onChange={(performanceMode) =>
-                update((current) => ({ ...current, performanceMode }))
-              }
+              onChange={(performanceMode) => update((current) => ({ ...current, performanceMode }))}
             />
             <p className="mt-2 text-xs text-muted-foreground">
               Modos mais rápidos podem reduzir a autonomia.

@@ -4,7 +4,11 @@ import type { BrowserHidDevice } from '../deviceDiscovery';
 import type { DeviceDefinition } from '../deviceRegistry';
 import { WebHidTransport } from '../WebHidTransport';
 import { LeviathanV4Driver } from './LeviathanV4Driver';
-import { createLeviathanV4Peripheral, LEVIATHAN_V4_RECEIVER_PRODUCT_ID, RAWM_VENDOR_ID } from './leviathanV4';
+import {
+  createLeviathanV4Peripheral,
+  LEVIATHAN_V4_RECEIVER_PRODUCT_ID,
+  RAWM_VENDOR_ID,
+} from './leviathanV4';
 import { parseMouseParamState } from './mouseParamSnapshot';
 import { queryRawmDevice } from './session';
 

@@ -33,8 +33,18 @@ const buttons: MouseButtonSpot[] = [
   { id: 'esquerdo', label: 'Clique esquerdo', position: { x: 0.28, y: 0.25 }, callout: 'esquerda' },
   { id: 'direito', label: 'Clique direito', position: { x: 0.72, y: 0.25 }, callout: 'direita' },
   { id: 'central', label: 'Clique central', position: { x: 0.5, y: 0.18 }, callout: 'direita' },
-  { id: 'lateral-traseiro', label: 'Lateral traseiro', position: { x: 0.12, y: 0.48 }, callout: 'esquerda' },
-  { id: 'lateral-dianteiro', label: 'Lateral dianteiro', position: { x: 0.12, y: 0.39 }, callout: 'esquerda' },
+  {
+    id: 'lateral-traseiro',
+    label: 'Lateral traseiro',
+    position: { x: 0.12, y: 0.48 },
+    callout: 'esquerda',
+  },
+  {
+    id: 'lateral-dianteiro',
+    label: 'Lateral dianteiro',
+    position: { x: 0.12, y: 0.39 },
+    callout: 'esquerda',
+  },
   { id: 'dpi', label: 'Botão de DPI', position: { x: 0.5, y: 0.84 }, callout: 'direita' },
 ];
 
@@ -62,7 +72,11 @@ function finiteNumber(raw: Record<string, unknown>, key: string): number {
 
 function numericArray(raw: Record<string, unknown>, key: string): number[] {
   const value = raw[key];
-  if (!Array.isArray(value) || value.length === 0 || value.some((item) => typeof item !== 'number')) {
+  if (
+    !Array.isArray(value) ||
+    value.length === 0 ||
+    value.some((item) => typeof item !== 'number')
+  ) {
     throw new Error(`Consulta RAWM incompleta: ${key}.`);
   }
   return value;
@@ -124,8 +138,7 @@ export function createLeviathanV4Peripheral(
     manufacturer: 'RAWM',
     connection: 'sem-fio',
     status: 'conectado',
-    firmware:
-      typeof raw.r === 'string' || typeof raw.r === 'number' ? String(raw.r) : null,
+    firmware: typeof raw.r === 'string' || typeof raw.r === 'number' ? String(raw.r) : null,
     demo: false,
     battery:
       typeof raw.battery === 'number' && raw.battery >= 0 && raw.battery <= 100

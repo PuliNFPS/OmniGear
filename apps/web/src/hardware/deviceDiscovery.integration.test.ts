@@ -53,9 +53,12 @@ describe('WebHID discovery', () => {
 
     expect(devices).toHaveLength(1);
     expect(connect).toHaveBeenCalledOnce();
-    expect(connect).toHaveBeenCalledWith(knownDevice, expect.objectContaining({
-      id: 'rawm-leviathan-v4',
-    }));
+    expect(connect).toHaveBeenCalledWith(
+      knownDevice,
+      expect.objectContaining({
+        id: 'rawm-leviathan-v4',
+      }),
+    );
   });
 
   it('reports the identity of only the device that disconnected', () => {

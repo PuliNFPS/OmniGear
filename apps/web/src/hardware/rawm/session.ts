@@ -81,7 +81,9 @@ export async function queryRawmDevice(
           await transport.send({ reportId: 0, data: report });
         }
       } catch (error) {
-        finish(error instanceof Error ? error : new Error('Falha ao consultar o dispositivo RAWM.'));
+        finish(
+          error instanceof Error ? error : new Error('Falha ao consultar o dispositivo RAWM.'),
+        );
       }
     })();
   });

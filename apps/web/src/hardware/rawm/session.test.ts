@@ -27,10 +27,7 @@ function respondingTransport(responses: Uint8Array[]): HardwareTransport {
 
 describe('queryRawmDevice', () => {
   it('queries and validates the physical receiver identity', async () => {
-    const response = queryResult(
-      { dn: 'RAWM HS Receiver', vi: 0x1915, pi: 0x2346, crc: 1 },
-      false,
-    );
+    const response = queryResult({ dn: 'RAWM HS Receiver', vi: 0x1915, pi: 0x2346, crc: 1 }, false);
     const transport = respondingTransport(response);
 
     await expect(
