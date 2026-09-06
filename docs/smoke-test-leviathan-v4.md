@@ -182,3 +182,26 @@ Sobram cinco funcoes (central, dois laterais, DPI e roda) para os ids 3, 4, 5, 6
 O preset **Descoberta** da a cada id uma acao que nenhum outro tem, entao uma unica passada
 pelo hardware nomeia todos de uma vez. Os ids 1 e 2 ficam nos seus lugares confirmados para
 o mouse seguir usavel durante o teste.
+
+## Separando id de acao
+
+Duas rodadas com ids diferentes deram o mesmo resultado por acao:
+
+| acao              | id na rodada 1 | id na descoberta | resultado |
+| ----------------- | -------------- | ---------------- | --------- |
+| `clique-esquerdo` | 1              | 1                | funciona  |
+| `clique-direito`  | 2              | 2                | funciona  |
+| `voltar`          | 5              | 3                | nunca     |
+| `avancar`         | 6              | 4                | nunca     |
+| `dpi-ciclo`       | 7              | 6                | nunca     |
+
+Uma falha que segue a **acao** entre conjuntos, e nao o id, aponta para a codificacao da
+acao. Um id errado nao se comportaria assim.
+
+Como o id 2 esta provado como o botao direito, ele serve de banco de teste: coloque a acao
+suspeita nele e aperte o direito. Nada acontecer acusa a acao, nao o id. Os presets
+`Acao no id 2` fazem exatamente isso, um encoding por vez.
+
+Tambem observado: com a roda mapeada, **os dois sentidos rolam para baixo**. Isso aconteceu
+com `0x41` na rodada 1 e com `0x3f` na descoberta, em ids diferentes, entao a rolagem nao
+parece vir do mapeamento que enviamos.
