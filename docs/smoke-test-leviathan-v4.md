@@ -205,3 +205,23 @@ suspeita nele e aperte o direito. Nada acontecer acusa a acao, nao o id. Os pres
 Tambem observado: com a roda mapeada, **os dois sentidos rolam para baixo**. Isso aconteceu
 com `0x41` na rodada 1 e com `0x3f` na descoberta, em ids diferentes, entao a rolagem nao
 parece vir do mapeamento que enviamos.
+
+## Correcao: os ids 1 e 2 nunca foram confirmados
+
+Mapear `id 1 -> clique-esquerdo` e `id 2 -> clique-direito` sobre botoes que ja eram
+esquerdo e direito nao prova nada: o resultado e o mesmo se o mapeamento for ignorado.
+E a mesma tautologia detectada no teste de polling, e ela passou despercebida aqui.
+
+O teste que desfez o engano: `id 2 -> clique-central` deixou o botao direito dando clique
+direito. Se o mapeamento tivesse efeito, ele teria virado clique de roda.
+
+A leitura que explica todas as rodadas: **nenhum mapeamento teve efeito**. Esquerdo e
+direito funcionam por serem nativos e sobreviverem ao reset; o resto morre no reset e nossos
+eventos nao restauram nada.
+
+Sobra uma peca nunca testada: os dois `ACTION_SAVE_CONFIG_TO_FDS` da sequencia oficial. O
+primeiro nomeia o slot de destino, o ultimo confirma. Sem eles os mapeamentos podem nao ter
+onde ser gravados, o que explicaria terem sido aceitos e ignorados em todas as variantes.
+
+Isso grava na flash, e o power cycle deixa de desfazer. Escreva num slot que nao seja o
+ativo: o mouse declara quatro em `ocn` e esta no primeiro segundo `oci`.

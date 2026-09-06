@@ -14,9 +14,11 @@ import {
   probeButtonMapping,
   probeMappingSet,
   probePollingWrite,
+  probeProfileWrite,
   type MappingProbeReport,
   type MappingSetEntry,
   type MappingSetReport,
+  type ProfileWriteReport,
   type WriteProbeReport,
 } from '../hardware/rawm/writeProbe';
 import type { MouseActionId } from '@gearhub/shared';
@@ -102,6 +104,21 @@ const KEY_IDS: { id: number; rotulo: string }[] = [
  * HID convention where 1 is left, 2 is right and 3 is middle.
  */
 const MAPPING_SETS: { id: string; rotulo: string; entradas: MappingSetEntry[] }[] = [
+  {
+    // One unmistakable change: if mappings finally land, the right button
+    // middle-clicks. Everything else keeps a plausible default so the saved
+    // profile is usable rather than half empty.
+    id: 'perfil-teste',
+    rotulo: 'Perfil de teste: id 2 vira clique central',
+    entradas: [
+      { keyIds: [1], acao: 'clique-esquerdo' },
+      { keyIds: [2], acao: 'clique-central' },
+      { keyIds: [3], acao: 'clique-direito' },
+      { keyIds: [5], acao: 'voltar' },
+      { keyIds: [6], acao: 'avancar' },
+      { keyIds: [7], acao: 'dpi-ciclo' },
+    ],
+  },
   {
     id: 'acao-central-no-2',
     rotulo: 'Acao no id 2 (direito): clique central',
@@ -225,6 +242,8 @@ export function RawmDiagnosticPage() {
   const [withReset, setWithReset] = useState(true);
   const [setId, setSetId] = useState(MAPPING_SETS[0].id);
   const [conjunto, setConjunto] = useState<MappingSetReport | null>(null);
+  const [slot, setSlot] = useState(4);
+  const [perfil, setPerfil] = useState<ProfileWriteReport | null>(null);
   const [action, setAction] = useState<MouseActionId>('clique-central');
 
   async function probe(allDevices: boolean) {
@@ -245,6 +264,7 @@ export function RawmDiagnosticPage() {
       setWrite(null);
       setMapping(null);
       setConjunto(null);
+      setPerfil(null);
       setArmed(false);
       setReport(await runReadOnlyDiagnostic(chosen));
     } catch (cause) {
@@ -582,6 +602,89 @@ export function RawmDiagnosticPage() {
                     size="sm"
                     variant="outline"
                     onClick={() => downloadJson('conjunto-rawm.json', setReport)}
+                  >
+                    Baixar relatorio
+                  </Button>
+                </div>
+              )}
+            </section>
+          )}
+
+          {report.snapshot && device && (
+            <section className="mt-8 rounded-md border-2 border-destructive bg-destructive/10 p-4">
+              <h2 className="text-lg font-semibold">Gravar perfil (grava na memoria do mouse)</h2>
+              <p className="mt-2 text-sm">
+                <strong>Isto e a unica acao aqui que um power cycle nao desfaz.</strong> Manda a
+                sequencia oficial completa, com os dois <code>ACTION_SAVE_CONFIG_TO_FDS</code> que
+                nunca enviamos: reset, save de abertura nomeando o slot, parametros, mapeamentos,
+                save de fechamento.
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Toda tentativa anterior deixou os mapeamentos fora de qualquer transacao, e nenhuma
+                teve efeito. Esta e a peca que faltava testar.
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Escreva num slot que nao seja o ativo. O mouse declarou quatro e esta no primeiro,
+                entao o quarto preserva o que voce usa hoje.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <label className="flex items-center gap-2 text-sm">
+                  Slot
+                  <select
+                    className="rounded-md border border-border bg-card px-2 py-1 text-sm"
+                    value={slot}
+                    onChange={(event) => setSlot(Number(event.target.value))}
+                  >
+                    {[1, 2, 3, 4].map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                        {value === 1 ? ' (ativo)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={!armed || busy}
+                  onClick={() => {
+                    const chosen = MAPPING_SETS.find((item) => item.id === setId);
+                    if (!chosen) return;
+                    setBusy(true);
+                    setError(null);
+                    probeProfileWrite(device, slot, chosen.entradas)
+                      .then(setPerfil)
+                      .catch((cause: unknown) =>
+                        setError(cause instanceof Error ? cause.message : String(cause)),
+                      )
+                      .finally(() => setBusy(false));
+                  }}
+                >
+                  Gravar no slot {slot}
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  usa o conjunto selecionado acima
+                </span>
+              </div>
+
+              {perfil && (
+                <div className="mt-4">
+                  <p className="text-sm">
+                    <span
+                      className={`rounded px-2 py-0.5 text-xs font-semibold ${
+                        perfil.enviado ? statusStyles.aviso : statusStyles.falha
+                      }`}
+                    >
+                      {perfil.enviado ? 'GRAVADO - TESTE TUDO' : 'NAO GRAVADO'}
+                    </span>{' '}
+                    slot {perfil.slot}, {perfil.eventos} eventos
+                  </p>
+                  {perfil.erro && <p className="mt-2 text-sm text-destructive">{perfil.erro}</p>}
+                  <Button
+                    className="mt-3"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => downloadJson('perfil-rawm.json', perfil)}
                   >
                     Baixar relatorio
                   </Button>
