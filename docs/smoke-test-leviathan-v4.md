@@ -153,3 +153,32 @@ roda sem restaurá-la — foi exatamente o que matou o scroll no teste.
 
 Por isso `applyToSession` passou a escrever **apenas o bloco de parâmetros**, que está
 confirmado, e `writeProfile` recusa: ele gravaria na flash, e aí o power cycle não desfaz.
+
+## Key ids: o que o hardware confirmou
+
+Conjunto testado: 1=esquerdo, 2=direito, 3=central, 4=rolagem-cima, 5=voltar, 6=avancar,
+7=dpi.
+
+| controle           | resultado |
+| ------------------ | --------- |
+| clique esquerdo    | funciona  |
+| clique direito     | funciona  |
+| rolagem para baixo | funciona  |
+| rolagem para cima  | nao       |
+| clique da roda     | nao       |
+| laterais (os dois) | nao       |
+
+**Confirmado:** id 1 = esquerdo, id 2 = direito. A convencao HID vale, e a tabela original
+do driver estava trocada, com `central: 2` e `direito: 3`.
+
+**Decorre disso:** como MKEY 1 e 2 funcionaram, os codigos de acao estao corretos. O que
+esta errado sao os key ids de 3, 5 e 6.
+
+**Direcao da roda invertida:** o id 4 foi mapeado para `rolagem-cima` (`0x41`) e o efeito
+observado foi rolagem para baixo. Entao `0x41` e baixo, e os rotulos em `actions` estao
+trocados.
+
+Sobram cinco funcoes (central, dois laterais, DPI e roda) para os ids 3, 4, 5, 6 e 7.
+O preset **Descoberta** da a cada id uma acao que nenhum outro tem, entao uma unica passada
+pelo hardware nomeia todos de uma vez. Os ids 1 e 2 ficam nos seus lugares confirmados para
+o mouse seguir usavel durante o teste.
