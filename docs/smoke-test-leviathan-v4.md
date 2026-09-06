@@ -39,9 +39,12 @@ propriedade estrutural, não uma promessa.
 5. Clique em **Selecionar receptor RAWM** e escolha `RAWM HS Receiver` no seletor nativo.
    O botão fica ocupado por até ~6 s: são duas janelas de 3 s, uma por canal.
    - O seletor do WebHID é uma janela nativa do navegador: só você consegue clicar nela.
-   - Se o receptor não aparecer, use **Mostrar todos os dispositivos**. O filtro normal
-     usa apenas o VID `0x1915`; se nem assim aparecer, o VID real é outro e o relatório
-     vai mostrar qual.
+   - O filtro pede a coleção `0xff00`/`0x0001`, então deve aparecer **uma única linha**.
+     O receptor publica várias interfaces HID com o mesmo nome; sem esse filtro o
+     seletor lista linhas idênticas e escolher a errada entrega uma interface sem
+     relatórios de saída, incapaz de responder.
+   - Se nada aparecer, use **Mostrar todos os dispositivos**: significa que a página
+     vendor real é outra, e o relatório vai mostrar quais coleções existem.
 
 ## O que o relatório traz
 

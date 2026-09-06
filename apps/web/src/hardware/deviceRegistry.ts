@@ -53,7 +53,11 @@ export const deviceDefinitions: DeviceDefinition[] = [
     id: 'rawm-leviathan-v4',
     manufacturer: 'RAWM',
     model: 'Leviathan V4',
-    requestFilter: { vendorId: RAWM_VENDOR_ID },
+    requestFilter: {
+      vendorId: RAWM_VENDOR_ID,
+      usagePage: RAWM_CONFIG_USAGE_PAGE,
+      usage: RAWM_CONFIG_USAGE,
+    },
     matches: (device) =>
       device.vendorId === RAWM_VENDOR_ID &&
       device.productId === LEVIATHAN_V4_RECEIVER_PRODUCT_ID &&
@@ -61,12 +65,18 @@ export const deviceDefinitions: DeviceDefinition[] = [
   },
 ];
 
+/**
+ * One entry per distinct filter. A receiver publishes several HID interfaces
+ * under the same product name, so the filter has to name the configuration
+ * collection: otherwise the picker lists rows the user cannot tell apart, and
+ * choosing a sibling interface yields a device that cannot answer a query.
+ */
 export function deviceRequestFilters(): DeviceRequestFilter[] {
-  const byVendor = new Map<number, DeviceRequestFilter>();
+  const unique = new Map<string, DeviceRequestFilter>();
   for (const definition of deviceDefinitions) {
-    byVendor.set(definition.requestFilter.vendorId, definition.requestFilter);
+    unique.set(JSON.stringify(definition.requestFilter), definition.requestFilter);
   }
-  return [...byVendor.values()];
+  return [...unique.values()];
 }
 
 export function matchDeviceDefinition(device: HidDeviceIdentity): DeviceDefinition | null {

@@ -41,7 +41,9 @@ describe('WebHID discovery', () => {
       status: 'conectado',
       devices: [peripheral],
     });
-    expect(api.requestDevice).toHaveBeenCalledWith({ filters: [{ vendorId: 0x1915 }] });
+    expect(api.requestDevice).toHaveBeenCalledWith({
+      filters: [{ vendorId: 0x1915, usagePage: 0xff00, usage: 0x0001 }],
+    });
   });
 
   it('restores only authorized devices that the registry recognizes', async () => {
