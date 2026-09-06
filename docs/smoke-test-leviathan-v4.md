@@ -90,3 +90,20 @@ dispositivo qualquer.
 Só avance para gravação quando o snapshot real passar no parser. A ordem é:
 `Apply to Session` → perfil temporário → conferir na releitura a taxa de reporte, o modo
 de desempenho e o Turbo sem fio.
+
+## Teste de escrita mínimo
+
+Depois que todas as etapas fecharem OK, a seção **Teste de escrita** no fim da página envia
+**um único** evento de parâmetros: o snapshot recém-lido com a taxa de reporte alterada e
+todo o resto idêntico.
+
+Ela existe porque `applyToSession` não serve como primeiro teste — o driver manda
+`CONFIG_RESET`, o corpo completo de parâmetros **e todos os mapeamentos de botão**, que
+foram lidos do software oficial sem confirmação em hardware. Um erro ali seria difícil de
+atribuir.
+
+O que a seção não faz: `CONFIG_RESET`, mapeamento de botão, e `ACTION_SAVE_CONFIG_TO_FDS`.
+Sem gravação em flash, desligar e religar o mouse desfaz a mudança.
+
+Depois de escrever, ela relê e compara **campo a campo**. Um layout de bytes errado aparece
+como divergência nomeada, não como um mouse se comportando de forma estranha.
