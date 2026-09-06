@@ -1,0 +1,10 @@
+{
+  "id": "conexao-erros",
+  "refs": [
+    "C:/Users/Paulo/Documents/claude/OmniGear/apps/web/.impeccable/mocks/adicionar/adicionar-1-modal.png"
+  ],
+  "prompt": "High-fidelity OmniGear UI STATE SHEET, using supplied approved reference only for visual identity: neutral black/white palette, clean sans typography, thin borders and restrained corners. This is a handoff sheet of cropped real UI states, not a dashboard containing all states simultaneously. TWO equal columns labeled 'Escuro' and 'Claro' on the sheet only; left column dark UI, right column light UI, identical state content per row. Generous gaps between independent examples. Crisp readable Brazilian Portuguese. All in-app headers, when present, have ONE moon icon in dark, ONE sun icon in light; NEVER a theme switch. White primary button dark, black primary light. No decorative RGB, gradient UI, fake brands or claimed physical compatibility. Use large enough resolution for readable text. Three rows of MODAL crops, matching approved Add device modal style. Row1 label 'Permissão recusada': title 'Acesso não autorizado', outlined lock icon, copy 'O navegador não permitiu o acesso ao dispositivo.', helper 'Autorize o acesso na próxima seleção.', primary 'Tentar novamente', secondary 'Fechar'. Row2 label 'Modelo não reconhecido': title 'Dispositivo não reconhecido', outlined mouse/question icon, copy 'Ainda não foi possível identificar um driver compatível.', primary 'Selecionar outro', secondary 'Fechar', quiet 'Explorar demonstração' link. Row3 label 'Navegador sem suporte': title 'Conexão indisponível', simple browser outline icon, copy 'Este navegador não oferece o recurso necessário para conectar dispositivos.', primary 'Explorar demonstração', secondary 'Fechar'. Every modal closeX, readable text, neutral status symbols. No list of named browsers or support promises. Respect exact spelling.",
+  "tool": "image_gen",
+  "approved": false,
+  "kind": "state-extension"
+}

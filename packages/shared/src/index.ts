@@ -1,34 +1,40 @@
-export type PeripheralType = 'mouse' | 'keyboard';
+export type {
+  ConnectionKind,
+  ConnectionStatus,
+  KeyboardPeripheral,
+  MousePeripheral,
+  Peripheral,
+  PeripheralPhoto,
+  PeripheralSettings,
+  PeripheralType,
+  ProfileSlot,
+} from './peripheral';
 
-export interface DeviceCapabilities {
-  dpi?: { min: number; max: number; presets: number[] };
-  pollingRate?: { supported: number[] };
-  battery?: boolean;
-  rapidTrigger?: boolean;
-  actuation?: { min: number; max: number; step: number };
-  lighting?: boolean;
-}
+export type {
+  DpiCapability,
+  DpiStage,
+  MouseActionId,
+  MouseButtonSpot,
+  MouseCapabilities,
+  MouseParameterCapabilities,
+  MouseParameterId,
+  MouseParameters,
+  MousePerformanceMode,
+  MouseRPlusCapability,
+  MouseRPlusSettings,
+  MouseSettings,
+  NumericParameterRange,
+} from './mouse';
 
-export interface DeviceSettings {
-  dpi?: number;
-  pollingRate?: number;
-  batteryLevel?: number;
-  rapidTrigger?: boolean;
-  actuation?: number;
-  lighting?: boolean;
-  profile: string;
-}
-
-export interface ConnectedPeripheral {
-  id: string;
-  name: string;
-  manufacturer: string;
-  type: PeripheralType;
-  capabilities: DeviceCapabilities;
-  settings: DeviceSettings;
-  setDpi?(dpi: number): Promise<void>;
-  setPollingRate?(rate: number): Promise<void>;
-}
+export type {
+  KeyboardAction,
+  KeyboardCapabilities,
+  KeyboardKeySpot,
+  KeyboardSettings,
+  LightingCapabilities,
+  LightingEffect,
+  LightingSettings,
+} from './keyboard';
 
 export interface HidCommand {
   reportId: number;

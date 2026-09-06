@@ -1,0 +1,10 @@
+{
+  "id": "home-estados",
+  "refs": [
+    "C:/Users/Paulo/Documents/claude/OmniGear/apps/web/.impeccable/mocks/revised/home-icone-tema.png"
+  ],
+  "prompt": "High-fidelity OmniGear UI STATE SHEET, using supplied approved reference only for visual identity: neutral black/white palette, clean sans typography, thin borders and restrained corners. This is a handoff sheet of cropped real UI states, not a dashboard containing all states simultaneously. TWO equal columns labeled 'Escuro' and 'Claro' on the sheet only; left column dark UI, right column light UI, identical state content per row. Generous gaps between independent examples. Crisp readable Brazilian Portuguese. All in-app headers, when present, have ONE moon icon in dark, ONE sun icon in light; NEVER a theme switch. White primary button dark, black primary light. No decorative RGB, gradient UI, fake brands or claimed physical compatibility. Use large enough resolution for readable text. Create TWO rows of full miniature home viewports,4 screens total. Row1 label 'Carregamento': header OmniGear and current-theme icon, heading Seus dispositivos and Add device button disabled; left list has TWO skeleton device rows, right preview skeleton, short loading status 'Carregando dispositivos…'. No empty-state message during loading. Row2 label 'Dispositivo desconectado': home list-left/preview-right layout from reference, list shows Mouse de demonstração selected with outlined unplug icon and text 'Desconectado', second Teclado de demonstração 'Demonstração'; right black mouse preview and title Mouse de demonstração, message 'Reconecte o dispositivo para continuar.', primary 'Reconectar', secondary text 'Voltar à lista'. Header Demonstração badge only row2. No Configurar enabled for disconnected mouse. No numeric battery telemetry. Adequate whitespace, all layout and text match across themes. Sheet landscape or square at high resolution.",
+  "tool": "image_gen",
+  "approved": false,
+  "kind": "state-extension"
+}

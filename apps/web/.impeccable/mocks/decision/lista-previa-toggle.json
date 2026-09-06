@@ -1,0 +1,10 @@
+{
+  "prompt": "Edit the supplied OmniGear HOME UI comparison image. This is a precise localized edit, NOT a redesign. Preserve the image dimensions, both stacked dark and light theme viewports, ALL other pixels/layout/content as closely as possible: header wordmark, demonstration badge, headings, device list on left, mouse preview on right, product imagery, typography, spacing, colors, cards, all other buttons and help link. CHANGE ONLY the theme chooser at the upper-right corner of EACH of the two viewports. Remove the pair of separate 'Claro' and 'Escuro' buttons/text and replace them with ONE compact standard pill-shaped TOGGLE SWITCH, a single circular thumb, flanked by a small decorative sun icon on the left and a small decorative moon icon on the right. There must be exactly ONE clickable-looking switch per viewport, not two segments, not two buttons, no labels and no active pill around either icon. TOP dark viewport: single switch thumb at RIGHT, light-gray track and dark round thumb, sun and moon icons in readable offwhite; this represents dark mode active. BOTTOM light viewport: single switch thumb at LEFT, pale-gray track with a dark thumb, sun and moon icons in readable dark ink; this represents dark mode inactive. Keep the entire new sun-switch-moon group compact, right aligned and vertically centered in the existing header. Do not change any other element. High-fidelity faithful UI mockup.",
+  "tool": "image_gen",
+  "purpose": "Selected home design with user-requested single theme switch",
+  "approved": true,
+  "approvalSource": "User selected option 1 (lista com prévia) and requested replacing the two theme buttons with one toggle switch.",
+  "approvalDate": "2026-09-05",
+  "sourceImage": "lista-previa.png",
+  "seed": "21bbc9e8"
+}

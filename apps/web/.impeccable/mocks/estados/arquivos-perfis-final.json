@@ -1,0 +1,10 @@
+{
+  "id": "arquivos-perfis-final",
+  "refs": [
+    "C:/Users/Paulo/.codex/generated_images/01a06fe8-aa4f-73a2-bc1f-70ed04617a8a/exec-eac8c508-46f6-4a5a-9049-0dee76ec8f43.png"
+  ],
+  "prompt": "Precise localized edit of supplied OmniGear profile-dialog state sheet. Replace EACH moon or sun icon in upper-right corner of EVERY dialog with a standard small CLOSE X icon, same size and stroke contrast. There are3dialogs in each of2theme columns,6closeX total. These are modals, theme control belongs to app header not inside dialogs. Preserve absolutely all other content, typography, button states, radios, names, fields, errors, two-column layout, dimensions and backgrounds. Do not change the outside Escuro/Claro headings.",
+  "tool": "image_gen",
+  "kind": "state-correction",
+  "approved": false
+}

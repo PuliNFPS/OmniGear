@@ -1,0 +1,11 @@
+{
+  "id": "teclado-geral",
+  "references": [
+    "C:/Users/Paulo/Documents/claude/OmniGear/apps/web/.impeccable/mocks/geral/geral-1-mouse.png",
+    "C:/Users/Paulo/Documents/claude/OmniGear/apps/web/.impeccable/mocks/teclas/teclas-1-contextual.png"
+  ],
+  "prompt": "Adapt image1 APPROVED OmniGear mouse Geral comparison to KEYBOARD Geral; image2 supplies physical keyboard identity and keyboard sidebar ONLY. Preserve two stacked dark/light desktop viewports, typography, materials, SINGLE moon dark / SINGLE sun light theme icon, header OmniGear + Demonstração badge, Geral heading and information/reset functionality. Sidebar device 'Teclado de demonstração', Perfil1 dropdown, menu ONLY Teclas,Iluminação,Perfis,Geral SELECTED. Replace portrait mouse on main LEFT with the realistic horizontal matte-black compact keyboard from image2, naturally oriented with readable keys, fully visible. Widen left product region to about55% of main and use45% for information so keyboard fits; keep device-left/details-right topology. No remapping popover, key highlights, RGB or leader lines. Small Modo demonstração text beneath keyboard. RIGHT aligned information rows: Modelo / Teclado de demonstração; Conexão / USB (simulada); Firmware / Não informado; Perfil em uso / Perfil1. Below thin separator: Restaurar ajustes; helper 'Redefine os ajustes do perfil atual. Os demais perfis são mantidos.' outlined 'Restaurar padrões' button, note 'Você poderá revisar antes de salvar.' Bottom clean state check 'Nenhuma alteração pendente'. No Save/Discard bar in clean state. No new firmware, pairing, layers or magnetic features. Crisp readable Brazilian Portuguese. Keep exact same keyboard and layout across themes.",
+  "tool": "image_gen",
+  "approved": false,
+  "inheritsApprovedLayout": true
+}

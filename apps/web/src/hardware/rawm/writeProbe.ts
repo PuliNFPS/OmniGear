@@ -1,0 +1,394 @@
+import type { MouseActionId } from '@gearhub/shared';
+import { encodeAction, encodeConfigReset, encodeMouseParamSnapshot } from '../../core/coreBridge';
+import type { BrowserHidDevice } from '../deviceDiscovery';
+import { WebHidTransport, type HardwareTransport } from '../WebHidTransport';
+import { captureQuery, type RawReportLog } from './diagnostics';
+import { encodeLeviathanAction } from './LeviathanV4Driver';
+import {
+  encodeMouseParamBody,
+  parseMouseParamState,
+  type RawmMouseParamState,
+} from './mouseParamSnapshot';
+import { frameEvent, withProtocolEnvelope } from './protocol';
+
+/**
+ * Smallest possible write, for confirming the binary parameter body against
+ * real hardware.
+ *
+ * The driver's applyToSession is not a minimal test: it sends CONFIG_RESET, the
+ * full parameter body and every button mapping, and the mappings were read from
+ * the official software without hardware confirmation. This sends exactly one
+ * mouse-parameter event, built from the snapshot just read with a single field
+ * changed.
+ *
+ * It never sends ACTION_SAVE_CONFIG_TO_FDS, so nothing reaches flash and a
+ * power cycle restores the mouse. It then reads back and reports every field
+ * that moved, so a wrong byte layout shows up as a named divergence rather than
+ * as a mouse behaving oddly.
+ */
+
+export interface FieldDivergence {
+  campo: string;
+  esperado: unknown;
+  obtido: unknown;
+}
+
+export interface WriteProbeReport {
+  geradoEm: string;
+  alvo: { campo: string; de: number | null; para: number };
+  eventoHex: string;
+  antes: RawmMouseParamState | null;
+  depois: RawmMouseParamState | null;
+  divergencias: FieldDivergence[];
+  confirmado: boolean;
+  /**
+   * False when the target already equalled the current value. The read back
+   * matches either way then, so the run cannot tell a working write from an
+   * ignored one and must not be read as evidence.
+   */
+  conclusivo: boolean;
+  erro: string | null;
+  relatorios: RawReportLog[];
+}
+
+export interface WriteProbeOptions {
+  timeoutMs?: number;
+  /** Time given to the mouse to apply the change before reading back. */
+  settleMs?: number;
+  createTransport?: (device: BrowserHidDevice) => HardwareTransport;
+}
+
+const DEFAULT_TIMEOUT_MS = 3000;
+const DEFAULT_SETTLE_MS = 250;
+
+function hex(bytes: Uint8Array): string {
+  return [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join(' ');
+}
+
+function messageOf(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function wait(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+/** Every field that differs, so an unintended edit elsewhere cannot hide. */
+export function compareStates(
+  expected: RawmMouseParamState,
+  actual: RawmMouseParamState,
+): FieldDivergence[] {
+  const divergences: FieldDivergence[] = [];
+  for (const campo of Object.keys(expected) as (keyof RawmMouseParamState)[]) {
+    const left = expected[campo];
+    const right = actual[campo];
+    if (JSON.stringify(left) !== JSON.stringify(right)) {
+      divergences.push({ campo, esperado: left, obtido: right });
+    }
+  }
+  return divergences;
+}
+
+export async function probePollingWrite(
+  device: BrowserHidDevice,
+  pollingRate: number,
+  options: WriteProbeOptions = {},
+): Promise<WriteProbeReport> {
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const createTransport = options.createTransport ?? ((target) => new WebHidTransport(target));
+  const relatorios: RawReportLog[] = [];
+  const report: WriteProbeReport = {
+    geradoEm: new Date().toISOString(),
+    alvo: { campo: 'pollingRate', de: null, para: pollingRate },
+    eventoHex: '',
+    antes: null,
+    depois: null,
+    divergencias: [],
+    confirmado: false,
+    conclusivo: false,
+    erro: null,
+    relatorios,
+  };
+
+  try {
+    const transport = createTransport(device);
+    await transport.open();
+
+    const before = await captureQuery(transport, 'virtual', relatorios, timeoutMs);
+    if (!before.raw) {
+      report.erro = `Leitura antes da escrita falhou: ${before.error ?? 'sem resposta'}.`;
+      return report;
+    }
+    const antes = parseMouseParamState(before.raw);
+    report.antes = antes;
+    report.alvo.de = antes.pollingRate;
+
+    const esperado: RawmMouseParamState = { ...antes, pollingRate };
+    const inner = encodeMouseParamSnapshot(encodeMouseParamBody(esperado));
+    const event = withProtocolEnvelope(inner, before.raw.crc === 1);
+    report.eventoHex = hex(event);
+
+    for (const chunk of frameEvent(event, true)) {
+      await transport.send({ reportId: 0, data: chunk });
+    }
+    await wait(options.settleMs ?? DEFAULT_SETTLE_MS);
+
+    const after = await captureQuery(transport, 'virtual', relatorios, timeoutMs);
+    if (!after.raw) {
+      report.erro = `Leitura depois da escrita falhou: ${after.error ?? 'sem resposta'}. O evento foi enviado; o estado do mouse é desconhecido.`;
+      return report;
+    }
+    const depois = parseMouseParamState(after.raw);
+    report.depois = depois;
+    report.divergencias = compareStates(esperado, depois);
+    report.confirmado = report.divergencias.length === 0;
+    report.conclusivo = antes.pollingRate !== pollingRate;
+    if (report.confirmado && !report.conclusivo) {
+      report.erro = `O mouse já estava em ${pollingRate} Hz. A releitura confere de qualquer jeito, então esta execução não distingue uma escrita aceita de uma ignorada. Escolha um valor diferente.`;
+    }
+  } catch (error) {
+    report.erro = messageOf(error);
+  }
+
+  return report;
+}
+
+/**
+ * Single button-mapping write.
+ *
+ * Unlike the parameter probe, this one cannot confirm itself: the query
+ * response carries no mapping fields, so there is nothing to read back. The
+ * only verification is behavioural — press the button and see what it does.
+ *
+ * That matters because the physical key ids were read from the official
+ * software and never confirmed. A wrong id remaps a different button than
+ * intended, so the caller picks one id at a time and the mapping never reaches
+ * flash: powering the mouse off and on restores it.
+ */
+export interface MappingProbeReport {
+  geradoEm: string;
+  keyId: number;
+  acao: MouseActionId;
+  /** Whether a CONFIG_RESET preceded the mapping. */
+  comConfigReset: boolean;
+  eventosHex: string[];
+  enviado: boolean;
+  erro: string | null;
+}
+
+export async function probeButtonMapping(
+  device: BrowserHidDevice,
+  keyId: number,
+  acao: MouseActionId,
+  options: WriteProbeOptions & { comConfigReset?: boolean } = {},
+): Promise<MappingProbeReport> {
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const createTransport = options.createTransport ?? ((target) => new WebHidTransport(target));
+  const report: MappingProbeReport = {
+    geradoEm: new Date().toISOString(),
+    keyId,
+    acao,
+    comConfigReset: options.comConfigReset ?? false,
+    eventosHex: [],
+    enviado: false,
+    erro: null,
+  };
+
+  try {
+    const transport = createTransport(device);
+    await transport.open();
+
+    // Queried first only to confirm the mouse is awake and to learn whether it
+    // wants the CRC envelope; nothing from the response is written back.
+    const alive = await captureQuery(transport, 'virtual', [], timeoutMs);
+    if (!alive.raw) {
+      report.erro = `O mouse não respondeu antes da escrita: ${alive.error ?? 'sem resposta'}.`;
+      return report;
+    }
+
+    const inner = encodeLeviathanAction([keyId], acao);
+    if (!inner) {
+      report.erro = 'A ação escolhida desativa o botão e não gera evento.';
+      return report;
+    }
+
+    const useCrc = alive.raw.crc === 1;
+    // An isolated mapping event had no effect on real hardware. The official
+    // sequence opens with CONFIG_RESET, so mappings may only be accepted inside
+    // the configuration block it starts. Still no save, so flash is untouched.
+    const events = options.comConfigReset
+      ? [withProtocolEnvelope(encodeConfigReset(), useCrc), withProtocolEnvelope(inner, useCrc)]
+      : [withProtocolEnvelope(inner, useCrc)];
+
+    for (const event of events) {
+      report.eventosHex.push(hex(event));
+      for (const chunk of frameEvent(event, true)) {
+        await transport.send({ reportId: 0, data: chunk });
+      }
+      await wait(8);
+    }
+    report.enviado = true;
+  } catch (error) {
+    report.erro = messageOf(error);
+  }
+
+  return report;
+}
+
+/**
+ * Writes a complete mapping set inside one configuration block.
+ *
+ * CONFIG_RESET clears every mapping the mouse holds, so a mapping only survives
+ * as part of the full set sent after it. Anything left out of `entries` stops
+ * working until a power cycle — that is how the scroll wheel was lost.
+ *
+ * Multi-id entries are how the R-Plus layer is expressed: the activator id
+ * followed by the target id.
+ */
+export interface MappingSetEntry {
+  keyIds: number[];
+  acao: MouseActionId;
+}
+
+export interface MappingSetReport {
+  geradoEm: string;
+  entradas: MappingSetEntry[];
+  eventos: number;
+  enviado: boolean;
+  erro: string | null;
+}
+
+export async function probeMappingSet(
+  device: BrowserHidDevice,
+  entries: MappingSetEntry[],
+  options: WriteProbeOptions = {},
+): Promise<MappingSetReport> {
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const createTransport = options.createTransport ?? ((target) => new WebHidTransport(target));
+  const report: MappingSetReport = {
+    geradoEm: new Date().toISOString(),
+    entradas: entries,
+    eventos: 0,
+    enviado: false,
+    erro: null,
+  };
+
+  try {
+    const transport = createTransport(device);
+    await transport.open();
+
+    const alive = await captureQuery(transport, 'virtual', [], timeoutMs);
+    if (!alive.raw) {
+      report.erro = `O mouse não respondeu antes da escrita: ${alive.error ?? 'sem resposta'}.`;
+      return report;
+    }
+    const useCrc = alive.raw.crc === 1;
+
+    const events: Uint8Array[] = [withProtocolEnvelope(encodeConfigReset(), useCrc)];
+    for (const entry of entries) {
+      const inner = encodeLeviathanAction(entry.keyIds, entry.acao);
+      if (inner) events.push(withProtocolEnvelope(inner, useCrc));
+    }
+
+    for (const event of events) {
+      for (const chunk of frameEvent(event, true)) {
+        await transport.send({ reportId: 0, data: chunk });
+      }
+      await wait(8);
+    }
+    report.eventos = events.length;
+    report.enviado = true;
+  } catch (error) {
+    report.erro = messageOf(error);
+  }
+
+  return report;
+}
+
+const ACTION_SAVE_CONFIG_TO_FDS = 0x34;
+
+/**
+ * The official write sequence, including the saves this project never sent.
+ *
+ * Every earlier attempt left the mappings out of any transaction: a reset, then
+ * mapping events, then nothing. All of them were accepted and none took effect,
+ * and mapping a key id to a different action never changed that button. The
+ * remaining untested piece is the pair of ACTION_SAVE_CONFIG_TO_FDS around the
+ * body, where the first names the target slot and the last commits.
+ *
+ * This reaches flash. Unlike everything else here, a power cycle does not undo
+ * it, which is why the slot is explicit and defaults away from the active one.
+ */
+export interface ProfileWriteReport {
+  geradoEm: string;
+  slot: number;
+  entradas: MappingSetEntry[];
+  eventos: number;
+  enviado: boolean;
+  erro: string | null;
+}
+
+export async function probeProfileWrite(
+  device: BrowserHidDevice,
+  slotIndex: number,
+  entries: MappingSetEntry[],
+  options: WriteProbeOptions = {},
+): Promise<ProfileWriteReport> {
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const createTransport = options.createTransport ?? ((target) => new WebHidTransport(target));
+  const report: ProfileWriteReport = {
+    geradoEm: new Date().toISOString(),
+    slot: slotIndex,
+    entradas: entries,
+    eventos: 0,
+    enviado: false,
+    erro: null,
+  };
+
+  if (!Number.isInteger(slotIndex) || slotIndex < 1 || slotIndex > 4) {
+    report.erro = 'Slot de perfil invalido: o mouse declarou quatro.';
+    return report;
+  }
+
+  try {
+    const transport = createTransport(device);
+    await transport.open();
+
+    const alive = await captureQuery(transport, 'virtual', [], timeoutMs);
+    if (!alive.raw) {
+      report.erro = `O mouse nao respondeu antes da escrita: ${alive.error ?? 'sem resposta'}.`;
+      return report;
+    }
+    const useCrc = alive.raw.crc === 1;
+    const snapshot = parseMouseParamState(alive.raw);
+
+    const events: Uint8Array[] = [
+      withProtocolEnvelope(encodeConfigReset(), useCrc),
+      // Opens the block and names the destination slot.
+      withProtocolEnvelope(
+        encodeAction(ACTION_SAVE_CONFIG_TO_FDS, 1 | ((slotIndex - 1) << 8)),
+        useCrc,
+      ),
+      withProtocolEnvelope(encodeMouseParamSnapshot(encodeMouseParamBody(snapshot)), useCrc),
+    ];
+    for (const entry of entries) {
+      const inner = encodeLeviathanAction(entry.keyIds, entry.acao);
+      if (inner) events.push(withProtocolEnvelope(inner, useCrc));
+    }
+    // Commits.
+    events.push(withProtocolEnvelope(encodeAction(ACTION_SAVE_CONFIG_TO_FDS, 0), useCrc));
+
+    for (const event of events) {
+      for (const chunk of frameEvent(event, true)) {
+        await transport.send({ reportId: 0, data: chunk });
+      }
+      await wait(8);
+    }
+    report.eventos = events.length;
+    report.enviado = true;
+  } catch (error) {
+    report.erro = messageOf(error);
+  }
+
+  return report;
+}

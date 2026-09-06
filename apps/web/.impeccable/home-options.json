@@ -1,0 +1,42 @@
+{
+  "title": "OmniGear · estrutura da home",
+  "question": "Compare três formas de encontrar e abrir seus periféricos. Todas mantêm temas preto e branco e a ação de adicionar dispositivo.",
+  "options": [
+    {
+      "id": "lista-previa",
+      "label": "Lista com prévia",
+      "thesis": "Escolha na lista e confira o periférico em uma área de prévia ao lado.",
+      "palette": ["#111111", "#232323", "#fafafa", "#ffffff"],
+      "materials": ["superfícies neutras", "imagens de periféricos"],
+      "viewport": "Lista de dispositivos à esquerda, prévia e botão Configurar à direita.",
+      "risk": "Acrescenta uma seleção antes de entrar na configuração.",
+      "comp": ".impeccable/mocks/decision/lista-previa-toggle.png"
+    },
+    {
+      "id": "galeria",
+      "label": "Galeria de dispositivos",
+      "thesis": "Cada periférico aparece em um cartão com acesso direto às configurações.",
+      "palette": ["#111111", "#232323", "#fafafa", "#ffffff"],
+      "materials": ["superfícies neutras", "imagens de periféricos"],
+      "viewport": "Adicionar dispositivo no topo e galeria de mouse e teclado abaixo.",
+      "risk": "Coleções grandes exigem mais rolagem.",
+      "comp": ".impeccable/mocks/decision/galeria.png"
+    },
+    {
+      "id": "destaque",
+      "label": "Dispositivo em destaque",
+      "thesis": "O último periférico usado recebe destaque, com os demais logo abaixo.",
+      "palette": ["#111111", "#232323", "#fafafa", "#ffffff"],
+      "materials": ["superfícies neutras", "imagens de periféricos"],
+      "viewport": "Último dispositivo em uma faixa principal e outros periféricos em uma linha compacta.",
+      "risk": "Dá mais importância ao último usado do que aos demais.",
+      "comp": ".impeccable/mocks/decision/destaque.png"
+    }
+  ],
+  "reroll": true,
+  "buildPath": {
+    "value": "comp",
+    "toggle": true
+  },
+  "steer": true
+}

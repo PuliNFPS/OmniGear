@@ -1,0 +1,10 @@
+{
+  "id": "salvamento-conexao",
+  "refs": [
+    "C:/Users/Paulo/Documents/claude/OmniGear/apps/web/.impeccable/mocks/dpi/dpi-2-linhas.png"
+  ],
+  "prompt": "High-fidelity OmniGear UI STATE SHEET, using supplied approved reference only for visual identity: neutral black/white palette, clean sans typography, thin borders and restrained corners. This is a handoff sheet of cropped real UI states, not a dashboard containing all states simultaneously. TWO equal columns labeled 'Escuro' and 'Claro' on the sheet only; left column dark UI, right column light UI, identical state content per row. Generous gaps between independent examples. Crisp readable Brazilian Portuguese. All in-app headers, when present, have ONE moon icon in dark, ONE sun icon in light; NEVER a theme switch. White primary button dark, black primary light. No decorative RGB, gradient UI, fake brands or claimed physical compatibility. Use large enough resolution for readable text. Five rows of contextual UI BANNERS/FOOTERS, not fullscreens. Row1 label 'Aplicando à sessão': banner spinner 'Aplicando ajustes…', helper 'A gravação no perfil ainda está pendente.', disabled Salvar no perfil button. Row2 label 'Gravando perfil': footer spinner 'Salvando no Perfil 1…', disabled Salvar no perfil button; no success check. Row3 label 'Gravado': footer check 'Alterações salvas no Perfil 1', helper 'Nenhuma alteração pendente.', no active save button. Row4 label 'Falha ao salvar': inline error outline exclamation 'Não foi possível salvar.', helper 'Suas alterações foram preservadas.', primary 'Tentar novamente', secondary 'Descartar'. Row5 label 'Conexão perdida durante edição': wider banner unplug icon 'Dispositivo desconectado', copy 'Seu rascunho foi mantido. Reconecte para aplicar e salvar.', primary 'Reconectar', disabled 'Salvar no perfil'. No indicators of live successful hardware communication; design-state sheet only. Primary action and recovery clear. Text never cropped.",
+  "tool": "image_gen",
+  "approved": false,
+  "kind": "state-extension"
+}

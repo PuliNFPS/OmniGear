@@ -1,0 +1,10 @@
+{
+  "prompt": "Use case: precise-object-edit\nAsset type: OmniGear desktop app performance-page mockup\nPrimary request: Preserve the supplied current Desempenho page exactly and add only Modo de desempenho beside Taxa de reporte, on the same row and without a divider. Keep the upright mouse, metrics, sidebar, dark theme and save bar unchanged. Use Office, LP, HP and Gaming+ in a compact segmented control, with Gaming+ selected.",
+  "tool": "image_gen",
+  "title": "Modos de desempenho",
+  "description": "Extensão mínima da tela atual: modo de desempenho ao lado da taxa de reporte, sem divisória entre os grupos.",
+  "approved": true,
+  "approvalSource": "Aprovado pelo usuário em 2026-09-06",
+  "reference": "Captura atual da tela Desempenho enviada pelo usuário em 2026-09-06",
+  "notes": "A organização atual, o mouse em pé e as métricas foram preservados. Apenas o bloco de polling foi reduzido para acomodar Modo de desempenho à direita, sem divisória. Revisões anteriores permanecem versionadas. Office, LP, HP e Gaming+ só aparecem quando declarados pelo driver. Glass Mode não faz parte desta proposta."
+}

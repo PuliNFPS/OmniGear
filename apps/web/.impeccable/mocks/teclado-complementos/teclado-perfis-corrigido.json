@@ -1,0 +1,9 @@
+{
+  "id": "teclado-perfis-corrigido",
+  "prompt": "Precise localized correction of supplied OmniGear keyboard Perfis mockup, preserving original dimensions and all other pixels/layout/text/themes as closely as possible. ONLY in LOWER LIGHT viewport, REMOVE the 'Carregar' button inside Slot1 / Perfil1 / Em uso card. This profile is already active and must not offer loading, matching the UPPER DARK viewport's Slot1 card. Fill removed button area with the same card background. Keep Carregar buttons for Slots2 and3 in both themes, Gravar aqui for Slot4, rename fields, import/export, footer and all other content completely unchanged. Do not redraw keyboard or add any controls.",
+  "references": [
+    "C:/Users/Paulo/.codex/generated_images/01a06fe8-aa4f-73a2-bc1f-70ed04617a8a/exec-e71853f9-33c1-4566-b892-281c402503bb.png"
+  ],
+  "tool": "image_gen",
+  "approved": false
+}

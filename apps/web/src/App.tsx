@@ -1,115 +1,98 @@
-import type { DeviceSettings } from '@gearhub/shared';
-import { Alert, AlertDescription, AlertTitle } from '@gearhub/ui/components/alert';
-import { Button } from '@gearhub/ui/components/button';
-import { Cable, CircleAlert, CircleCheck, Moon, Sun } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { DevicePanel } from './components/DevicePanel';
-import { Sidebar } from './components/Sidebar';
-import { loadCore, type CoreStatus } from './core/coreBridge';
+import { useEffect, useState } from 'react';
+import { exitDemonstration } from './app/demo';
+import { homeRoute } from './app/routes';
+import { navigate, useRoute } from './app/useRoute';
+import { useTheme } from './app/useTheme';
+import { useDeviceReports } from './app/useDeviceReports';
+import { AddDeviceDialog } from './components/AddDeviceDialog';
+import { AppHeader } from './components/AppHeader';
+import { DeviceWorkspace } from './components/DeviceWorkspace';
+import { HomePage } from './components/HomePage';
+import { ConfirmDialog } from './components/ConfirmDialog';
+import { countChanges } from './domain/changes';
+import { useEditorStore } from './store/editorStore';
+import { onDeviceDisconnected } from './hardware/deviceDiscovery';
 import { useDeviceStore } from './store/deviceStore';
 
 export function App() {
-  const {
-    devices,
-    selectedId,
-    discovering,
-    saveState,
-    feedback,
-    selectDevice,
-    connectDevices,
-    updateSetting,
-  } = useDeviceStore();
-  const [dark, setDark] = useState(true);
-  const [core, setCore] = useState<CoreStatus | null>(null);
-  const selected = useMemo(
-    () => devices.find((device) => device.id === selectedId),
-    [devices, selectedId],
+  const { theme, toggleTheme } = useTheme();
+  const route = useRoute();
+  const devices = useDeviceStore((state) => state.devices);
+  const loading = useDeviceStore((state) => state.loading);
+  const demoMode = useDeviceStore((state) => state.demoMode);
+  const restoreSession = useDeviceStore((state) => state.restoreSession);
+  const entries = useEditorStore((state) => state.entries);
+  const [exitOpen, setExitOpen] = useState(false);
+  const hasPendingWork = Object.values(entries).some(
+    (entry) => entry.status === 'gravando' || countChanges(entry.saved, entry.draft) > 0,
   );
 
   useEffect(() => {
-    loadCore()
-      .then(setCore)
-      .catch(() => setCore({ version: 'unavailable', wasm: false }));
-  }, []);
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark);
-  }, [dark]);
+    if (!hasPendingWork) return;
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnBeforeLeaving);
+    return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
+  }, [hasPendingWork]);
 
-  function update<K extends keyof DeviceSettings>(key: K, value: DeviceSettings[K]) {
-    if (selected) void updateSetting(selected.id, key, value);
-  }
+  useEffect(() => {
+    void restoreSession();
+  }, [restoreSession]);
+
+  useDeviceReports(devices);
+
+  useEffect(
+    () => onDeviceDisconnected((deviceId) => useDeviceStore.getState().markDisconnected(deviceId)),
+    [],
+  );
+
+  const device =
+    route.name === 'device' ? devices.find((item) => item.id === route.deviceId) : undefined;
+
+  useEffect(() => {
+    if (route.name === 'device' && !loading && !device) navigate(homeRoute, { replace: true });
+  }, [route, loading, device]);
 
   return (
-    <div className="app-frame">
-      <Sidebar
-        devices={devices}
-        selectedId={selectedId}
-        discovering={discovering}
-        onSelect={selectDevice}
-        onConnect={() => void connectDevices()}
+    <div className="flex min-h-screen flex-col bg-background">
+      <a
+        href="#conteudo"
+        className="skip-link"
+        onClick={(event) => {
+          event.preventDefault();
+          document.getElementById('conteudo')?.focus();
+        }}
+      >
+        Pular para o conteúdo
+      </a>
+      <AppHeader
+        demo={demoMode}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onExitDemo={() => (hasPendingWork ? setExitOpen(true) : exitDemonstration())}
       />
-      <main className="main-panel">
-        <div className="topbar">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span
-              className={`size-1.5 rounded-full ${core?.wasm ? 'bg-status' : 'bg-muted-foreground/50'}`}
-            />
-            <span>
-              {core
-                ? `Core ${core.version}${core.wasm ? ' · WASM' : ' · dev bridge'}`
-                : 'Loading core…'}
-            </span>
-          </div>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => setDark((value) => !value)}
-            aria-label={`Use ${dark ? 'light' : 'dark'} theme`}
-          >
-            {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-          </Button>
-        </div>
-        <div className="main-scroll">
-          {selected ? (
-            <DevicePanel
-              device={selected}
-              pending={saveState?.deviceId === selected.id ? saveState.setting : null}
-              onUpdate={update}
-            />
-          ) : (
-            <EmptyState loading={discovering} onConnect={() => void connectDevices()} />
-          )}
-        </div>
-        {feedback && (
-          <div className="alert-stack" aria-live="polite">
-            <Alert variant={feedback.type === 'error' ? 'destructive' : 'default'}>
-              {feedback.type === 'error' ? <CircleAlert /> : <CircleCheck />}
-              <AlertTitle>{feedback.title}</AlertTitle>
-              <AlertDescription>{feedback.message}</AlertDescription>
-            </Alert>
-          </div>
-        )}
-      </main>
-    </div>
-  );
-}
-
-function EmptyState({ loading, onConnect }: { loading: boolean; onConnect(): void }) {
-  return (
-    <div className="empty-state">
-      <div className="empty-icon">
-        <Cable className="size-6" />
-      </div>
-      <h1 className="mt-5 text-xl font-semibold tracking-tight">Bring your gear together</h1>
-      <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
-        Connect a compatible mouse or keyboard to manage its essential settings in one place.
-      </p>
-      <Button className="mt-6" onClick={onConnect} disabled={loading}>
-        {loading ? 'Looking for devices…' : 'Connect device'}
-      </Button>
-      <p className="mt-4 text-xs text-muted-foreground">
-        Two mock peripherals are available in this preview.
-      </p>
+      {device ? (
+        <DeviceWorkspace
+          key={device.id}
+          device={device}
+          sectionId={route.name === 'device' ? route.section : ''}
+        />
+      ) : (
+        <HomePage />
+      )}
+      <AddDeviceDialog />
+      <ConfirmDialog
+        open={exitOpen}
+        onOpenChange={setExitOpen}
+        title="Sair da demonstração?"
+        description="Os ajustes desta sessão serão perdidos. Exporte seus perfis se quiser guardá-los."
+        actions={[
+          { label: 'Continuar editando', onSelect: () => undefined },
+          { label: 'Sair da demonstração', variant: 'destructive', onSelect: exitDemonstration },
+        ]}
+      />
     </div>
   );
 }

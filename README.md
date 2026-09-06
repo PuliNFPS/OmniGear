@@ -17,6 +17,14 @@ This repository replaces the previous Portuguese-only placeholder with the curre
 - [pnpm](https://pnpm.io/) 11.19.0
 - [wasm-pack](https://rustwasm.github.io/wasm-pack/) (for building the Rust core)
 
+> **Careful with `pnpm core:build` once wasm-pack is installed.** `packages/core/pkg/`
+> holds a checked-in JavaScript development bridge that mirrors `packages/core/src/lib.rs`
+> and runs the encoders synchronously. `core:build` overwrites it with wasm-bindgen glue
+> that needs `init()` before use, which breaks the test suite — and `pnpm dev` triggers it
+> through `core:prepare` whenever wasm-pack is on PATH. The generated output must never be
+> committed: CI installs Rust but not wasm-pack, and reads the bridge from git. After a
+> `core:build`, restore the bridge before running the tests.
+
 ## Setup
 
 ```bash
@@ -24,7 +32,21 @@ pnpm install
 pnpm dev
 ```
 
-The preview currently uses two mock peripherals so you can explore DPI, polling rate, lighting, and related settings without hardware.
+The interface is in Portuguese and follows the design set in `apps/web/.impeccable`.
+Open the app, choose **Explorar demonstração** and two simulated peripherals appear:
+a wireless mouse (buttons, DPI, performance, parameters, profiles, general) and a 60%
+keyboard (keys, lighting, profiles, general). They borrow the name, the layout and a
+photo of real models so the demonstration is concrete, and every screen marks them as
+a demonstration — nothing is sent to hardware. Editing changes a draft that is applied
+to the session; writing it into a profile slot is a separate, explicit action.
+
+Real hardware still depends on a driver: choosing a device in the browser picker
+reports that the model is not supported yet instead of pretending to configure it.
+
+Bringing up a real device starts with a read-only probe at
+<http://localhost:5173/diagnostico.html> — a separate Vite entry that queries the
+receiver and shows the raw response without registering a driver or opening the editor.
+See [docs/smoke-test-leviathan-v4.md](docs/smoke-test-leviathan-v4.md).
 
 ## Architecture validation
 
