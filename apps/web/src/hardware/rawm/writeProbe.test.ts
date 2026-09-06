@@ -9,6 +9,7 @@ import {
   probeButtonMapping,
   probeMappingSet,
   probePollingWrite,
+  probeProfileWrite,
 } from './writeProbe';
 
 function queryReports(value: Record<string, unknown>): Uint8Array[] {
@@ -272,5 +273,45 @@ describe('probeMappingSet', () => {
     expect(mapping[8]).toBe(2); // two key ids
     expect(mapping[9]).toBe(6); // activator
     expect(mapping[10]).toBe(2); // target
+  });
+});
+
+describe('probeProfileWrite', () => {
+  const entradas = [{ keyIds: [2], acao: 'clique-central' as const }];
+
+  it('sends the official sequence with a save on each side of the body', async () => {
+    const mouse = fakeMouse({ ignoreWrites: true });
+
+    const report = await probeProfileWrite(mouse.device, 4, entradas);
+
+    expect(report.enviado).toBe(true);
+    // reset, opening save, parameters, one mapping, closing save.
+    expect(report.eventos).toBe(5);
+
+    const inner = (write: Uint8Array) => ({ cmd: write[5] & 0x0f, tipo: write[7] });
+    const kinds = mouse.writes.filter((write) => write.length > 7).map(inner);
+    // Action events carry command 0x06; there is one opening and one closing.
+    expect(kinds.filter((k) => k.cmd === 0x06)).toHaveLength(2);
+  });
+
+  it('targets the slot asked for', async () => {
+    const mouse = fakeMouse({ ignoreWrites: true });
+
+    await probeProfileWrite(mouse.device, 4, entradas);
+
+    // Opening save is the second event: value 1 | ((slot - 1) << 8) = 0x0301.
+    const opening = mouse.writes[1];
+    expect(opening[8]).toBe(0x01);
+    expect(opening[9]).toBe(0x03);
+  });
+
+  it('refuses a slot the mouse does not have', async () => {
+    const mouse = fakeMouse({ ignoreWrites: true });
+
+    const report = await probeProfileWrite(mouse.device, 9, entradas);
+
+    expect(report.enviado).toBe(false);
+    expect(report.erro).toContain('invalido');
+    expect(mouse.writes).toHaveLength(0);
   });
 });

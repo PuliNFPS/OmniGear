@@ -1,5 +1,5 @@
 import type { MouseActionId } from '@gearhub/shared';
-import { encodeConfigReset, encodeMouseParamSnapshot } from '../../core/coreBridge';
+import { encodeAction, encodeConfigReset, encodeMouseParamSnapshot } from '../../core/coreBridge';
 import type { BrowserHidDevice } from '../deviceDiscovery';
 import { WebHidTransport, type HardwareTransport } from '../WebHidTransport';
 import { captureQuery, type RawReportLog } from './diagnostics';
@@ -289,6 +289,94 @@ export async function probeMappingSet(
       const inner = encodeLeviathanAction(entry.keyIds, entry.acao);
       if (inner) events.push(withProtocolEnvelope(inner, useCrc));
     }
+
+    for (const event of events) {
+      for (const chunk of frameEvent(event, true)) {
+        await transport.send({ reportId: 0, data: chunk });
+      }
+      await wait(8);
+    }
+    report.eventos = events.length;
+    report.enviado = true;
+  } catch (error) {
+    report.erro = messageOf(error);
+  }
+
+  return report;
+}
+
+const ACTION_SAVE_CONFIG_TO_FDS = 0x34;
+
+/**
+ * The official write sequence, including the saves this project never sent.
+ *
+ * Every earlier attempt left the mappings out of any transaction: a reset, then
+ * mapping events, then nothing. All of them were accepted and none took effect,
+ * and mapping a key id to a different action never changed that button. The
+ * remaining untested piece is the pair of ACTION_SAVE_CONFIG_TO_FDS around the
+ * body, where the first names the target slot and the last commits.
+ *
+ * This reaches flash. Unlike everything else here, a power cycle does not undo
+ * it, which is why the slot is explicit and defaults away from the active one.
+ */
+export interface ProfileWriteReport {
+  geradoEm: string;
+  slot: number;
+  entradas: MappingSetEntry[];
+  eventos: number;
+  enviado: boolean;
+  erro: string | null;
+}
+
+export async function probeProfileWrite(
+  device: BrowserHidDevice,
+  slotIndex: number,
+  entries: MappingSetEntry[],
+  options: WriteProbeOptions = {},
+): Promise<ProfileWriteReport> {
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const createTransport = options.createTransport ?? ((target) => new WebHidTransport(target));
+  const report: ProfileWriteReport = {
+    geradoEm: new Date().toISOString(),
+    slot: slotIndex,
+    entradas: entries,
+    eventos: 0,
+    enviado: false,
+    erro: null,
+  };
+
+  if (!Number.isInteger(slotIndex) || slotIndex < 1 || slotIndex > 4) {
+    report.erro = 'Slot de perfil invalido: o mouse declarou quatro.';
+    return report;
+  }
+
+  try {
+    const transport = createTransport(device);
+    await transport.open();
+
+    const alive = await captureQuery(transport, 'virtual', [], timeoutMs);
+    if (!alive.raw) {
+      report.erro = `O mouse nao respondeu antes da escrita: ${alive.error ?? 'sem resposta'}.`;
+      return report;
+    }
+    const useCrc = alive.raw.crc === 1;
+    const snapshot = parseMouseParamState(alive.raw);
+
+    const events: Uint8Array[] = [
+      withProtocolEnvelope(encodeConfigReset(), useCrc),
+      // Opens the block and names the destination slot.
+      withProtocolEnvelope(
+        encodeAction(ACTION_SAVE_CONFIG_TO_FDS, 1 | ((slotIndex - 1) << 8)),
+        useCrc,
+      ),
+      withProtocolEnvelope(encodeMouseParamSnapshot(encodeMouseParamBody(snapshot)), useCrc),
+    ];
+    for (const entry of entries) {
+      const inner = encodeLeviathanAction(entry.keyIds, entry.acao);
+      if (inner) events.push(withProtocolEnvelope(inner, useCrc));
+    }
+    // Commits.
+    events.push(withProtocolEnvelope(encodeAction(ACTION_SAVE_CONFIG_TO_FDS, 0), useCrc));
 
     for (const event of events) {
       for (const chunk of frameEvent(event, true)) {
