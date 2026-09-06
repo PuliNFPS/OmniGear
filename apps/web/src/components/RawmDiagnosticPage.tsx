@@ -107,6 +107,7 @@ export function RawmDiagnosticPage() {
   const [armed, setArmed] = useState(false);
   const [mapping, setMapping] = useState<MappingProbeReport | null>(null);
   const [keyId, setKeyId] = useState(KEY_IDS[0].id);
+  const [withReset, setWithReset] = useState(true);
   const [action, setAction] = useState<MouseActionId>('clique-central');
 
   async function probe(allDevices: boolean) {
@@ -330,6 +331,14 @@ export function RawmDiagnosticPage() {
                     </option>
                   ))}
                 </select>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={withReset}
+                    onChange={(event) => setWithReset(event.target.checked)}
+                  />
+                  CONFIG_RESET antes
+                </label>
                 <Button
                   variant="destructive"
                   size="sm"
@@ -337,7 +346,7 @@ export function RawmDiagnosticPage() {
                   onClick={() => {
                     setBusy(true);
                     setError(null);
-                    probeButtonMapping(device, keyId, action)
+                    probeButtonMapping(device, keyId, action, { comConfigReset: withReset })
                       .then(setMapping)
                       .catch((cause: unknown) =>
                         setError(cause instanceof Error ? cause.message : String(cause)),
@@ -360,6 +369,7 @@ export function RawmDiagnosticPage() {
                       {mapping.enviado ? 'ENVIADO — VERIFIQUE APERTANDO' : 'NÃO ENVIADO'}
                     </span>{' '}
                     botão {mapping.keyId} → {mapping.acao}
+                    {mapping.comConfigReset ? ' (com CONFIG_RESET)' : ' (evento isolado)'}
                   </p>
                   {mapping.erro && <p className="mt-2 text-sm text-destructive">{mapping.erro}</p>}
                   {mapping.enviado && (
