@@ -107,3 +107,24 @@ Sem gravação em flash, desligar e religar o mouse desfaz a mudança.
 
 Depois de escrever, ela relê e compara **campo a campo**. Um layout de bytes errado aparece
 como divergência nomeada, não como um mouse se comportando de forma estranha.
+
+## Teste de mapeamento de botão
+
+Diferente do teste de parâmetros, **este não se verifica sozinho**. A resposta de consulta
+não traz nenhum campo de mapeamento — os 46 campos são todos de parâmetro — então não há o
+que reler. A única verificação é comportamental: apertar o botão.
+
+Isso importa porque os ids físicos em `physicalKeyIds` foram lidos do software oficial e
+nunca confirmados. Um id errado remapeia outro botão.
+
+Procedimento, um id por vez:
+
+1. Comece pelo **botão de DPI (id 7)**, o menos crítico.
+2. Escolha uma ação observável, como clique central.
+3. Clique em **Remapear** e aperte o botão físico.
+4. Anote qual botão mudou de comportamento — se foi outro, o id é desse outro.
+5. **Desligue e religue o mouse** para reverter antes do próximo id.
+
+Nada vai para a flash, então o power cycle sempre restaura. Deixe o id 1 (clique esquerdo)
+por último: se ele estiver errado e o clique esquerdo parar de funcionar, você vai precisar
+do teclado até religar o mouse.
