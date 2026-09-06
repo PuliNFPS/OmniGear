@@ -3,6 +3,12 @@
   "ignoreBinaries": ["graphify", "wasm-pack"],
   // Agent skill runtimes and the design gallery are tooling, not application code.
   "ignore": [".agents/skills/**", ".claude/skills/**", "apps/web/.impeccable/**"],
+  "workspaces": {
+    "apps/web": {
+      // Second Vite HTML entry: the read-only RAWM probe. index.html is detected.
+      "entry": ["src/diagnostico.tsx"],
+    },
+  },
   "ignoreIssues": {
     // Skeleton kept for the upcoming WebHID implementation.
     "apps/web/src/hardware/WebHidTransport.ts": ["files"],

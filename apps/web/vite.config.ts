@@ -5,4 +5,14 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: { port: 5173 },
+  build: {
+    rollupOptions: {
+      input: {
+        // The read-only RAWM probe is its own entry so it never mounts the
+        // editor, which applies changes to hardware as soon as a control moves.
+        main: 'index.html',
+        diagnostico: 'diagnostico.html',
+      },
+    },
+  },
 });
