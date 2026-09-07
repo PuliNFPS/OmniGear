@@ -17,13 +17,10 @@ This repository replaces the previous Portuguese-only placeholder with the curre
 - [pnpm](https://pnpm.io/) 11.19.0
 - [wasm-pack](https://rustwasm.github.io/wasm-pack/) (for building the Rust core)
 
-> **Careful with `pnpm core:build` once wasm-pack is installed.** `packages/core/pkg/`
-> holds a checked-in JavaScript development bridge that mirrors `packages/core/src/lib.rs`
-> and runs the encoders synchronously. `core:build` overwrites it with wasm-bindgen glue
-> that needs `init()` before use, which breaks the test suite — and `pnpm dev` triggers it
-> through `core:prepare` whenever wasm-pack is on PATH. The generated output must never be
-> committed: CI installs Rust but not wasm-pack, and reads the bridge from git. After a
-> `core:build`, restore the bridge before running the tests.
+> **wasm-pack is required, not optional.** The Rust core is compiled to
+> `packages/core-wasm/pkg/`, which git ignores entirely — nothing there is committed.
+> `pnpm build` and `pnpm test` build it for you; if tests fail right after a clone, run
+> `pnpm core:build` directly.
 
 ## Setup
 

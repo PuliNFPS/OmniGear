@@ -4,9 +4,10 @@ const available =
   spawnSync('wasm-pack', ['--version'], { stdio: 'ignore', shell: true }).status === 0;
 
 if (!available) {
-  console.log('[core] wasm-pack not found; using the checked-in development bridge.');
-  console.log('[core] Install wasm-pack and run `pnpm core:build` to enable the Rust WASM module.');
-  process.exit(0);
+  console.error('[core] wasm-pack not found. The Rust WASM core is generated, not checked in,');
+  console.error('[core] and required to run the app: nothing ships without it.');
+  console.error('[core] Install it: https://rustwasm.github.io/wasm-pack/installer/');
+  process.exit(1);
 }
 
 const result = spawnSync('pnpm', ['core:build'], { stdio: 'inherit', shell: true });

@@ -43,9 +43,7 @@ export function GeneralSection({ device }: { device: Peripheral }) {
     { label: 'Perfil em uso', value: activeProfileName(device) },
     {
       label: 'Núcleo',
-      value: core
-        ? `${core.version} · ${core.wasm ? 'WASM' : 'ponte de desenvolvimento'}`
-        : 'Carregando…',
+      value: core ? `${core.version} · ${core.wasm ? 'WASM' : 'falha ao carregar'}` : 'Carregando…',
     },
   ];
 
