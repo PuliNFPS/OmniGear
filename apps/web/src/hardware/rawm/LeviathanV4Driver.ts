@@ -244,22 +244,19 @@ export class LeviathanV4Driver implements DeviceDriver {
   }
 
   /**
-   * Makes the mouse run another onboard slot. The index travels in the
-   * parameter block, exactly as the vendor sends it; there is no configuration
-   * type of its own for it.
+   * There is deliberately no `switchProfile` here.
+   *
+   * The vendor library has no command for it. `device_info.onboard` is only
+   * ever read from the query's `ob`, never written to select a slot, and the
+   * field that names the active slot is `oci`, a different one. What does exist
+   * is NOTIFY_TYPE_MOUSE_ONBOARD_INDEX (0x22): the mouse announcing that it
+   * switched, which it does on its own when its button is pressed.
+   *
+   * Sending a parameter block to force the index would also carry the previous
+   * slot's DPI, polling and parameters — the query only ever described the
+   * active slot — so it would overwrite the destination with the source. The
+   * editor falls back to writing the settings instead, which is safe.
    */
-  switchProfile(slotIndex: number): Promise<void> {
-    if (!Number.isInteger(slotIndex) || slotIndex < 1 || slotIndex > 255) {
-      return Promise.reject(new RangeError('Indice de perfil RAWM invalido.'));
-    }
-    return this.enqueue(async () => {
-      this.snapshot = { ...this.snapshot, onboard: slotIndex - 1 };
-      await this.sendEvent(encodeMouseParamSnapshot(encodeMouseParamBody(this.snapshot)));
-      // The mouse now runs another slot's mappings, so what was tracked for the
-      // previous one no longer describes it.
-      this.appliedMappings = this.activeSlotSignature();
-    });
-  }
 
   private enqueue(operation: () => Promise<void>): Promise<void> {
     const current = this.tail.then(operation, operation);

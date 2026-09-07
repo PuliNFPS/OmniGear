@@ -141,18 +141,16 @@ describe('reading the onboard slots', () => {
   });
 });
 
+/**
+ * The vendor library has no command for selecting a slot: `onboard` is only
+ * ever read from the query, the active slot is named by a different field, and
+ * the mouse announces its own switches. Offering one here would mean sending
+ * the previous slot's parameters to the destination.
+ */
 describe('switching the active onboard slot', () => {
-  it('sends the parameter block carrying the new index', async () => {
-    const { sent, driver } = harness();
-
-    await driver.switchProfile(3);
-
-    expect(sent.filter((report) => innerType(report) === 0x15)).toHaveLength(1);
-  });
-
-  it('rejects a slot index outside the addressable range', async () => {
+  it('is not offered, so the editor writes the settings instead', () => {
     const { driver } = harness();
 
-    await expect(driver.switchProfile(0)).rejects.toThrow('invalido');
+    expect((driver as { switchProfile?: unknown }).switchProfile).toBeUndefined();
   });
 });

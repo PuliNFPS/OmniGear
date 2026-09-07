@@ -8,12 +8,27 @@
       "apps_web_src_app_useeditor_usechangecount",
       "apps_web_src_app_useeditor_useeditorentry",
       "apps_web_src_app_useeditor_usekeyboardeditor",
+      "apps_web_src_app_useeditor_usemouseeditor",
       "apps_web_src_app_useeditor_useprofileload",
+      "apps_web_src_components_changebar",
+      "apps_web_src_components_changebar_barcontent",
+      "apps_web_src_components_changebar_changebar",
+      "apps_web_src_components_changebar_changebarprops",
+      "apps_web_src_components_changebar_changebarprops_ondiscard",
+      "apps_web_src_components_changebar_changebarprops_onreconnect",
+      "apps_web_src_components_changebar_changebarprops_onretry",
+      "apps_web_src_components_changebar_changebarprops_onsave",
       "apps_web_src_components_deviceworkspace_deviceworkspace",
       "apps_web_src_components_profileloadconfirm",
       "apps_web_src_components_profileloadconfirm_profileloadconfirm",
-      "apps_web_src_components_sections_generalsection_generalsection",
       "apps_web_src_components_sections_profilessection_profilessection",
+      "apps_web_src_domain_changes",
+      "apps_web_src_domain_changes_countchanges",
+      "apps_web_src_domain_changes_countlistchanges",
+      "apps_web_src_domain_changes_describechangecount",
+      "apps_web_src_domain_changes_idsof",
+      "apps_web_src_domain_changes_isrecord",
+      "apps_web_src_domain_changes_test",
       "apps_web_src_domain_settings",
       "apps_web_src_domain_settings_activeprofilename",
       "apps_web_src_domain_settings_activesettings",
@@ -21,7 +36,6 @@
       "apps_web_src_domain_settings_ismousesettings",
       "apps_web_src_domain_settings_profileslots",
       "apps_web_src_domain_settings_withwrittenprofile",
-      "apps_web_src_hardware_devicediscovery_defaultconnector",
       "apps_web_src_hardware_devicedriver",
       "apps_web_src_hardware_devicedriver_demodriver",
       "apps_web_src_hardware_devicedriver_devicedriver",
@@ -37,15 +51,12 @@
       "apps_web_src_hardware_devicedriver_test",
       "apps_web_src_hardware_devicedriver_unregisterdevicedriver",
       "apps_web_src_hardware_devicedriver_wait",
-      "apps_web_src_hardware_deviceregistry_devicedefinition",
-      "apps_web_src_hardware_deviceregistry_devicedefinition_matches",
-      "apps_web_src_hardware_rawm_connectleviathanv4",
-      "apps_web_src_hardware_rawm_connectleviathanv4_connectleviathanv4",
       "apps_web_src_hardware_rawm_onboardconfig_settingsfromslot",
       "apps_web_src_store_editorstore",
       "apps_web_src_store_editorstore_applytokens",
       "apps_web_src_store_editorstore_cancelpendingapply",
       "apps_web_src_store_editorstore_editorentry",
+      "apps_web_src_store_editorstore_editorstatus",
       "apps_web_src_store_editorstore_editorstore",
       "apps_web_src_store_editorstore_editorstore_discard",
       "apps_web_src_store_editorstore_editorstore_edit",
@@ -83,7 +94,6 @@
       "apps_web_src_app_sections_mousesections",
       "apps_web_src_app_sections_sectiondefinition",
       "apps_web_src_app_sections_sectionsfor",
-      "apps_web_src_app_useeditor_usemouseeditor",
       "apps_web_src_components_devices_mousesideart",
       "apps_web_src_components_devices_mousesideart_mousesideart",
       "apps_web_src_components_devices_rotationdial",
@@ -94,6 +104,7 @@
       "apps_web_src_components_optiongroup",
       "apps_web_src_components_optiongroup_option",
       "apps_web_src_components_optiongroup_optiongroup",
+      "apps_web_src_components_sections_generalsection_generalsection",
       "apps_web_src_components_sections_keyboardkeyssection",
       "apps_web_src_components_sections_keyboardkeyssection_keyboardkeyssection",
       "apps_web_src_components_sections_keyboardkeyssection_keyboardkeyssection_assign",
@@ -235,6 +246,7 @@
       "apps_web_src_domain_profiles_namevalidation",
       "apps_web_src_domain_profiles_occupiedslots",
       "apps_web_src_domain_profiles_validateprofilename",
+      "packages_shared_src_peripheral_profileslot",
       "packages_ui_src_components_alert",
       "packages_ui_src_components_alert_alert",
       "packages_ui_src_components_alert_alertdescription",
@@ -302,53 +314,9 @@
       "packages_shared_src_peripheral_keyboardperipheral",
       "packages_shared_src_peripheral_peripheralbase",
       "packages_shared_src_peripheral_peripheralsettings",
-      "packages_shared_src_peripheral_peripheraltype",
-      "packages_shared_src_peripheral_profileslot"
+      "packages_shared_src_peripheral_peripheraltype"
     ],
     "5": [
-      "apps_web_src_app_download",
-      "apps_web_src_app_download_downloadjson",
-      "apps_web_src_components_rawmdiagnosticpage",
-      "apps_web_src_components_rawmdiagnosticpage_jsonblock",
-      "apps_web_src_components_rawmdiagnosticpage_key_ids",
-      "apps_web_src_components_rawmdiagnosticpage_mapping_actions",
-      "apps_web_src_components_rawmdiagnosticpage_mapping_sets",
-      "apps_web_src_components_rawmdiagnosticpage_rawmdiagnosticpage",
-      "apps_web_src_components_rawmdiagnosticpage_stagerow",
-      "apps_web_src_components_rawmdiagnosticpage_statuslabels",
-      "apps_web_src_components_rawmdiagnosticpage_statusstyles",
-      "apps_web_src_components_rawmdiagnosticpage_write_targets",
-      "apps_web_src_core_corebridge_encodeaction",
-      "apps_web_src_core_corebridge_encodeconfigreset",
-      "apps_web_src_core_corebridge_encodemouseparamsnapshot",
-      "apps_web_src_core_corebridge_test",
-      "apps_web_src_core_corebridge_test_bytes",
-      "apps_web_src_diagnostico",
-      "apps_web_src_hardware_rawm_diagnostics_diagnosticreport",
-      "apps_web_src_hardware_rawm_diagnostics_diagnosticstage",
-      "apps_web_src_hardware_rawm_diagnostics_rawreportlog",
-      "apps_web_src_hardware_rawm_mouseparamsnapshot_rawmmouseparamstate",
-      "apps_web_src_hardware_rawm_writeprobe",
-      "apps_web_src_hardware_rawm_writeprobe_comparestates",
-      "apps_web_src_hardware_rawm_writeprobe_fielddivergence",
-      "apps_web_src_hardware_rawm_writeprobe_hex",
-      "apps_web_src_hardware_rawm_writeprobe_mappingprobereport",
-      "apps_web_src_hardware_rawm_writeprobe_mappingsetentry",
-      "apps_web_src_hardware_rawm_writeprobe_mappingsetreport",
-      "apps_web_src_hardware_rawm_writeprobe_messageof",
-      "apps_web_src_hardware_rawm_writeprobe_probebuttonmapping",
-      "apps_web_src_hardware_rawm_writeprobe_probemappingset",
-      "apps_web_src_hardware_rawm_writeprobe_probepollingwrite",
-      "apps_web_src_hardware_rawm_writeprobe_probeprofilewrite",
-      "apps_web_src_hardware_rawm_writeprobe_profilewritereport",
-      "apps_web_src_hardware_rawm_writeprobe_test",
-      "apps_web_src_hardware_rawm_writeprobe_test_fakemouse",
-      "apps_web_src_hardware_rawm_writeprobe_test_queryreports",
-      "apps_web_src_hardware_rawm_writeprobe_wait",
-      "apps_web_src_hardware_rawm_writeprobe_writeprobereport",
-      "packages_shared_src_mouse_mouseactionid"
-    ],
-    "6": [
       "apps_web_src_components_sections_dpisection",
       "apps_web_src_components_sections_dpisection_axisfield",
       "apps_web_src_components_sections_dpisection_axisfield_commit",
@@ -388,7 +356,7 @@
       "packages_ui_src_components_input",
       "packages_ui_src_components_input_input"
     ],
-    "7": [
+    "6": [
       "package",
       "package_devdependencies",
       "package_devdependencies_dependency_cruiser",
@@ -424,33 +392,64 @@
       "ref_prettier",
       "ref_turbo"
     ],
+    "7": [
+      "apps_web_src_hardware_rawm_diagnostics_capturequery",
+      "apps_web_src_hardware_rawm_notifications_subscribetonotifications",
+      "apps_web_src_hardware_rawm_protocol",
+      "apps_web_src_hardware_rawm_protocol_buildqueryevent",
+      "apps_web_src_hardware_rawm_protocol_crc16",
+      "apps_web_src_hardware_rawm_protocol_decodereportchunk",
+      "apps_web_src_hardware_rawm_protocol_encodelength",
+      "apps_web_src_hardware_rawm_protocol_eventlength",
+      "apps_web_src_hardware_rawm_protocol_frameevent",
+      "apps_web_src_hardware_rawm_protocol_isqueryresult",
+      "apps_web_src_hardware_rawm_protocol_parsequeryjson",
+      "apps_web_src_hardware_rawm_protocol_raweventassembler",
+      "apps_web_src_hardware_rawm_protocol_raweventassembler_push",
+      "apps_web_src_hardware_rawm_protocol_raweventassembler_reset",
+      "apps_web_src_hardware_rawm_protocol_test",
+      "apps_web_src_hardware_rawm_protocol_test_event",
+      "apps_web_src_hardware_rawm_protocol_withprotocolenvelope",
+      "apps_web_src_hardware_rawm_session",
+      "apps_web_src_hardware_rawm_session_integer",
+      "apps_web_src_hardware_rawm_session_queryoptions",
+      "apps_web_src_hardware_rawm_session_queryrawmdevice",
+      "apps_web_src_hardware_rawm_session_rawmidentity",
+      "apps_web_src_hardware_rawm_session_test",
+      "apps_web_src_hardware_rawm_session_test_oninputreport",
+      "apps_web_src_hardware_rawm_session_test_queryresult",
+      "apps_web_src_hardware_rawm_session_test_respondingtransport",
+      "apps_web_src_hardware_rawm_session_validaterawmidentity",
+      "apps_web_src_hardware_rawm_writeprobe_test_queryreports",
+      "apps_web_src_hardware_webhidtransport_hardwaretransport_oninputreport",
+      "apps_web_src_hardware_webhidtransport_hardwaretransport_send"
+    ],
     "8": [
-      "apps_web_src_core_corebridge",
-      "apps_web_src_core_corebridge_bytearraylike",
-      "apps_web_src_core_corebridge_copybytes",
-      "apps_web_src_core_corebridge_corestatus",
-      "apps_web_src_core_corebridge_encodemousefunction",
-      "apps_web_src_core_corebridge_encodemousekey",
-      "apps_web_src_core_corebridge_isbytearraylike",
-      "apps_web_src_core_corebridge_loadcore",
-      "apps_web_src_core_corebridge_mouseparamsnapshot",
-      "apps_web_src_core_corebridge_rawaction",
-      "apps_web_src_core_corebridge_rawmousefunction",
-      "apps_web_src_core_corebridge_rawmousekey",
-      "apps_web_src_core_corebridge_rawmouseparamsnapshot",
-      "apps_web_src_core_corebridge_snapshotbytes",
-      "apps_web_src_core_corebridge_textbytes",
-      "packages_core_pkg_index",
-      "packages_core_pkg_index_configevent",
-      "packages_core_pkg_index_core_version",
-      "packages_core_pkg_index_encode_action",
-      "packages_core_pkg_index_encode_config_reset",
-      "packages_core_pkg_index_encode_mouse_function",
-      "packages_core_pkg_index_encode_mouse_key",
-      "packages_core_pkg_index_encode_mouse_param_snapshot",
-      "packages_core_pkg_index_init",
-      "packages_core_pkg_index_is_wasm_available",
-      "packages_core_pkg_index_u16le"
+      "apps_web_src_hardware_devicediscovery",
+      "apps_web_src_hardware_devicediscovery_browserhidapi",
+      "apps_web_src_hardware_devicediscovery_browserhidapi_addeventlistener",
+      "apps_web_src_hardware_devicediscovery_browserhidapi_getdevices",
+      "apps_web_src_hardware_devicediscovery_browserhidapi_removeeventlistener",
+      "apps_web_src_hardware_devicediscovery_connectionresult",
+      "apps_web_src_hardware_devicediscovery_connectrecognized",
+      "apps_web_src_hardware_devicediscovery_defaultconnector",
+      "apps_web_src_hardware_devicediscovery_deviceconnector",
+      "apps_web_src_hardware_devicediscovery_hidapi",
+      "apps_web_src_hardware_devicediscovery_hiddisconnectevent",
+      "apps_web_src_hardware_devicediscovery_hidrequestoptions",
+      "apps_web_src_hardware_devicediscovery_integration_test",
+      "apps_web_src_hardware_devicediscovery_integration_test_hidapi",
+      "apps_web_src_hardware_devicediscovery_integration_test_knowndevice",
+      "apps_web_src_hardware_devicediscovery_ondevicedisconnected",
+      "apps_web_src_hardware_devicediscovery_peripheralidfor",
+      "apps_web_src_hardware_devicediscovery_requestdevice",
+      "apps_web_src_hardware_devicediscovery_restoreauthorizeddevices",
+      "apps_web_src_hardware_deviceregistry_devicedefinition",
+      "apps_web_src_hardware_deviceregistry_devicedefinition_matches",
+      "apps_web_src_hardware_deviceregistry_devicerequestfilters",
+      "apps_web_src_hardware_deviceregistry_matchdevicedefinition",
+      "apps_web_src_hardware_deviceregistry_test",
+      "apps_web_src_hardware_deviceregistry_test_leviathanreceiver"
     ],
     "9": [
       "apps_web_src_hardware_deviceregistry",
@@ -480,86 +479,6 @@
       "apps_web_src_hardware_rawm_leviathanv4driver_test_transport"
     ],
     "10": [
-      "apps_web_src_hardware_rawm_diagnostics_capturequery",
-      "apps_web_src_hardware_rawm_notifications",
-      "apps_web_src_hardware_rawm_notifications_isnotification",
-      "apps_web_src_hardware_rawm_notifications_parsenotification",
-      "apps_web_src_hardware_rawm_notifications_subscribetonotifications",
-      "apps_web_src_hardware_rawm_protocol",
-      "apps_web_src_hardware_rawm_protocol_buildqueryevent",
-      "apps_web_src_hardware_rawm_protocol_crc16",
-      "apps_web_src_hardware_rawm_protocol_decodereportchunk",
-      "apps_web_src_hardware_rawm_protocol_eventlength",
-      "apps_web_src_hardware_rawm_protocol_isqueryresult",
-      "apps_web_src_hardware_rawm_protocol_parsequeryjson",
-      "apps_web_src_hardware_rawm_protocol_raweventassembler",
-      "apps_web_src_hardware_rawm_protocol_raweventassembler_push",
-      "apps_web_src_hardware_rawm_protocol_raweventassembler_reset",
-      "apps_web_src_hardware_rawm_protocol_test",
-      "apps_web_src_hardware_rawm_protocol_test_event",
-      "apps_web_src_hardware_rawm_session",
-      "apps_web_src_hardware_rawm_session_integer",
-      "apps_web_src_hardware_rawm_session_queryoptions",
-      "apps_web_src_hardware_rawm_session_queryrawmdevice",
-      "apps_web_src_hardware_rawm_session_rawmidentity",
-      "apps_web_src_hardware_rawm_session_validaterawmidentity",
-      "apps_web_src_hardware_webhidtransport_hardwaretransport_oninputreport",
-      "apps_web_src_hardware_webhidtransport_hardwaretransport_send"
-    ],
-    "11": [
-      "apps_web_src_hardware_rawm_leviathanv4driver",
-      "apps_web_src_hardware_rawm_leviathanv4keys",
-      "apps_web_src_hardware_rawm_leviathanv4keys_actions",
-      "apps_web_src_hardware_rawm_leviathanv4keys_buttonidsbykeyid",
-      "apps_web_src_hardware_rawm_leviathanv4keys_encodedaction",
-      "apps_web_src_hardware_rawm_leviathanv4keys_function_show_power",
-      "apps_web_src_hardware_rawm_leviathanv4keys_mouse_key_type_mkey",
-      "apps_web_src_hardware_rawm_leviathanv4keys_mouse_key_type_wheel",
-      "apps_web_src_hardware_rawm_leviathanv4keys_physicalkeyids",
-      "apps_web_src_hardware_rawm_leviathanv4keys_show_power_key_id",
-      "apps_web_src_hardware_rawm_leviathanv4keys_touch_type_press",
-      "apps_web_src_hardware_rawm_onboardconfig",
-      "apps_web_src_hardware_rawm_onboardconfig_declaredlength",
-      "apps_web_src_hardware_rawm_onboardconfig_decodeonboardentry",
-      "apps_web_src_hardware_rawm_onboardconfig_functionactions",
-      "apps_web_src_hardware_rawm_onboardconfig_keyactions",
-      "apps_web_src_hardware_rawm_onboardconfig_namedaction",
-      "apps_web_src_hardware_rawm_onboardconfig_onboardbinding",
-      "apps_web_src_hardware_rawm_onboardconfig_onboardconfigcollector",
-      "apps_web_src_hardware_rawm_onboardconfig_onboardconfigcollector_finish",
-      "apps_web_src_hardware_rawm_onboardconfig_onboardconfigcollector_push",
-      "apps_web_src_hardware_rawm_onboardconfig_settings_test",
-      "apps_web_src_hardware_rawm_onboardconfig_settings_test_base",
-      "apps_web_src_hardware_rawm_onboardconfig_settings_test_binding",
-      "apps_web_src_hardware_rawm_onboardconfig_settings_test_slotof"
-    ],
-    "12": [
-      "apps_web_src_hardware_devicedriver_devicereport",
-      "apps_web_src_hardware_rawm_leviathanv4driver_editorkeysets",
-      "apps_web_src_hardware_rawm_leviathanv4driver_intendedmappings",
-      "apps_web_src_hardware_rawm_leviathanv4driver_isshowpower",
-      "apps_web_src_hardware_rawm_leviathanv4driver_keyof",
-      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver",
-      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_activeslot",
-      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_activeslotsignature",
-      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_applytosession",
-      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_constructor",
-      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_enqueue",
-      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_ondevicereport",
-      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_ononboardprofiles",
-      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_preservedevents",
-      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_sendevent",
-      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_switchprofile",
-      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_writeconfigurationbody",
-      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_writeparameters",
-      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_writeprofile",
-      "apps_web_src_hardware_rawm_leviathanv4driver_mousesettings",
-      "apps_web_src_hardware_rawm_leviathanv4driver_pause",
-      "apps_web_src_hardware_rawm_leviathanv4driver_reportedmappings",
-      "apps_web_src_hardware_rawm_leviathanv4driver_signatureof",
-      "apps_web_src_hardware_rawm_onboardconfig_onboardslotconfig"
-    ],
-    "13": [
       "apps_web_eslint_config",
       "apps_web_package",
       "apps_web_package_json_ref_react",
@@ -584,10 +503,7 @@
       "ref_vitejs_plugin_react",
       "ref_zustand"
     ],
-    "14": [
-      "apps_web_src_components_rawmdiagnosticpage_hidapi",
-      "apps_web_src_components_rawmdiagnosticpage_rawmdiagnosticpage_probe",
-      "apps_web_src_hardware_devicediscovery_browserhidapi_requestdevice",
+    "11": [
       "apps_web_src_hardware_rawm_diagnostics",
       "apps_web_src_hardware_rawm_diagnostics_captureresult",
       "apps_web_src_hardware_rawm_diagnostics_capturesource",
@@ -597,70 +513,52 @@
       "apps_web_src_hardware_rawm_diagnostics_diagnosticchannel",
       "apps_web_src_hardware_rawm_diagnostics_diagnosticcollectioninfo",
       "apps_web_src_hardware_rawm_diagnostics_diagnosticdeviceinfo",
+      "apps_web_src_hardware_rawm_diagnostics_diagnosticreport",
+      "apps_web_src_hardware_rawm_diagnostics_diagnosticstage",
       "apps_web_src_hardware_rawm_diagnostics_hex",
       "apps_web_src_hardware_rawm_diagnostics_hexid",
       "apps_web_src_hardware_rawm_diagnostics_identitystage",
       "apps_web_src_hardware_rawm_diagnostics_messageof",
       "apps_web_src_hardware_rawm_diagnostics_namestage",
       "apps_web_src_hardware_rawm_diagnostics_querystage",
-      "apps_web_src_hardware_rawm_diagnostics_requestdiagnosticdevice",
+      "apps_web_src_hardware_rawm_diagnostics_rawreportlog",
       "apps_web_src_hardware_rawm_diagnostics_runreadonlydiagnostic",
       "apps_web_src_hardware_rawm_diagnostics_snapshotstage",
       "apps_web_src_hardware_rawm_diagnostics_stagestatus",
-      "apps_web_src_hardware_rawm_mouseparamsnapshot_parsemouseparamstate"
+      "apps_web_src_hardware_rawm_mouseparamsnapshot_rawmmouseparamstate",
+      "apps_web_src_hardware_rawm_writeprobe_writeprobereport"
     ],
-    "15": [
-      "apps_web_src_hardware_devicediscovery",
-      "apps_web_src_hardware_devicediscovery_browserhidapi",
-      "apps_web_src_hardware_devicediscovery_browserhidapi_addeventlistener",
-      "apps_web_src_hardware_devicediscovery_browserhidapi_getdevices",
-      "apps_web_src_hardware_devicediscovery_browserhidapi_removeeventlistener",
-      "apps_web_src_hardware_devicediscovery_connectionresult",
-      "apps_web_src_hardware_devicediscovery_connectrecognized",
-      "apps_web_src_hardware_devicediscovery_deviceconnector",
-      "apps_web_src_hardware_devicediscovery_hidapi",
-      "apps_web_src_hardware_devicediscovery_hiddisconnectevent",
-      "apps_web_src_hardware_devicediscovery_hidrequestoptions",
-      "apps_web_src_hardware_devicediscovery_integration_test",
-      "apps_web_src_hardware_devicediscovery_integration_test_hidapi",
-      "apps_web_src_hardware_devicediscovery_integration_test_knowndevice",
-      "apps_web_src_hardware_devicediscovery_ondevicedisconnected",
-      "apps_web_src_hardware_devicediscovery_peripheralidfor",
-      "apps_web_src_hardware_devicediscovery_requestdevice",
-      "apps_web_src_hardware_devicediscovery_restoreauthorizeddevices",
-      "apps_web_src_hardware_deviceregistry_devicerequestfilters",
-      "apps_web_src_hardware_deviceregistry_matchdevicedefinition",
-      "apps_web_src_hardware_deviceregistry_test",
-      "apps_web_src_hardware_deviceregistry_test_leviathanreceiver"
+    "12": [
+      "apps_web_src_app_download",
+      "apps_web_src_app_download_downloadjson",
+      "apps_web_src_components_rawmdiagnosticpage",
+      "apps_web_src_components_rawmdiagnosticpage_hidapi",
+      "apps_web_src_components_rawmdiagnosticpage_jsonblock",
+      "apps_web_src_components_rawmdiagnosticpage_key_ids",
+      "apps_web_src_components_rawmdiagnosticpage_mapping_actions",
+      "apps_web_src_components_rawmdiagnosticpage_mapping_sets",
+      "apps_web_src_components_rawmdiagnosticpage_rawmdiagnosticpage",
+      "apps_web_src_components_rawmdiagnosticpage_rawmdiagnosticpage_probe",
+      "apps_web_src_components_rawmdiagnosticpage_stagerow",
+      "apps_web_src_components_rawmdiagnosticpage_statuslabels",
+      "apps_web_src_components_rawmdiagnosticpage_statusstyles",
+      "apps_web_src_components_rawmdiagnosticpage_write_targets",
+      "apps_web_src_diagnostico",
+      "apps_web_src_hardware_devicediscovery_browserhidapi_requestdevice",
+      "apps_web_src_hardware_rawm_diagnostics_requestdiagnosticdevice",
+      "apps_web_src_hardware_rawm_writeprobe_mappingprobereport",
+      "apps_web_src_hardware_rawm_writeprobe_mappingsetentry",
+      "apps_web_src_hardware_rawm_writeprobe_mappingsetreport",
+      "apps_web_src_hardware_rawm_writeprobe_profilewritereport",
+      "packages_shared_src_mouse_mouseactionid"
     ],
-    "16": [
-      "apps_web_src_app",
-      "apps_web_src_app_app",
-      "apps_web_src_app_demo",
-      "apps_web_src_app_demo_exitdemonstration",
-      "apps_web_src_app_usetheme",
-      "apps_web_src_app_usetheme_storedtheme",
-      "apps_web_src_app_usetheme_systemtheme",
-      "apps_web_src_app_usetheme_theme",
-      "apps_web_src_app_usetheme_usetheme",
-      "apps_web_src_components_appheader",
-      "apps_web_src_components_appheader_appheader",
-      "apps_web_src_components_brandmark",
-      "apps_web_src_components_brandmark_brandmark",
-      "apps_web_src_main",
-      "apps_web_src_store_devicestore_devicestore_restoresession",
-      "apps_web_src_store_devicestore_test",
-      "apps_web_src_store_devicestore_test_fakestorage",
-      "apps_web_src_store_devicestore_test_reload",
-      "apps_web_src_store_devicestore_test_requestdevicemock",
-      "apps_web_src_store_devicestore_test_startdemo"
-    ],
-    "17": [
+    "13": [
       "apps_web_src_domain_mousepresentation",
       "apps_web_src_domain_mousepresentation_mousefeaturevisibility",
       "apps_web_src_domain_mousepresentation_test",
       "apps_web_src_hardware_demodevices",
       "apps_web_src_hardware_demodevices_buildkeyboardlayout",
+      "apps_web_src_hardware_demodevices_createdemokeyboard",
       "apps_web_src_hardware_demodevices_createdemomouse",
       "apps_web_src_hardware_demodevices_demokeyboarddefaults",
       "apps_web_src_hardware_demodevices_demomousedefaults",
@@ -675,31 +573,101 @@
       "apps_web_src_hardware_demodevices_mousebuttons",
       "apps_web_src_hardware_demodevices_mousephoto",
       "apps_web_src_hardware_demodevices_mouseprofile",
+      "apps_web_src_hardware_devicediscovery_connectdemodevices",
       "apps_web_src_store_editorstore_onboard_test_onboardmouse"
     ],
-    "18": [
+    "14": [
+      "apps_web_src_hardware_rawm_connectleviathanv4",
+      "apps_web_src_hardware_rawm_connectleviathanv4_connectleviathanv4",
       "apps_web_src_hardware_rawm_connectleviathanv4_test",
       "apps_web_src_hardware_rawm_connectleviathanv4_test_fakedevice",
       "apps_web_src_hardware_rawm_connectleviathanv4_test_mouse",
       "apps_web_src_hardware_rawm_connectleviathanv4_test_queryreports",
       "apps_web_src_hardware_rawm_connectleviathanv4_test_receiver",
-      "apps_web_src_hardware_rawm_leviathanv4driver_encodeleviathanaction",
-      "apps_web_src_hardware_rawm_notifications_rawmnotification",
-      "apps_web_src_hardware_rawm_notifications_test",
-      "apps_web_src_hardware_rawm_notifications_test_faketransport",
-      "apps_web_src_hardware_rawm_notifications_test_notifyevent",
-      "apps_web_src_hardware_rawm_onboardconfig_test",
-      "apps_web_src_hardware_rawm_onboardconfig_test_entry",
-      "apps_web_src_hardware_rawm_protocol_encodelength",
-      "apps_web_src_hardware_rawm_protocol_frameevent",
-      "apps_web_src_hardware_rawm_protocol_withprotocolenvelope",
-      "apps_web_src_hardware_rawm_session_test",
-      "apps_web_src_hardware_rawm_session_test_oninputreport",
-      "apps_web_src_hardware_rawm_session_test_queryresult",
-      "apps_web_src_hardware_rawm_session_test_respondingtransport",
-      "ref_vitest"
+      "apps_web_src_hardware_webhidtransport",
+      "apps_web_src_hardware_webhidtransport_hiddevicehandle",
+      "apps_web_src_hardware_webhidtransport_hiddevicehandle_addeventlistener",
+      "apps_web_src_hardware_webhidtransport_hiddevicehandle_open",
+      "apps_web_src_hardware_webhidtransport_hiddevicehandle_removeeventlistener",
+      "apps_web_src_hardware_webhidtransport_hiddevicehandle_sendreport",
+      "apps_web_src_hardware_webhidtransport_hidinputreportevent",
+      "apps_web_src_hardware_webhidtransport_test",
+      "apps_web_src_hardware_webhidtransport_test_fakedevice",
+      "apps_web_src_hardware_webhidtransport_webhidtransport_oninputreport",
+      "apps_web_src_hardware_webhidtransport_webhidtransport_open",
+      "apps_web_src_hardware_webhidtransport_webhidtransport_send",
+      "apps_web_src_hardware_webhidtransport_webhidtransportoptions",
+      "apps_web_src_hardware_webhidtransport_withintimeout",
+      "packages_shared_src_index_hidcommand"
     ],
-    "19": [
+    "15": [
+      "apps_web_src_hardware_devicedriver_devicereport",
+      "apps_web_src_hardware_rawm_leviathanv4driver",
+      "apps_web_src_hardware_rawm_leviathanv4driver_intendedmappings",
+      "apps_web_src_hardware_rawm_leviathanv4driver_isshowpower",
+      "apps_web_src_hardware_rawm_leviathanv4driver_keyof",
+      "apps_web_src_hardware_rawm_leviathanv4driver_reportedmappings",
+      "apps_web_src_hardware_rawm_leviathanv4driver_signatureof",
+      "apps_web_src_hardware_rawm_leviathanv4keys",
+      "apps_web_src_hardware_rawm_leviathanv4keys_actions",
+      "apps_web_src_hardware_rawm_leviathanv4keys_buttonidsbykeyid",
+      "apps_web_src_hardware_rawm_leviathanv4keys_encodedaction",
+      "apps_web_src_hardware_rawm_leviathanv4keys_function_show_power",
+      "apps_web_src_hardware_rawm_leviathanv4keys_mouse_key_type_mkey",
+      "apps_web_src_hardware_rawm_leviathanv4keys_mouse_key_type_wheel",
+      "apps_web_src_hardware_rawm_leviathanv4keys_physicalkeyids",
+      "apps_web_src_hardware_rawm_leviathanv4keys_show_power_key_id",
+      "apps_web_src_hardware_rawm_leviathanv4keys_touch_type_press",
+      "apps_web_src_hardware_rawm_onboardconfig",
+      "apps_web_src_hardware_rawm_onboardconfig_functionactions",
+      "apps_web_src_hardware_rawm_onboardconfig_keyactions",
+      "apps_web_src_hardware_rawm_onboardconfig_onboardslotconfig"
+    ],
+    "16": [
+      "apps_web_src_core_corebridge",
+      "apps_web_src_core_corebridge_bytearraylike",
+      "apps_web_src_core_corebridge_corestatus",
+      "apps_web_src_core_corebridge_loadcore",
+      "apps_web_src_core_corebridge_mouseparamsnapshot",
+      "apps_web_src_core_corebridge_rawaction",
+      "apps_web_src_core_corebridge_rawmousefunction",
+      "apps_web_src_core_corebridge_rawmousekey",
+      "apps_web_src_core_corebridge_rawmouseparamsnapshot",
+      "packages_core_pkg_index",
+      "packages_core_pkg_index_configevent",
+      "packages_core_pkg_index_core_version",
+      "packages_core_pkg_index_encode_action",
+      "packages_core_pkg_index_encode_config_reset",
+      "packages_core_pkg_index_encode_mouse_function",
+      "packages_core_pkg_index_encode_mouse_key",
+      "packages_core_pkg_index_encode_mouse_param_snapshot",
+      "packages_core_pkg_index_init",
+      "packages_core_pkg_index_is_wasm_available",
+      "packages_core_pkg_index_u16le"
+    ],
+    "17": [
+      "apps_web_src_core_corebridge_encodeaction",
+      "apps_web_src_core_corebridge_encodeconfigreset",
+      "apps_web_src_core_corebridge_encodemouseparamsnapshot",
+      "apps_web_src_core_corebridge_test",
+      "apps_web_src_core_corebridge_test_bytes",
+      "apps_web_src_hardware_rawm_mouseparamsnapshot_parsemouseparamstate",
+      "apps_web_src_hardware_rawm_writeprobe",
+      "apps_web_src_hardware_rawm_writeprobe_comparestates",
+      "apps_web_src_hardware_rawm_writeprobe_fielddivergence",
+      "apps_web_src_hardware_rawm_writeprobe_hex",
+      "apps_web_src_hardware_rawm_writeprobe_messageof",
+      "apps_web_src_hardware_rawm_writeprobe_probebuttonmapping",
+      "apps_web_src_hardware_rawm_writeprobe_probemappingset",
+      "apps_web_src_hardware_rawm_writeprobe_probepollingwrite",
+      "apps_web_src_hardware_rawm_writeprobe_probeprofilewrite",
+      "apps_web_src_hardware_rawm_writeprobe_test",
+      "apps_web_src_hardware_rawm_writeprobe_test_fakemouse",
+      "apps_web_src_hardware_rawm_writeprobe_wait",
+      "apps_web_src_hardware_webhidtransport_webhidtransport",
+      "apps_web_src_hardware_webhidtransport_webhidtransport_constructor"
+    ],
+    "18": [
       "apps_web_components",
       "apps_web_components_aliases",
       "apps_web_components_aliases_components",
@@ -719,7 +687,7 @@
       "apps_web_components_tailwind_prefix",
       "apps_web_components_tsx"
     ],
-    "20": [
+    "19": [
       "apps_web_tsconfig_app",
       "apps_web_tsconfig_app_compileroptions",
       "apps_web_tsconfig_app_compileroptions_allowjs",
@@ -739,7 +707,7 @@
       "apps_web_tsconfig_app_compileroptions_usedefineforclassfields",
       "apps_web_tsconfig_app_include"
     ],
-    "21": [
+    "20": [
       "packages_ui_components",
       "packages_ui_components_aliases",
       "packages_ui_components_aliases_components",
@@ -759,7 +727,7 @@
       "packages_ui_components_tailwind_prefix",
       "packages_ui_components_tsx"
     ],
-    "22": [
+    "21": [
       "apps_web_package_json_ref_lucide_react",
       "apps_web_package_json_ref_react_dom",
       "apps_web_package_json_ref_types_react",
@@ -778,26 +746,7 @@
       "ref_clsx",
       "ref_tailwind_merge"
     ],
-    "23": [
-      "apps_web_src_hardware_webhidtransport",
-      "apps_web_src_hardware_webhidtransport_hiddevicehandle",
-      "apps_web_src_hardware_webhidtransport_hiddevicehandle_addeventlistener",
-      "apps_web_src_hardware_webhidtransport_hiddevicehandle_open",
-      "apps_web_src_hardware_webhidtransport_hiddevicehandle_removeeventlistener",
-      "apps_web_src_hardware_webhidtransport_hiddevicehandle_sendreport",
-      "apps_web_src_hardware_webhidtransport_hidinputreportevent",
-      "apps_web_src_hardware_webhidtransport_test",
-      "apps_web_src_hardware_webhidtransport_test_fakedevice",
-      "apps_web_src_hardware_webhidtransport_webhidtransport",
-      "apps_web_src_hardware_webhidtransport_webhidtransport_constructor",
-      "apps_web_src_hardware_webhidtransport_webhidtransport_oninputreport",
-      "apps_web_src_hardware_webhidtransport_webhidtransport_open",
-      "apps_web_src_hardware_webhidtransport_webhidtransport_send",
-      "apps_web_src_hardware_webhidtransport_webhidtransportoptions",
-      "apps_web_src_hardware_webhidtransport_withintimeout",
-      "packages_shared_src_index_hidcommand"
-    ],
-    "24": [
+    "22": [
       "packages_core_src_lib",
       "packages_core_src_lib_append_u16_le",
       "packages_core_src_lib_config_event",
@@ -816,25 +765,7 @@
       "packages_core_src_lib_rs_vec",
       "string"
     ],
-    "25": [
-      "apps_web_src_components_changebar",
-      "apps_web_src_components_changebar_barcontent",
-      "apps_web_src_components_changebar_changebar",
-      "apps_web_src_components_changebar_changebarprops",
-      "apps_web_src_components_changebar_changebarprops_ondiscard",
-      "apps_web_src_components_changebar_changebarprops_onreconnect",
-      "apps_web_src_components_changebar_changebarprops_onretry",
-      "apps_web_src_components_changebar_changebarprops_onsave",
-      "apps_web_src_domain_changes",
-      "apps_web_src_domain_changes_countchanges",
-      "apps_web_src_domain_changes_countlistchanges",
-      "apps_web_src_domain_changes_describechangecount",
-      "apps_web_src_domain_changes_idsof",
-      "apps_web_src_domain_changes_isrecord",
-      "apps_web_src_domain_changes_test",
-      "apps_web_src_store_editorstore_editorstatus"
-    ],
-    "26": [
+    "23": [
       "apps_web_package_devdependencies",
       "apps_web_package_devdependencies_eslint",
       "apps_web_package_devdependencies_eslint_js",
@@ -850,6 +781,55 @@
       "apps_web_package_devdependencies_vite",
       "apps_web_package_devdependencies_vitejs_plugin_react",
       "apps_web_package_devdependencies_vitest"
+    ],
+    "24": [
+      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver",
+      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_activeslot",
+      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_activeslotsignature",
+      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_applytosession",
+      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_constructor",
+      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_enqueue",
+      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_ondevicereport",
+      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_ononboardprofiles",
+      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_preservedevents",
+      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_sendevent",
+      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_writeconfigurationbody",
+      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_writeparameters",
+      "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver_writeprofile",
+      "apps_web_src_hardware_rawm_leviathanv4driver_mousesettings",
+      "apps_web_src_hardware_rawm_leviathanv4driver_pause"
+    ],
+    "25": [
+      "apps_web_src_app_demo",
+      "apps_web_src_app_demo_exitdemonstration",
+      "apps_web_src_hardware_devicediscovery_connectionfailure",
+      "apps_web_src_store_devicestore",
+      "apps_web_src_store_devicestore_connectionstate",
+      "apps_web_src_store_devicestore_demowasactive",
+      "apps_web_src_store_devicestore_mergedevices",
+      "apps_web_src_store_devicestore_rememberdemo",
+      "apps_web_src_store_devicestore_test",
+      "apps_web_src_store_devicestore_test_fakestorage",
+      "apps_web_src_store_devicestore_test_reload",
+      "apps_web_src_store_devicestore_test_requestdevicemock",
+      "apps_web_src_store_devicestore_test_startdemo",
+      "apps_web_src_store_devicestore_usedevicestore"
+    ],
+    "26": [
+      "apps_web_src_hardware_rawm_leviathanv4driver_encodeleviathanaction",
+      "apps_web_src_hardware_rawm_onboardconfig_declaredlength",
+      "apps_web_src_hardware_rawm_onboardconfig_decodeonboardentry",
+      "apps_web_src_hardware_rawm_onboardconfig_namedaction",
+      "apps_web_src_hardware_rawm_onboardconfig_onboardbinding",
+      "apps_web_src_hardware_rawm_onboardconfig_onboardconfigcollector",
+      "apps_web_src_hardware_rawm_onboardconfig_onboardconfigcollector_finish",
+      "apps_web_src_hardware_rawm_onboardconfig_onboardconfigcollector_push",
+      "apps_web_src_hardware_rawm_onboardconfig_settings_test",
+      "apps_web_src_hardware_rawm_onboardconfig_settings_test_base",
+      "apps_web_src_hardware_rawm_onboardconfig_settings_test_binding",
+      "apps_web_src_hardware_rawm_onboardconfig_settings_test_slotof",
+      "apps_web_src_hardware_rawm_onboardconfig_test",
+      "apps_web_src_hardware_rawm_onboardconfig_test_entry"
     ],
     "27": [
       "turbo",
@@ -868,6 +848,21 @@
       "turbo_test_outputs"
     ],
     "28": [
+      "apps_web_src_components_adddevicedialog_adddevicedialog",
+      "apps_web_src_components_homepage_homepage",
+      "apps_web_src_store_devicestore_devicestore",
+      "apps_web_src_store_devicestore_devicestore_closeadddevice",
+      "apps_web_src_store_devicestore_devicestore_connectdevice",
+      "apps_web_src_store_devicestore_devicestore_exitdemo",
+      "apps_web_src_store_devicestore_devicestore_markdisconnected",
+      "apps_web_src_store_devicestore_devicestore_openadddevice",
+      "apps_web_src_store_devicestore_devicestore_reconnect",
+      "apps_web_src_store_devicestore_devicestore_resetconnection",
+      "apps_web_src_store_devicestore_devicestore_restoresession",
+      "apps_web_src_store_devicestore_devicestore_startdemo",
+      "apps_web_src_store_devicestore_devicestore_updatedevice"
+    ],
+    "29": [
       "hidcommand",
       "packages_core_src_device_mod",
       "packages_core_src_device_mod_mousedriver",
@@ -882,21 +877,21 @@
       "packages_core_src_drivers_mock_mouse_mockmousedriver_set_dpi",
       "packages_core_src_drivers_mock_mouse_mockmousedriver_set_polling_rate"
     ],
-    "29": [
-      "apps_web_src_components_adddevicedialog_adddevicedialog",
-      "apps_web_src_components_homepage_homepage",
-      "apps_web_src_store_devicestore_devicestore",
-      "apps_web_src_store_devicestore_devicestore_closeadddevice",
-      "apps_web_src_store_devicestore_devicestore_connectdevice",
-      "apps_web_src_store_devicestore_devicestore_exitdemo",
-      "apps_web_src_store_devicestore_devicestore_markdisconnected",
-      "apps_web_src_store_devicestore_devicestore_openadddevice",
-      "apps_web_src_store_devicestore_devicestore_reconnect",
-      "apps_web_src_store_devicestore_devicestore_resetconnection",
-      "apps_web_src_store_devicestore_devicestore_startdemo",
-      "apps_web_src_store_devicestore_devicestore_updatedevice"
-    ],
     "30": [
+      "apps_web_src_app",
+      "apps_web_src_app_app",
+      "apps_web_src_app_usetheme",
+      "apps_web_src_app_usetheme_storedtheme",
+      "apps_web_src_app_usetheme_systemtheme",
+      "apps_web_src_app_usetheme_theme",
+      "apps_web_src_app_usetheme_usetheme",
+      "apps_web_src_components_appheader",
+      "apps_web_src_components_appheader_appheader",
+      "apps_web_src_components_brandmark",
+      "apps_web_src_components_brandmark_brandmark",
+      "apps_web_src_main"
+    ],
+    "31": [
       "apps_web_src_hardware_devicediscovery_browserhiddevice",
       "apps_web_src_hardware_rawm_diagnostics_diagnosticoptions",
       "apps_web_src_hardware_rawm_diagnostics_test",
@@ -910,7 +905,7 @@
       "apps_web_src_hardware_webhidtransport_hardwaretransport",
       "apps_web_src_hardware_webhidtransport_hardwaretransport_open"
     ],
-    "31": [
+    "32": [
       "apps_web_src_hardware_rawm_leviathanv4_test",
       "apps_web_src_hardware_rawm_leviathanv4_test_query",
       "apps_web_src_hardware_rawm_leviathanv4fixture",
@@ -924,7 +919,7 @@
       "apps_web_src_hardware_rawm_mouseparamsnapshot_test",
       "apps_web_src_hardware_rawm_mouseparamsnapshot_test_raw"
     ],
-    "32": [
+    "33": [
       "apps_web_src_hardware_rawm_mouseparamsnapshot",
       "apps_web_src_hardware_rawm_mouseparamsnapshot_applysettingstomouseparam",
       "apps_web_src_hardware_rawm_mouseparamsnapshot_encodemouseparambody",
@@ -938,7 +933,7 @@
       "apps_web_src_hardware_rawm_mouseparamsnapshot_pushu16",
       "apps_web_src_hardware_rawm_mouseparamsnapshot_pushu32"
     ],
-    "33": [
+    "34": [
       "package_json_ref_typescript",
       "packages_shared_package",
       "packages_shared_package_devdependencies",
@@ -952,7 +947,7 @@
       "packages_shared_package_type",
       "packages_shared_package_version"
     ],
-    "34": [
+    "35": [
       "tsconfig_audit",
       "tsconfig_audit_compileroptions",
       "tsconfig_audit_compileroptions_allowsyntheticdefaultimports",
@@ -965,7 +960,7 @@
       "tsconfig_audit_compileroptions_target",
       "tsconfig_audit_include"
     ],
-    "35": [
+    "36": [
       "packages_ui_tsconfig",
       "packages_ui_tsconfig_compileroptions",
       "packages_ui_tsconfig_compileroptions_jsx",
@@ -976,17 +971,6 @@
       "packages_ui_tsconfig_compileroptions_strict",
       "packages_ui_tsconfig_compileroptions_target",
       "packages_ui_tsconfig_include"
-    ],
-    "36": [
-      "apps_web_src_hardware_demodevices_createdemokeyboard",
-      "apps_web_src_hardware_devicediscovery_connectdemodevices",
-      "apps_web_src_hardware_devicediscovery_connectionfailure",
-      "apps_web_src_store_devicestore",
-      "apps_web_src_store_devicestore_connectionstate",
-      "apps_web_src_store_devicestore_demowasactive",
-      "apps_web_src_store_devicestore_mergedevices",
-      "apps_web_src_store_devicestore_rememberdemo",
-      "apps_web_src_store_devicestore_usedevicestore"
     ],
     "37": [
       "packages_core_package",
@@ -1021,6 +1005,16 @@
       "apps_web_package_dependencies_zustand"
     ],
     "40": [
+      "apps_web_src_hardware_rawm_notifications",
+      "apps_web_src_hardware_rawm_notifications_isnotification",
+      "apps_web_src_hardware_rawm_notifications_parsenotification",
+      "apps_web_src_hardware_rawm_notifications_rawmnotification",
+      "apps_web_src_hardware_rawm_notifications_test",
+      "apps_web_src_hardware_rawm_notifications_test_faketransport",
+      "apps_web_src_hardware_rawm_notifications_test_notifyevent",
+      "ref_vitest"
+    ],
+    "41": [
       "apps_web_tsconfig_node",
       "apps_web_tsconfig_node_compileroptions",
       "apps_web_tsconfig_node_compileroptions_composite",
@@ -1030,7 +1024,8 @@
       "apps_web_tsconfig_node_compileroptions_skiplibcheck",
       "apps_web_tsconfig_node_include"
     ],
-    "41": [
+    "42": [
+      "apps_web_src_hardware_rawm_leviathanv4driver_editorkeysets",
       "apps_web_src_hardware_rawm_leviathanv4driver_mappingevents",
       "apps_web_src_hardware_rawm_leviathanv4driver_onboard_test",
       "apps_web_src_hardware_rawm_leviathanv4driver_onboard_test_disabledcentral",
@@ -1038,7 +1033,15 @@
       "apps_web_src_hardware_rawm_leviathanv4driver_onboard_test_innertype",
       "apps_web_src_hardware_rawm_leviathanv4driver_onboard_test_notifyreport"
     ],
-    "42": [
+    "43": [
+      "apps_web_src_core_corebridge_copybytes",
+      "apps_web_src_core_corebridge_encodemousefunction",
+      "apps_web_src_core_corebridge_encodemousekey",
+      "apps_web_src_core_corebridge_isbytearraylike",
+      "apps_web_src_core_corebridge_snapshotbytes",
+      "apps_web_src_core_corebridge_textbytes"
+    ],
+    "44": [
       "packages_core_pkg_package",
       "packages_core_pkg_package_main",
       "packages_core_pkg_package_name",
@@ -1046,7 +1049,7 @@
       "packages_core_pkg_package_types",
       "packages_core_pkg_package_version"
     ],
-    "43": [
+    "45": [
       "packages_ui_package_dependencies",
       "packages_ui_package_dependencies_class_variance_authority",
       "packages_ui_package_dependencies_clsx",
@@ -1054,159 +1057,159 @@
       "packages_ui_package_dependencies_radix_ui",
       "packages_ui_package_dependencies_tailwind_merge"
     ],
-    "44": [
+    "46": [
       "apps_web_package_scripts",
       "apps_web_package_scripts_build",
       "apps_web_package_scripts_dev",
       "apps_web_package_scripts_lint",
       "apps_web_package_scripts_test"
     ],
-    "45": [
+    "47": [
       "apps_web_package_imports",
       "apps_web_package_imports_components",
       "apps_web_package_imports_hooks",
       "apps_web_package_imports_lib"
     ],
-    "46": [
+    "48": [
       "packages_ui_package_devdependencies",
       "packages_ui_package_devdependencies_react",
       "packages_ui_package_devdependencies_types_react",
       "packages_ui_package_devdependencies_typescript"
     ],
-    "47": [
+    "49": [
       "packages_ui_package_exports",
       "packages_ui_package_exports_components",
       "packages_ui_package_exports_hooks",
       "packages_ui_package_exports_lib"
     ],
-    "48": [
+    "50": [
       "packages_ui_package_imports",
       "packages_ui_package_imports_components",
       "packages_ui_package_imports_hooks",
       "packages_ui_package_imports_lib"
     ],
-    "49": [
+    "51": [
       "scripts_run_rust_tool",
       "scripts_run_rust_tool_commands",
       "scripts_run_rust_tool_coredirectory",
       "scripts_run_rust_tool_result"
     ],
-    "50": [
+    "52": [
       "apps_web_impeccable_serve_design",
       "apps_web_impeccable_serve_design_root",
       "apps_web_impeccable_serve_design_types"
     ],
-    "51": [
+    "53": [
       "apps_web_tsconfig",
       "apps_web_tsconfig_files",
       "apps_web_tsconfig_references"
     ],
-    "52": [
+    "54": [
       "cursor_mcp",
       "cursor_mcp_mcp_server_graphify",
       "mcp_command_graphify_mcp"
     ],
-    "53": [
+    "55": [
       "packages_core_src_command",
       "packages_core_src_command_hidcommand",
       "packages_core_src_command_rs_vec"
     ],
-    "54": [
+    "56": [
       "packages_core_src_device_capabilities",
       "packages_core_src_device_capabilities_mousecapabilities",
       "packages_core_src_device_capabilities_rs_vec"
     ],
-    "55": [
+    "57": [
       "apps_web_impeccable_build_design_gallery",
       "apps_web_impeccable_build_design_gallery_catalog"
     ],
-    "56": [
+    "58": [
       "scripts_prepare_core",
       "scripts_prepare_core_result"
     ],
-    "57": [
+    "59": [
       "apps_web_src_vite_env_d"
     ],
-    "58": [
+    "60": [
       "crate:gearhub-core-wasm"
     ],
-    "59": [
+    "61": [
       "dependency_cruiser_cjs_dependency_cruiser"
     ],
-    "60": [
+    "62": [
       "option"
     ],
-    "61": [
+    "63": [
       "packages_core_pkg_index_d"
     ],
-    "62": [
+    "64": [
       "packages_core_src_drivers_mod"
     ],
-    "63": [
+    "65": [
       "packages_core_src_protocols_mod"
     ],
-    "64": [
+    "66": [
       "prettier_config"
     ]
   },
   "cohesion": {
-    "0": 0.06368011847463902,
-    "1": 0.06293706293706294,
+    "0": 0.05518207282913165,
+    "1": 0.061072261072261075,
     "2": 0.0715846994535519,
-    "3": 0.08078431372549019,
-    "4": 0.09856035437430787,
-    "5": 0.1048780487804878,
-    "6": 0.12233285917496443,
-    "7": 0.058823529411764705,
-    "8": 0.15076923076923077,
+    "3": 0.07918552036199095,
+    "4": 0.10104529616724739,
+    "5": 0.12233285917496443,
+    "6": 0.058823529411764705,
+    "7": 0.18160919540229886,
+    "8": 0.13333333333333333,
     "9": 0.11333333333333333,
-    "10": 0.21,
-    "11": 0.14333333333333334,
-    "12": 0.17391304347826086,
-    "13": 0.11067193675889328,
-    "14": 0.1383399209486166,
-    "15": 0.15584415584415584,
-    "16": 0.1631578947368421,
-    "17": 0.11578947368421053,
-    "18": 0.1631578947368421,
+    "10": 0.11067193675889328,
+    "11": 0.1383399209486166,
+    "12": 0.12121212121212122,
+    "13": 0.10822510822510822,
+    "14": 0.12121212121212122,
+    "15": 0.17142857142857143,
+    "16": 0.18421052631578946,
+    "17": 0.2631578947368421,
+    "18": 0.1111111111111111,
     "19": 0.1111111111111111,
     "20": 0.1111111111111111,
-    "21": 0.1111111111111111,
-    "22": 0.11764705882352941,
-    "23": 0.17647058823529413,
-    "24": 0.19852941176470587,
-    "25": 0.2,
-    "26": 0.13333333333333333,
+    "21": 0.11764705882352941,
+    "22": 0.19852941176470587,
+    "23": 0.13333333333333333,
+    "24": 0.2761904761904762,
+    "25": 0.21978021978021978,
+    "26": 0.2087912087912088,
     "27": 0.14285714285714285,
-    "28": 0.23076923076923078,
-    "29": 0.21212121212121213,
-    "30": 0.19696969696969696,
-    "31": 0.24242424242424243,
-    "32": 0.25757575757575757,
-    "33": 0.16666666666666666,
-    "34": 0.18181818181818182,
-    "35": 0.2,
-    "36": 0.3333333333333333,
+    "28": 0.19230769230769232,
+    "29": 0.23076923076923078,
+    "30": 0.30303030303030304,
+    "31": 0.19696969696969696,
+    "32": 0.24242424242424243,
+    "33": 0.25757575757575757,
+    "34": 0.16666666666666666,
+    "35": 0.18181818181818182,
+    "36": 0.2,
     "37": 0.2222222222222222,
     "38": 0.2222222222222222,
     "39": 0.25,
-    "40": 0.25,
-    "41": 0.4666666666666667,
-    "42": 0.3333333333333333,
-    "43": 0.3333333333333333,
-    "44": 0.4,
-    "45": 0.5,
-    "46": 0.5,
+    "40": 0.35714285714285715,
+    "41": 0.25,
+    "42": 0.38095238095238093,
+    "43": 0.5333333333333333,
+    "44": 0.3333333333333333,
+    "45": 0.3333333333333333,
+    "46": 0.4,
     "47": 0.5,
     "48": 0.5,
     "49": 0.5,
-    "50": 0.6666666666666666,
-    "51": 0.6666666666666666,
+    "50": 0.5,
+    "51": 0.5,
     "52": 0.6666666666666666,
     "53": 0.6666666666666666,
     "54": 0.6666666666666666,
-    "55": 1.0,
-    "56": 1.0,
+    "55": 0.6666666666666666,
+    "56": 0.6666666666666666,
     "57": 1.0,
     "58": 1.0,
     "59": 1.0,
@@ -1214,7 +1217,9 @@
     "61": 1.0,
     "62": 1.0,
     "63": 1.0,
-    "64": 1.0
+    "64": 1.0,
+    "65": 1.0,
+    "66": 1.0
   },
   "gods": [
     {
@@ -1223,13 +1228,13 @@
       "degree": 33
     },
     {
-      "id": "apps_web_src_hardware_rawm_protocol_withprotocolenvelope",
-      "label": "withProtocolEnvelope()",
+      "id": "packages_ui_src_lib_utils_cn",
+      "label": "cn()",
       "degree": 29
     },
     {
-      "id": "packages_ui_src_lib_utils_cn",
-      "label": "cn()",
+      "id": "apps_web_src_hardware_rawm_protocol_withprotocolenvelope",
+      "label": "withProtocolEnvelope()",
       "degree": 29
     },
     {
@@ -1241,11 +1246,6 @@
       "id": "apps_web_src_hardware_rawm_protocol_frameevent",
       "label": "frameEvent()",
       "degree": 23
-    },
-    {
-      "id": "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver",
-      "label": "LeviathanV4Driver",
-      "degree": 22
     },
     {
       "id": "apps_web_src_store_devicestore_usedevicestore",
@@ -1266,6 +1266,11 @@
       "id": "apps_web_src_hardware_rawm_diagnostics_capturequery",
       "label": "captureQuery()",
       "degree": 20
+    },
+    {
+      "id": "apps_web_src_hardware_rawm_leviathanv4driver_leviathanv4driver",
+      "label": "LeviathanV4Driver",
+      "degree": 19
     }
   ],
   "surprises": [
@@ -1281,10 +1286,10 @@
       "why": "connects across different repos/directories; peripheral node `StageRemoval` unexpectedly reaches hub `DpiStage`"
     },
     {
-      "source": "DeviceWorkspace()",
+      "source": "ChangeBar()",
       "target": "cn()",
       "source_files": [
-        "apps/web/src/components/DeviceWorkspace.tsx",
+        "apps/web/src/components/ChangeBar.tsx",
         "packages/ui/src/lib/utils.ts"
       ],
       "confidence": "EXTRACTED",
@@ -1292,10 +1297,10 @@
       "why": "connects across different repos/directories; bridges separate communities"
     },
     {
-      "source": "GeneralSection()",
+      "source": "DeviceWorkspace()",
       "target": "cn()",
       "source_files": [
-        "apps/web/src/components/sections/GeneralSection.tsx",
+        "apps/web/src/components/DeviceWorkspace.tsx",
         "packages/ui/src/lib/utils.ts"
       ],
       "confidence": "EXTRACTED",
@@ -1328,33 +1333,33 @@
   "questions": [
     {
       "type": "bridge_node",
-      "question": "Why does `vitest` connect `withProtocolEnvelope` to `editorStore.ts`, `DeviceWorkspace.tsx`, `cn`, `index.ts`, `writeProbe.ts`, `DpiSection.tsx`, `LeviathanV4Driver.onboard.test.ts`, `leviathanV4.ts`, `LeviathanV4Driver.ts`, `protocol.ts`, `web/package.json`, `deviceDiscovery.ts`, `App.tsx`, `demoDevices.ts`, `WebHidTransport.ts`, `ChangeBar.tsx`, `diagnostics.test.ts`, `leviathanV4Fixture.ts`?",
-      "why": "High betweenness centrality (0.102) - this node is a cross-community bridge."
+      "question": "Why does `vitest` connect `vitest` to `editorStore.ts`, `DeviceWorkspace.tsx`, `cn`, `leviathanV4Fixture.ts`, `index.ts`, `DpiSection.tsx`, `withProtocolEnvelope`, `deviceDiscovery.ts`, `leviathanV4.ts`, `web/package.json`, `LeviathanV4Driver.onboard.test.ts`, `demoDevices.ts`, `connectLeviathanV4.test.ts`, `writeProbe.ts`, `deviceStore.ts`, `onboardConfig.settings.test.ts`, `diagnostics.test.ts`?",
+      "why": "High betweenness centrality (0.108) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
       "question": "Why does `typescript` connect `shared/package.json` to `web/package.json`, `ui/package.json`, `scripts`?",
-      "why": "High betweenness centrality (0.067) - this node is a cross-community bridge."
+      "why": "High betweenness centrality (0.061) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
       "question": "Why does `zustand` connect `web/package.json` to `editorStore.ts`, `deviceStore.ts`?",
-      "why": "High betweenness centrality (0.031) - this node is a cross-community bridge."
+      "why": "High betweenness centrality (0.032) - this node is a cross-community bridge."
     },
     {
       "type": "isolated_nodes",
-      "question": "What connects `ProfileWrite`, `SectionDefinition`, `Option` to the rest of the system?",
+      "question": "What connects `BarContent`, `ProfileWrite`, `SectionDefinition` to the rest of the system?",
       "why": "306 weakly-connected nodes found - possible documentation gaps or missing edges."
     },
     {
       "type": "low_cohesion",
       "question": "Should `editorStore.ts` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.06368011847463902 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.05518207282913165 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",
       "question": "Should `DeviceWorkspace.tsx` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.06293706293706294 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.061072261072261075 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",

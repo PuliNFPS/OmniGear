@@ -85,13 +85,30 @@ Consequência: **o mouse já despeja a config onboard a cada connect que o app f
 `queryRawmDevice` resolve no primeiro `0x02` e dá `unsubscribe`, jogando o dump fora. Ler
 os binds não exige comando novo — exige continuar ouvindo.
 
-## 5. Trocar o perfil ativo
+## 5. Trocar o perfil ativo: nao ha como
 
-Não existe `CONFIG_TYPE_ONBOARD`. `send_event_mouse_param` empacota `device_info.onboard`
-dentro do bloco `0x15`, logo depois de `cpiLevels` e antes de `powerMode` — a mesma posição
-em que `mouseParamSnapshot.ts:116` já escreve `state.onboard`.
+Nao existe comando para isso na biblioteca do fabricante, e a primeira leitura desta
+investigacao estava errada.
 
-Trocar de perfil é enviar `0x15` com outro `onboard`. O encoder já está pronto.
+- `device_info.onboard` so e **lido**, do `ob` da consulta. Nada no app do fabricante o
+  escreve para selecionar um slot.
+- Quem nomeia o slot ativo e `oci`, um campo diferente — e tambem so de leitura.
+- O que existe e `NOTIFY_TYPE_MOUSE_ONBOARD_INDEX` (`0x22`): o mouse **anunciando** que
+  trocou, o que ele faz por conta propria quando o botao e apertado.
+
+Mandar um `0x15` com outro `onboard` para forcar a troca carregaria junto o DPI, o polling
+e os parametros do slot **anterior** — a consulta so descreve o ativo — ou seja,
+sobrescreveria o destino com a origem. Por isso o driver nao oferece `switchProfile`, e o
+editor grava as configuracoes no slot em vez de pedir a troca.
+
+O fluxo de gravacao, esse sim, confere com o `writeProfile` deste projeto:
+
+```
+send_event_config_reset(client)
+send_event_action(client, ACTION_SAVE_CONFIG_TO_FDS, 1 | (indice << 8))
+...corpo...
+send_event_action(client, ACTION_SAVE_CONFIG_TO_FDS, 0)
+```
 
 ## 6. O que o app ainda não sabe representar
 
