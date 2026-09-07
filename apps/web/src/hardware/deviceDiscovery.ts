@@ -6,6 +6,7 @@ import {
   type DeviceDefinition,
   type HidDeviceIdentity,
 } from './deviceRegistry';
+import { reportHardwareFailure } from './hardwareFailure';
 import type { HidDeviceHandle } from './WebHidTransport';
 
 export type ConnectionFailure = 'sem-suporte' | 'permissao' | 'nao-reconhecido' | 'falha';
@@ -96,6 +97,8 @@ export async function requestDevice(
       : { status: 'erro', reason: 'nao-reconhecido' };
   } catch (error) {
     const name = error instanceof Error ? error.name : '';
+    // A denied permission is the user's answer, not a fault worth reporting.
+    if (name !== 'NotAllowedError') reportHardwareFailure('conectar o dispositivo', error);
     return { status: 'erro', reason: name === 'NotAllowedError' ? 'permissao' : 'falha' };
   }
 }

@@ -6,6 +6,7 @@ import {
   restoreAuthorizedDevices,
   type ConnectionFailure,
 } from '../hardware/deviceDiscovery';
+import { reportHardwareFailure } from '../hardware/hardwareFailure';
 
 const DEMO_STORAGE_KEY = 'omnigear:demonstracao';
 let demoGeneration = 0;
@@ -68,7 +69,12 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
     const generation = ++demoGeneration;
     const includeDemo = demoWasActive();
     const [authorized, demo] = await Promise.all([
-      restoreAuthorizedDevices().catch(() => []),
+      restoreAuthorizedDevices().catch((error: unknown) => {
+        // One device failing to reopen drops the whole list, so the reason has
+        // to be visible: otherwise the app simply shows nothing connected.
+        reportHardwareFailure('restaurar os dispositivos autorizados', error);
+        return [];
+      }),
       includeDemo ? connectDemoDevices() : Promise.resolve([]),
     ]);
     if (generation !== demoGeneration) return;

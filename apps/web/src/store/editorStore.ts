@@ -7,6 +7,7 @@ import {
   withWrittenProfile,
 } from '../domain/settings';
 import { driverFor } from '../hardware/deviceDriver';
+import { reportHardwareFailure } from '../hardware/hardwareFailure';
 import { useDeviceStore } from './deviceStore';
 
 /**
@@ -143,9 +144,10 @@ export const useEditorStore = create<EditorStore>((set, get) => {
         current = queued;
       }
       put(device.id, { status: 'ocioso' });
-    } catch {
+    } catch (error) {
       if (applyTokens.get(device.id) !== token) return;
       queuedApplies.delete(device.id);
+      reportHardwareFailure('aplicar os ajustes', error);
       put(device.id, { status: 'falha-aplicacao' });
     } finally {
       runningApplies.delete(device.id);
@@ -193,9 +195,10 @@ export const useEditorStore = create<EditorStore>((set, get) => {
         }, SAVED_MESSAGE_MS),
       );
       return true;
-    } catch {
+    } catch (error) {
       if (writes.get(device.id) === token) {
         failedWrites.set(device.id, operation);
+        reportHardwareFailure('gravar o perfil', error);
         put(device.id, { status: 'falha-gravacao' });
       }
       return false;
@@ -312,7 +315,8 @@ export const useEditorStore = create<EditorStore>((set, get) => {
       try {
         await driver.switchProfile(slotIndex);
         put(device.id, { status: 'ocioso' });
-      } catch {
+      } catch (error) {
+        reportHardwareFailure('trocar de perfil', error);
         put(device.id, { status: 'falha-aplicacao' });
       }
     },
