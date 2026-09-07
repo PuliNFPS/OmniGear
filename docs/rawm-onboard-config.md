@@ -107,6 +107,29 @@ O que ficou **verificado**, e é o que importa para não repetir o erro:
 
 Ou seja: **segue não encontrado, não provado impossível.** A diferença importa.
 
+### Confirmado na UI do fabricante, 2026-09-07
+
+Duas capturas do hub, alternando entre `Onboard config ①` e `Onboard config ②`, fecham a
+questão pelo lado da observação:
+
+- O marcador **`◀`** aparece no `①` enquanto se edita o `①`, e **desaparece** ao trocar o
+  dropdown para o `②`. É o `<option>` recebendo `'◀'` quando bate com
+  `get_onboard_index(client)`: o slot que o mouse **está rodando**. Trocar o dropdown não o
+  move.
+- Portanto **o dropdown do mouse é cursor de edição, não troca de slot.** Quem grava é o
+  botão "Apply & onboard".
+- O termo do fabricante na UI do mouse é **"Onboard config N"**, com numerais circulados —
+  não "Onboard Memory".
+
+Isso também confirma o `ocs` por observação, não só por leitura de código: o seletor
+**`Light`** mostra cor diferente por slot (branco no `①`, verde no `②`), e o toggle
+**`Switchable`** é o bit `0x80` — no JS, `valor | 0x80` ao marcar e `valor & ~0x80` ao
+desmarcar. A captura `ocs = [0x81, 0x82, 0x86, 0x84]` tem `0x80` nos quatro.
+
+O mapeamento exato de cor segue **em aberto**: se os bits baixos fossem flags RGB, `0x82`
+→ verde casa com o `②`, mas `0x81` → vermelho contradiz o branco observado no `①`. Falta
+saber que cor o `③` (`0x86`) e o `④` (`0x84`) mostram.
+
 ### Uma correção real que sobrou dessa investigação
 
 O argumento da leitura anterior — "mandar um `0x15` com outro `onboard` carregaria o DPI e
