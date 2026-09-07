@@ -241,18 +241,23 @@ export class LeviathanV4Driver implements DeviceDriver {
   }
 
   /**
-   * There is deliberately no `switchProfile` here.
+   * `switchProfile` is not implemented yet — but it is possible, and an earlier
+   * comment here claimed otherwise. See `docs/rawm-onboard-config.md` §5.
    *
-   * The vendor library has no command for it. `device_info.onboard` is only
-   * ever read from the query's `ob`, never written to select a slot, and the
-   * field that names the active slot is `oci`, a different one. What does exist
-   * is NOTIFY_TYPE_MOUSE_ONBOARD_INDEX (0x22): the mouse announcing that it
-   * switched, which it does on its own when its button is pressed.
+   * The command exists in a family this driver does not speak: `IQ_SET_PROFILE_ID`
+   * (0x40) followed by the slot index, zero-padded to 32 bytes, on the HS
+   * receiver — not the CMD_CONFIG/CMD_ACTION events everything here builds.
+   * Looking only at that family is what produced "there is no command".
    *
-   * Sending a parameter block to force the index would also carry the previous
-   * slot's DPI, polling and parameters — the query only ever described the
-   * active slot — so it would overwrite the destination with the source. The
-   * editor falls back to writing the settings instead, which is safe.
+   * Still true: forcing the index with a parameter block would carry the
+   * previous slot's DPI, polling and parameters — the query only ever described
+   * the active slot — so it would overwrite the destination with the source.
+   * Writing the settings, which is what the editor does, stays the safe path
+   * until 0x40 is implemented and confirmed on hardware.
+   *
+   * Also unhandled: NOTIFY_TYPE_MOUSE_ONBOARD_INDEX (0x22), the mouse
+   * announcing a switch it made on its own when its button is pressed. Until
+   * that is followed, the app keeps showing the slot the mouse already left.
    */
 
   private enqueue(operation: () => Promise<void>): Promise<void> {
