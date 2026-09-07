@@ -200,7 +200,10 @@ export function createLeviathanV4Peripheral(
     defaults: structuredClone(settings),
     profiles: Array.from({ length: profileCount }, (_, index) => ({
       index: index + 1,
-      name: `Perfil ${index + 1}`,
+      // The mouse reports no slot names, so this is the app's own label. It
+      // follows the vendor hub's "Onboard Memory 1-4" rather than inventing a
+      // separate vocabulary for the same four slots.
+      name: `Memória ${index + 1}`,
       settings: index + 1 === activeProfileSlot ? structuredClone(settings) : null,
     })),
     activeProfileSlot,

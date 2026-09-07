@@ -89,6 +89,20 @@ describe('createLeviathanV4Peripheral on the real capture', () => {
     expect(mouse.profiles).toHaveLength(4);
   });
 
+  // The mouse reports no slot names: the vendor's own data model indexes the
+  // slots (`allKeyConfigs[onboard_index]`) and its hub labels them "Onboard
+  // Memory 1-4", so the default name says which memory, not "profile N".
+  it('names each slot after the onboard memory it occupies', () => {
+    const mouse = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real');
+
+    expect(mouse.profiles.map((profile) => profile.name)).toEqual([
+      'Memória 1',
+      'Memória 2',
+      'Memória 3',
+      'Memória 4',
+    ]);
+  });
+
   // Only the four populated slots are real DPI stages.
   it('drops the zero padding from the DPI stages', () => {
     const mouse = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real');
