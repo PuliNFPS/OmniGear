@@ -156,7 +156,37 @@ export function encodeMouseFunction(
   );
 }
 
+let ready: Promise<void> | null = null;
+
+/**
+ * Initialises the core once, handing the same promise to every later caller.
+ *
+ * Every encoder above is synchronous, and the wasm glue that `pnpm core:build`
+ * generates throws on any call made before `init()` resolves. The checked-in
+ * development bridge makes `init()` a no-op, so nothing here ever awaited it —
+ * which held up right until wasm-pack was on PATH and `pnpm dev` replaced the
+ * bridge. Then every apply failed instantly, on every setting, with the error
+ * swallowed. So the app awaits this before it renders.
+ */
+export function ensureCoreReady(): Promise<void> {
+  // The development bridge resolves to nothing and the generated build resolves
+  // to its InitOutput, so the result is normalised rather than passed through.
+  const pending =
+    ready ??
+    Promise.resolve(init()).then(
+      () => undefined,
+      (error: unknown) => {
+        // A failure must not be remembered as a success, or the app would spend
+        // the rest of the session believing a core that never loaded is ready.
+        ready = null;
+        throw error;
+      },
+    );
+  ready = pending;
+  return pending;
+}
+
 export async function loadCore(): Promise<CoreStatus> {
-  await init();
+  await ensureCoreReady();
   return { version: core_version(), wasm: is_wasm_available() };
 }
