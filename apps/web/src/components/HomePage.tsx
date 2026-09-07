@@ -6,7 +6,9 @@ import { useState } from 'react';
 import { describeDevice } from '../app/labels';
 import { defaultSectionFor } from '../app/routes';
 import { navigate } from '../app/useRoute';
+import { batteryReading } from '../domain/battery';
 import { useDeviceStore } from '../store/deviceStore';
+import { BatteryLevel } from './BatteryLevel';
 import { DevicePhoto } from './devices/DevicePhoto';
 
 export function HomePage() {
@@ -119,8 +121,16 @@ function DeviceCard({
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[15px] font-medium">{device.name}</span>
-        <span className="mt-0.5 block text-sm text-muted-foreground">
-          {offline ? `${describeDevice(device)} · Desconectado` : describeDevice(device)}
+        <span className="mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
+          <span className="truncate">
+            {offline ? `${describeDevice(device)} · Desconectado` : describeDevice(device)}
+          </span>
+          {batteryReading(device) !== null && (
+            <>
+              <span aria-hidden="true">·</span>
+              <BatteryLevel device={device} />
+            </>
+          )}
         </span>
       </span>
       <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -146,7 +156,15 @@ function DevicePreview({ device, onReconnect }: { device: Peripheral; onReconnec
       </div>
       <div className="text-center sm:text-left">
         <h2 className="text-xl font-medium tracking-tight">{device.name}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{describeDevice(device)}</p>
+        <p className="mt-1 flex items-center justify-center gap-1.5 text-sm text-muted-foreground sm:justify-start">
+          <span>{describeDevice(device)}</span>
+          {batteryReading(device) !== null && (
+            <>
+              <span aria-hidden="true">·</span>
+              <BatteryLevel device={device} />
+            </>
+          )}
+        </p>
         {offline ? (
           <div className="mt-5">
             <p className="mb-3 flex items-center justify-center gap-2 text-sm text-muted-foreground sm:justify-start">
