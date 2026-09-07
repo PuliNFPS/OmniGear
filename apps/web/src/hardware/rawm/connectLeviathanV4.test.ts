@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { driverFor, unregisterDeviceDriver } from '../deviceDriver';
 import { deviceDefinitions } from '../deviceRegistry';
 import type { BrowserHidDevice } from '../deviceDiscovery';
@@ -82,6 +82,19 @@ function fakeDevice(
 }
 
 describe('connectLeviathanV4', () => {
+  it('queries only the virtual mouse after WebHID validates the receiver', async () => {
+    const device = fakeDevice();
+    const sendReport = vi.spyOn(device, 'sendReport');
+    const peripheral = await connectLeviathanV4(device, deviceDefinitions[0]);
+
+    try {
+      expect(sendReport).toHaveBeenCalledOnce();
+      expect(new Uint8Array(sendReport.mock.calls[0][1] as ArrayBuffer)[0]).toBe(0xc0);
+    } finally {
+      unregisterDeviceDriver(peripheral.id);
+    }
+  });
+
   it('validates receiver and virtual mouse before registering the live driver', async () => {
     const peripheral = await connectLeviathanV4(fakeDevice(), deviceDefinitions[0]);
     try {

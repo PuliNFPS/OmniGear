@@ -47,10 +47,10 @@ export async function queryRawmDevice(
   const virtualMouse = options.virtualMouse ?? false;
   const timeoutMs = options.timeoutMs ?? 1000;
   const assembler = new RawEventAssembler();
-  await transport.open();
 
   return new Promise<RawmIdentity>((resolve, reject) => {
     let settled = false;
+    let unsubscribe: () => void = () => undefined;
     const finish = (result: RawmIdentity | Error) => {
       if (settled) return;
       settled = true;
@@ -59,19 +59,6 @@ export async function queryRawmDevice(
       if (result instanceof Error) reject(result);
       else resolve(result);
     };
-    const unsubscribe = transport.onInputReport((reportId, report) => {
-      if (reportId !== 0) return;
-      try {
-        const chunk = decodeReportChunk(report, virtualMouse);
-        if (chunk === null || chunk.length === 0) return;
-        for (const event of assembler.push(chunk)) {
-          // The stream also carries non-query events; only 0x02 answers us.
-          if (isQueryResult(event)) finish(validateRawmIdentity(parseQueryJson(event)));
-        }
-      } catch (error) {
-        finish(error instanceof Error ? error : new Error('Resposta RAWM inválida.'));
-      }
-    });
     const timeout = setTimeout(
       () => finish(new Error('A consulta RAWM excedeu o tempo limite.')),
       timeoutMs,
@@ -80,6 +67,25 @@ export async function queryRawmDevice(
     const event = buildQueryEvent(options.epochSeconds);
     void (async () => {
       try {
+        await transport.open();
+        if (settled) return;
+        unsubscribe = transport.onInputReport((reportId, report) => {
+          if (reportId !== 0) return;
+          try {
+            const chunk = decodeReportChunk(report, virtualMouse);
+            if (chunk === null || chunk.length === 0) return;
+            for (const received of assembler.push(chunk)) {
+              // The stream also carries non-query events; only 0x02 answers us.
+              if (isQueryResult(received)) finish(validateRawmIdentity(parseQueryJson(received)));
+            }
+          } catch (error) {
+            finish(error instanceof Error ? error : new Error('Resposta RAWM inválida.'));
+          }
+        });
+        if (settled) {
+          unsubscribe();
+          return;
+        }
         for (const report of frameEvent(event, virtualMouse)) {
           await transport.send({ reportId: 0, data: report });
         }

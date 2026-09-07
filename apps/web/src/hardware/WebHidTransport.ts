@@ -19,16 +19,60 @@ export interface HardwareTransport {
   onInputReport(listener: (reportId: number, data: Uint8Array) => void): () => void;
 }
 
+export interface WebHidTransportOptions {
+  operationTimeoutMs?: number;
+}
+
+const DEFAULT_OPERATION_TIMEOUT_MS = 3000;
+
+async function withinTimeout<T>(
+  operation: () => Promise<T>,
+  description: string,
+  timeoutMs: number,
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      Promise.resolve().then(operation),
+      new Promise<T>((_resolve, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`Tempo limite ao ${description} (${timeoutMs} ms).`)),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
 export class WebHidTransport implements HardwareTransport {
-  constructor(private readonly device: HidDeviceHandle) {}
+  private readonly operationTimeoutMs: number;
+
+  constructor(
+    private readonly device: HidDeviceHandle,
+    options: WebHidTransportOptions = {},
+  ) {
+    this.operationTimeoutMs = options.operationTimeoutMs ?? DEFAULT_OPERATION_TIMEOUT_MS;
+  }
 
   async open() {
-    if (!this.device.opened) await this.device.open();
+    if (!this.device.opened) {
+      await withinTimeout(
+        () => this.device.open(),
+        'abrir o dispositivo HID',
+        this.operationTimeoutMs,
+      );
+    }
   }
 
   async send(command: HidCommand) {
     await this.open();
-    await this.device.sendReport(command.reportId, command.data as Uint8Array<ArrayBuffer>);
+    await withinTimeout(
+      () => this.device.sendReport(command.reportId, command.data as Uint8Array<ArrayBuffer>),
+      'enviar o relatório HID',
+      this.operationTimeoutMs,
+    );
   }
 
   onInputReport(listener: (reportId: number, data: Uint8Array) => void): () => void {

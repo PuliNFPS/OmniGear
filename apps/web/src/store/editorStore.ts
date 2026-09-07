@@ -46,6 +46,14 @@ interface EditorStore {
    * pending for the user to save.
    */
   syncActiveDpi(deviceId: string, dpi: number): void;
+  /**
+   * Replaces the baseline once the device reports what it actually holds.
+   *
+   * Until the mouse dumps its own mappings the app shows values it invented, so
+   * this is a correction, not an edit. It stands down whenever the user has
+   * something of their own in the draft: their work outranks the correction.
+   */
+  rebase(deviceId: string, settings: PeripheralSettings): void;
 }
 
 const SAVED_MESSAGE_MS = 2600;
@@ -68,6 +76,8 @@ const savedTimers = new Map<string, ReturnType<typeof setTimeout>>();
  */
 const APPLY_DEBOUNCE_MS = 180;
 const pendingApplies = new Map<string, ReturnType<typeof setTimeout>>();
+const runningApplies = new Set<string>();
+const queuedApplies = new Map<string, { device: Peripheral; draft: PeripheralSettings }>();
 
 function cancelPendingApply(deviceId: string) {
   const timer = pendingApplies.get(deviceId);
@@ -112,22 +122,40 @@ export const useEditorStore = create<EditorStore>((set, get) => {
 
   async function applyToSession(device: Peripheral, draft: PeripheralSettings) {
     cancelPendingApply(device.id);
+    if (runningApplies.has(device.id)) {
+      queuedApplies.set(device.id, { device, draft });
+      return;
+    }
+
     const token = Symbol();
     applyTokens.set(device.id, token);
+    runningApplies.add(device.id);
     try {
-      await driverFor(device).applyToSession(draft);
-      if (applyTokens.get(device.id) !== token) return;
-      if (liveDevice(device).status === 'desconectado') throw new Error('Disconnected');
+      let current = { device, draft };
+      while (true) {
+        await driverFor(current.device).applyToSession(current.draft);
+        if (applyTokens.get(device.id) !== token) return;
+        if (liveDevice(device).status === 'desconectado') throw new Error('Disconnected');
+
+        const queued = queuedApplies.get(device.id);
+        if (!queued) break;
+        queuedApplies.delete(device.id);
+        current = queued;
+      }
       put(device.id, { status: 'ocioso' });
     } catch {
       if (applyTokens.get(device.id) !== token) return;
+      queuedApplies.delete(device.id);
       put(device.id, { status: 'falha-aplicacao' });
+    } finally {
+      runningApplies.delete(device.id);
     }
   }
 
   async function writeProfile(device: Peripheral, operation: ProfileWrite): Promise<boolean> {
     // A queued apply would land after the save and overwrite what was written.
     cancelPendingApply(device.id);
+    queuedApplies.delete(device.id);
     if (
       writes.has(device.id) ||
       device.status === 'desconectado' ||
@@ -265,7 +293,28 @@ export const useEditorStore = create<EditorStore>((set, get) => {
       useDeviceStore
         .getState()
         .updateDevice(device.id, (current) => ({ ...current, activeProfileSlot: slotIndex }));
-      if (device.status !== 'desconectado') await applyToSession(device, settings);
+      if (device.status === 'desconectado') return;
+
+      // A device that keeps its profiles onboard already holds this slot: ask
+      // it to run that one instead of writing the settings back into it.
+      let driver;
+      try {
+        driver = driverFor(device);
+      } catch {
+        driver = undefined;
+      }
+      if (!driver?.switchProfile) {
+        await applyToSession(device, settings);
+        return;
+      }
+      cancelPendingApply(device.id);
+      queuedApplies.delete(device.id);
+      try {
+        await driver.switchProfile(slotIndex);
+        put(device.id, { status: 'ocioso' });
+      } catch {
+        put(device.id, { status: 'falha-aplicacao' });
+      }
     },
 
     renameProfile: async (input, slotIndex, name) => {
@@ -287,6 +336,7 @@ export const useEditorStore = create<EditorStore>((set, get) => {
       for (const deviceId of deviceIds) {
         clearSavedTimer(deviceId);
         cancelPendingApply(deviceId);
+        queuedApplies.delete(deviceId);
         applyTokens.delete(deviceId);
         writes.delete(deviceId);
         failedWrites.delete(deviceId);
@@ -307,6 +357,28 @@ export const useEditorStore = create<EditorStore>((set, get) => {
       const follow = (settings: PeripheralSettings): PeripheralSettings =>
         isMouseSettings(settings) ? { ...settings, activeStageId: stage.id } : settings;
       put(deviceId, { draft: follow(entry.draft), saved: follow(entry.saved) }, entry);
+    },
+
+    rebase: (deviceId, settings) => {
+      const entry = get().entries[deviceId];
+      // No entry yet means the editor has not opened this device, and it will
+      // read the corrected values from the device itself when it does.
+      if (!entry || entry.status !== 'ocioso') return;
+      if (writes.has(deviceId) || pendingApplies.has(deviceId) || runningApplies.has(deviceId)) {
+        return;
+      }
+      if (JSON.stringify(entry.draft) !== JSON.stringify(entry.saved)) return;
+
+      const corrected = structuredClone(settings);
+      put(
+        deviceId,
+        {
+          draft: corrected,
+          saved: structuredClone(corrected),
+          resetRevision: entry.resetRevision + 1,
+        },
+        entry,
+      );
     },
 
     retry: (input) => {

@@ -3,7 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { countChanges } from '../domain/changes';
 import { isMouseSettings } from '../domain/settings';
 import { createDemoMouse } from '../hardware/demoDevices';
-import { driverFor } from '../hardware/deviceDriver';
+import {
+  driverFor,
+  registerDeviceDriver,
+  unregisterDeviceDriver,
+  type DeviceDriver,
+} from '../hardware/deviceDriver';
 import { useDeviceStore } from './deviceStore';
 import { initialEntry, useEditorStore } from './editorStore';
 
@@ -27,6 +32,7 @@ beforeEach(() => {
 
 afterEach(() => {
   useEditorStore.getState().forget(Object.keys(useEditorStore.getState().entries));
+  unregisterDeviceDriver('slow-live-mouse');
   vi.restoreAllMocks();
   vi.useRealTimers();
 });
@@ -245,5 +251,51 @@ describe('coalescing rapid edits', () => {
     await vi.runAllTimersAsync();
 
     expect(apply).not.toHaveBeenCalled();
+  });
+
+  it('keeps at most the latest edit while a slow hardware apply is running', async () => {
+    const device: MousePeripheral = {
+      ...createDemoMouse(),
+      id: 'slow-live-mouse',
+      demo: false,
+    };
+    useDeviceStore.setState({ devices: [device], demoMode: false });
+
+    let finishFirstApply!: () => void;
+    const firstApply = new Promise<void>((resolve) => {
+      finishFirstApply = resolve;
+    });
+    const applyToSession = vi
+      .fn<DeviceDriver['applyToSession']>()
+      .mockImplementationOnce(() => firstApply)
+      .mockResolvedValue(undefined);
+    registerDeviceDriver(device.id, {
+      applyToSession,
+      writeProfile: vi.fn(async () => undefined),
+    });
+
+    useEditorStore
+      .getState()
+      .edit(device, (draft) => (isMouseSettings(draft) ? { ...draft, pollingRate: 500 } : draft));
+    await vi.advanceTimersByTimeAsync(180);
+
+    useEditorStore
+      .getState()
+      .edit(device, (draft) => (isMouseSettings(draft) ? { ...draft, pollingRate: 250 } : draft));
+    await vi.advanceTimersByTimeAsync(180);
+    useEditorStore
+      .getState()
+      .edit(device, (draft) => (isMouseSettings(draft) ? { ...draft, pollingRate: 125 } : draft));
+    await vi.advanceTimersByTimeAsync(180);
+
+    expect(applyToSession).toHaveBeenCalledTimes(1);
+
+    finishFirstApply();
+    await vi.runAllTimersAsync();
+
+    expect(applyToSession).toHaveBeenCalledTimes(2);
+    const latest = applyToSession.mock.calls[1][0];
+    expect(isMouseSettings(latest) && latest.pollingRate).toBe(125);
+    expect(useEditorStore.getState().entries[device.id].status).toBe('ocioso');
   });
 });

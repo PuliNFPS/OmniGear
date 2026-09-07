@@ -126,7 +126,10 @@ export function createLeviathanV4Peripheral(
   const dpiLevels = numericArray(raw, 'cpi_l').filter((level) => level > 0);
   const activeDpi = finiteNumber(raw, 'cpi');
   const pollingRate = finiteNumber(raw, 'polling');
-  const onboardIndex = finiteNumber(raw, 'ob');
+  // `oci` is the onboard config index — the slot the mouse is running. `ob`
+  // rides along in the parameter block and is not that selector, though both
+  // read 0 on a mouse that never left the first slot, which hid the mix-up.
+  const onboardIndex = typeof raw.oci === 'number' ? raw.oci : finiteNumber(raw, 'ob');
   const rawMode = finiteNumber(raw, 'pm');
   const lod = finiteNumber(raw, 'lod');
   const angleTuning = finiteNumber(raw, 'at');
