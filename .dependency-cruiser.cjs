@@ -50,10 +50,12 @@ module.exports = {
     },
     {
       name: 'wasm-only-through-core-bridge',
-      comment: 'Web code must access generated WASM bindings through coreBridge.ts.',
+      comment:
+        'Web code must access generated WASM bindings through coreBridge.ts. setupCore.ts is ' +
+        'exempt: it calls init() directly to ready the module before the test suite runs.',
       severity: 'error',
-      from: { path: '^apps/web/src/(?!core/coreBridge\\.ts$)' },
-      to: { path: '(^|/)packages/core/pkg/index\\.js$|(^|/)gearhub-core-wasm($|/)' },
+      from: { path: '^apps/web/src/(?!core/coreBridge\\.ts$|test/setupCore\\.ts$)' },
+      to: { path: '(^|/)packages/core-wasm/pkg/|(^|/)gearhub-core-wasm($|/)' },
     },
   ],
   options: {
