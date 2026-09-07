@@ -96,7 +96,11 @@ importers:
 
   packages/core: {}
 
-  packages/core-wasm: {}
+  packages/core-wasm:
+    devDependencies:
+      '@gearhub/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/shared:
     devDependencies:
