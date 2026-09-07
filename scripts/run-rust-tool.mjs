@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const coreDirectory = resolve(dirname(fileURLToPath(import.meta.url)), '../packages/core');
+const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 const mode = process.argv[2];
 const available = spawnSync('cargo', ['--version'], { stdio: 'ignore', shell: true }).status === 0;
@@ -13,10 +13,10 @@ if (!available) {
 }
 
 const commands = {
-  audit: ['machete', '.'],
+  audit: ['machete', 'packages/core', 'packages/core-wasm'],
   format: ['fmt', '--all'],
-  lint: ['clippy', '--all-targets', '--', '-D', 'warnings'],
-  test: ['test', '--all-targets'],
+  lint: ['clippy', '--workspace', '--all-targets', '--', '-D', 'warnings'],
+  test: ['test', '--workspace', '--all-targets'],
 };
 const args = commands[mode];
 
@@ -25,7 +25,7 @@ if (!args) {
   process.exit(2);
 }
 const result = spawnSync('cargo', args, {
-  cwd: coreDirectory,
+  cwd: workspaceRoot,
   stdio: 'inherit',
   shell: true,
 });
