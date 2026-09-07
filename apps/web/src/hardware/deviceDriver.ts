@@ -1,4 +1,4 @@
-import type { Peripheral, PeripheralSettings } from '@gearhub/shared';
+import type { MouseActionId, Peripheral, PeripheralSettings } from '@gearhub/shared';
 
 /** A change the device made on its own, without the app asking for it. */
 export type DeviceReport = { kind: 'dpi'; value: number };
@@ -16,6 +16,20 @@ export interface DeviceDriver {
    * stage the mouse has already left.
    */
   onDeviceReport?(listener: (report: DeviceReport) => void): () => void;
+  /**
+   * Present only for devices that keep their configuration onboard and report
+   * it. Until this arrives the app knows nothing about the mappings the device
+   * holds, and anything it shows is its own assumption.
+   */
+  onOnboardProfiles?(listener: (slots: OnboardProfileReport[]) => void): () => void;
+  /** Makes the device run another of its onboard slots. */
+  switchProfile?(slotIndex: number): Promise<void>;
+}
+
+/** One onboard slot as the device reports it. */
+export interface OnboardProfileReport {
+  index: number;
+  bindings: { keyIds: number[]; action: MouseActionId | null; raw: Uint8Array }[];
 }
 
 const APPLY_DELAY_MS = 260;

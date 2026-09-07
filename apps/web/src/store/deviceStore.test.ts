@@ -1,5 +1,13 @@
 import type { Peripheral } from '@gearhub/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const requestDeviceMock = vi.hoisted(() => vi.fn());
+
+vi.mock('../hardware/deviceDiscovery', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../hardware/deviceDiscovery')>();
+  return { ...actual, requestDevice: requestDeviceMock };
+});
+
 import { exitDemonstration } from '../app/demo';
 import { isMouseSettings } from '../domain/settings';
 import { createDemoMouse } from '../hardware/demoDevices';
@@ -36,6 +44,7 @@ async function reload() {
 
 beforeEach(() => {
   vi.useFakeTimers();
+  requestDeviceMock.mockReset();
   vi.stubGlobal('localStorage', fakeStorage());
   useDeviceStore.setState({
     devices: [],
@@ -125,5 +134,36 @@ describe('leaving the demonstration', () => {
     exitDemonstration();
 
     expect(useEditorStore.getState().entries[device.id]).toBeUndefined();
+  });
+});
+
+describe('connecting real devices', () => {
+  it('does not open manual discovery while authorized devices are being restored', () => {
+    useDeviceStore.setState({ loading: true, addDeviceOpen: false });
+
+    useDeviceStore.getState().openAddDevice();
+
+    expect(useDeviceStore.getState().addDeviceOpen).toBe(false);
+  });
+
+  it('replaces an existing device instead of registering the same hardware twice', async () => {
+    const existing: Peripheral = {
+      ...createDemoMouse(),
+      id: 'mouse-real',
+      name: 'Disconnected mouse',
+      demo: false,
+      status: 'desconectado',
+    };
+    const connected: Peripheral = {
+      ...existing,
+      name: 'Connected mouse',
+      status: 'conectado',
+    };
+    useDeviceStore.setState({ devices: [existing] });
+    requestDeviceMock.mockResolvedValue({ status: 'conectado', devices: [connected] });
+
+    await useDeviceStore.getState().connectDevice();
+
+    expect(useDeviceStore.getState().devices).toEqual([connected]);
   });
 });

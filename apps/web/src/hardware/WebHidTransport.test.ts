@@ -1,5 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { WebHidTransport, type HidInputReportEvent } from './WebHidTransport';
+
+afterEach(() => vi.useRealTimers());
 
 function fakeDevice() {
   let listener: ((event: HidInputReportEvent) => void) | null = null;
@@ -27,6 +29,42 @@ function fakeDevice() {
 }
 
 describe('WebHidTransport', () => {
+  it('rejects when opening the HID device exceeds the operation timeout', async () => {
+    vi.useFakeTimers();
+    const fake = fakeDevice();
+    fake.device.open.mockImplementation(() => new Promise<undefined>(() => undefined));
+    const opening = new WebHidTransport(fake.device, { operationTimeoutMs: 5 }).open();
+    let failure: unknown;
+    void opening.catch((error: unknown) => {
+      failure = error;
+    });
+
+    await vi.advanceTimersByTimeAsync(5);
+
+    expect(failure).toBeInstanceOf(Error);
+    expect((failure as Error).message).toContain('abrir');
+  });
+
+  it('rejects when sending a HID report exceeds the operation timeout', async () => {
+    vi.useFakeTimers();
+    const fake = fakeDevice();
+    fake.device.opened = true;
+    fake.device.sendReport.mockImplementation(() => new Promise<undefined>(() => undefined));
+    const sending = new WebHidTransport(fake.device, { operationTimeoutMs: 5 }).send({
+      reportId: 0,
+      data: Uint8Array.from([1]),
+    });
+    let failure: unknown;
+    void sending.catch((error: unknown) => {
+      failure = error;
+    });
+
+    await vi.advanceTimersByTimeAsync(5);
+
+    expect(failure).toBeInstanceOf(Error);
+    expect((failure as Error).message).toContain('enviar');
+  });
+
   it('opens once and sends report data', async () => {
     const fake = fakeDevice();
     const transport = new WebHidTransport(fake.device);

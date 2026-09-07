@@ -270,7 +270,10 @@ send_event_mouse_function: [CMD_CONFIG, 0, 0x18, count, ...ids, touch, func, val
 
 **Os dois encoders deste projeto ja estavam corretos**, byte por byte. A conclusao anterior
 de que o payload tinha bytes sobrando estava errada: aqueles eventos vinham dentro de
-`CONFIG_TYPE_MOUSE_CONFIG` (`0x14`), um formato de relato mais compacto, nao o de escrita.
+`NOTIFY_TYPE_MOUSE_CONFIG` (`0x14`), o dump que o mouse emite por conta propria. **Corrigido:** o
+layout dessas entradas e identico ao de escrita, nao um formato mais compacto, e `0x14` e um
+tipo de _notificacao_, nao de configuracao — como CONFIG type, `0x14` e `CONFIG_TYPE_MOUSE_QUICK_DROP`.
+Ver `docs/rawm-onboard-config.md`.
 
 O bug era so o **key id**. Do dump que o proprio mouse emite:
 

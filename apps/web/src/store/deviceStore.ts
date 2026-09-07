@@ -50,6 +50,12 @@ function demoWasActive(): boolean {
   }
 }
 
+function mergeDevices(current: Peripheral[], connected: Peripheral[]): Peripheral[] {
+  const byId = new Map(current.map((device) => [device.id, device]));
+  for (const device of connected) byId.set(device.id, device);
+  return [...byId.values()];
+}
+
 export const useDeviceStore = create<DeviceStore>((set, get) => ({
   devices: [],
   loading: true,
@@ -69,7 +75,10 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
     set({ devices: [...authorized, ...demo], demoMode: includeDemo, loading: false });
   },
 
-  openAddDevice: () => set({ addDeviceOpen: true, connection: 'ocioso', connectionError: null }),
+  openAddDevice: () => {
+    if (get().loading || get().connection === 'conectando') return;
+    set({ addDeviceOpen: true, connection: 'ocioso', connectionError: null });
+  },
   closeAddDevice: () => set({ addDeviceOpen: false }),
   resetConnection: () => set({ connection: 'ocioso', connectionError: null }),
 
@@ -101,11 +110,12 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
   },
 
   connectDevice: async () => {
+    if (get().loading || get().connection === 'conectando') return;
     set({ connection: 'conectando', connectionError: null });
     const result = await requestDevice();
     if (result.status === 'conectado') {
       set((state) => ({
-        devices: [...state.devices, ...result.devices],
+        devices: mergeDevices(state.devices, result.devices),
         connection: 'ocioso',
         addDeviceOpen: false,
       }));

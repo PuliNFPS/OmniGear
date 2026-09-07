@@ -35,6 +35,14 @@ describe('parseNotification', () => {
     });
   });
 
+  // Streamed unprompted after a query; the delimiters are one byte each.
+  it('passes an onboard config payload through for the collector', () => {
+    expect(parseNotification(notifyEvent(0x14, [0x00]))).toEqual({
+      kind: 'onboard-config',
+      payload: Uint8Array.from([0x00]),
+    });
+  });
+
   it('ignores notifications this app has no use for', () => {
     expect(parseNotification(notifyEvent(0x17, [50]))).toBeNull();
   });

@@ -38,7 +38,7 @@ export function HomePage() {
               : 'Selecione um periférico para configurar.'}
           </p>
         </div>
-        <Button size="lg" onClick={openAddDevice}>
+        <Button size="lg" disabled={loading || connecting} onClick={openAddDevice}>
           <Plus className="size-4" aria-hidden="true" />
           Adicionar dispositivo
         </Button>
@@ -73,7 +73,8 @@ export function HomePage() {
         <button
           type="button"
           onClick={openAddDevice}
-          className="inline-flex items-center gap-2 rounded-md text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+          disabled={loading || connecting}
+          className="inline-flex items-center gap-2 rounded-md text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         >
           <CircleHelp className="size-4" aria-hidden="true" />
           Precisa de ajuda para conectar?
