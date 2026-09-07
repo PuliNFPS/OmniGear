@@ -85,63 +85,73 @@ Consequência: **o mouse já despeja a config onboard a cada connect que o app f
 `queryRawmDevice` resolve no primeiro `0x02` e dá `unsubscribe`, jogando o dump fora. Ler
 os binds não exige comando novo — exige continuar ouvindo.
 
-## 5. Trocar o perfil ativo: existe, em outra família de comandos
+## 5. Trocar o perfil ativo: não encontrado no lado do mouse
 
-**Corrigido em 2026-09-07. As duas leituras anteriores estavam erradas**, e a segunda —
-"não existe comando" — foi afirmada com confiança. O comando existe:
+**Terceira leitura, 2026-09-07.** A segunda dizia "não existe comando". Uma terceira tentou
+derrubá-la apontando `IQ_SET_PROFILE_ID` (`0x40`) — e **estava errada, por um grep
+descuidado**: `set_onboard_index` só aparece como substring de `hs_set_onboard_index`.
+
+O que ficou **verificado**, e é o que importa para não repetir o erro:
+
+- `hs_set_onboard_index` / `IQ_SET_PROFILE_ID = 0x40` é **teclado**, não mouse. As duas
+  únicas ocorrências de `set_onboard_index` são `hs_`; o call site é
+  `select(kbd_onboard-config)`; e `send_client_data` desvia para `hs_send_client_data`
+  apenas quando `is_hs_keyboard(device)`, que é verdade só para dois `productName` de
+  teclado HS. A família `IQ_*` com `HS_MAXIMUM_PACKET_SIZE = 0x20` é desse caminho.
+- No lado do mouse existem **23** call sites de `send_event_mouse_param` (o bloco `0x15`),
+  todos no mesmo formato: muta um campo de `device_info` e reenvia o bloco. Nenhum deles
+  escreve o índice onboard ativo, e o grep por escrita em `device_info…onboard` volta vazio.
+- Existe um handler de mouse `select(onboard-config)`, distinto do de teclado, mas ele é
+  registrado através da tabela de strings ofuscada e **não foi lido**. É aí que uma quarta
+  leitura deve começar.
+
+Ou seja: **segue não encontrado, não provado impossível.** A diferença importa.
+
+### Uma correção real que sobrou dessa investigação
+
+O argumento da leitura anterior — "mandar um `0x15` com outro `onboard` carregaria o DPI e
+os parâmetros do slot anterior, sobrescrevendo o destino com a origem" — **não se sustenta
+como estava**. O padrão do próprio fabricante é exatamente esse, 23 vezes:
 
 ```js
-set_onboard_index(client, index) {
-  var buf = [];
-  buf.push(IQ_SET_PROFILE_ID);   // 0x40
-  buf.push(index);
-  send_event(client, hs_format_data(client, buf));
+set_onboard_status(client, index, valor) {
+  if (client.device_info.onboardStatus[index] != valor) {
+    client.device_info.onboardStatus[index] = valor;
+    send_event_mouse_param(client);   // o bloco 0x15
+    return true;
+  }
 }
 ```
 
-- `IQ_SET_PROFILE_ID = 0x40`, e o par de leitura `IQ_GET_PROFILE_ID = 0x39`.
-- `hs_format_data(client, buf)` apenas preenche com zeros até `HS_MAXIMUM_PACKET_SIZE = 0x20`
-  (32 bytes). Não há CRC nem enquadramento de comprimento nesta família.
-- Chamado com `show_waiting()`, ou seja: é operação de dispositivo, não de UI.
-
-**Por que as leituras anteriores não acharam:** procuraram na família
-`CMD_CONFIG` (`0x03`) / `CMD_ACTION` (`0x06`), que é a que este projeto implementa. A troca
-vive na família `IQ_*` do **receptor HS** — o dispositivo se enumera como "RAWM HS Receiver".
-Concluir "não existe" a partir de uma família só foi o erro; procurar por `set_onboard`
-no `library.min.js` o desfaz em um grep.
-
-Também existem as versões ligáveis a botão, que o firmware executa por conta própria:
-`FUNCTION_TOGGLE_ONBOARD = 0x11`, `FUNCTION_NEXT_ONBOARD = 0x12`,
-`FUNCTION_PREVIOUS_ONBOARD = 0x13`, `FUNCTION_CHOOSE_ONBOARD = 0x14`.
-
-Aberto, e a confirmar em hardware antes de implementar:
-
-- Se `index` é 0-based. É o mais provável: `oci` vale 0 num mouse rodando o slot 1, e este
-  projeto já faz `oci + 1`.
-- Qual report id esta família usa. O `send_event` do fabricante acumula em
-  `client.send_event_buf` e chama `post_send_client_data`; não é o mesmo caminho que
-  `WebHidTransport.send` monta hoje.
-- Se `ONBOARD_REBOOT_NEEDED` entra no fluxo.
-
-O que continua valendo da leitura anterior: mandar um `0x15` com outro `onboard` para forçar
-a troca carregaria junto o DPI, o polling e os parâmetros do slot **anterior** — a consulta
-só descreve o ativo — ou seja, sobrescreveria o destino com a origem. Esse caminho segue
-errado; o certo é o `0x40`.
-
-E o mouse continua anunciando a troca que ele mesmo faz:
-`NOTIFY_TYPE_MOUSE_ONBOARD_INDEX` (`0x22`), com `NOTIFY_TYPE_MOUSE_ONBOARD_STATUS` (`0x23`)
-ao lado. **Este app ainda não trata nenhum dos dois**, então hoje ele não segue o mouse
-quando o slot muda pelo botão.
+Reenviar o snapshot **atual** com um campo alterado não escreve dado velho — escreve o que
+está lá, mais a mudança. Este projeto já guarda o snapshot completo e opaco
+(`encode_mouse_param_snapshot`), então tem o material para fazer o mesmo. O que falta é
+saber **qual campo** carrega o índice ativo, e isso não foi estabelecido.
 
 ### O que `ocs` carrega
 
-`set_onboard_status(client, index, valor)` escreve o byte de status de um slot, e os bits
-baixos são cor de LED (`LED_R`, `LED_G`, …) com `0x80` ligado. A captura real é
-`ocs = [0x81, 0x82, 0x86, 0x84]` — quatro slots, cores diferentes.
+`set_onboard_status` é mouse-side (10 ocorrências, nenhuma `hs_`/`kbd_`) e escreve o byte de
+status de um slot: os bits baixos são cor de LED (`LED_R`, `LED_G`, …) com `0x80` ligado. A
+captura real é `ocs = [0x81, 0x82, 0x86, 0x84]` — quatro slots, cores diferentes.
 
 Não é um mapa de ocupado/vazio, e este projeto acerta ao não tratá-lo como tal: usa `ocs`
 apenas para **contar** os slots (`onboardSlotCount`) e guarda os bytes opacos no snapshot
 (`mouseParamSnapshot.ts`). Quem diz se um slot tem conteúdo é o dump `0x14`.
+
+**Consequência prática:** escolher uma memória no hub do fabricante pode escrever a cor de
+LED daquele slot via `0x15`. O mouse reage visivelmente, o que é fácil de ler como "ele
+trocou de slot" sem que troca alguma tenha acontecido.
+
+### As notificações seguem sem tratamento
+
+`NOTIFY_TYPE_MOUSE_ONBOARD_INDEX` (`0x22`) e `NOTIFY_TYPE_MOUSE_ONBOARD_STATUS` (`0x23`): o
+mouse anunciando o que ele mesmo mudou. **Este app não trata nenhum dos dois**, então não
+segue o mouse quando o slot troca pelo botão. Isso é implementável hoje, sem depender de
+descobrir comando nenhum — é leitura, não escrita.
+
+Ligáveis a botão, executadas pelo firmware: `FUNCTION_TOGGLE_ONBOARD = 0x11`,
+`FUNCTION_NEXT_ONBOARD = 0x12`, `FUNCTION_PREVIOUS_ONBOARD = 0x13`,
+`FUNCTION_CHOOSE_ONBOARD = 0x14`.
 
 O fluxo de gravacao, esse sim, confere com o `writeProfile` deste projeto:
 

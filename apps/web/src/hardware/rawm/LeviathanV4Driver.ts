@@ -241,23 +241,24 @@ export class LeviathanV4Driver implements DeviceDriver {
   }
 
   /**
-   * `switchProfile` is not implemented yet — but it is possible, and an earlier
-   * comment here claimed otherwise. See `docs/rawm-onboard-config.md` §5.
+   * There is no `switchProfile` here: no mouse-side command for it has been
+   * found. Found, not proven absent — see `docs/rawm-onboard-config.md` §5,
+   * which records three readings of this question, two of them wrong.
    *
-   * The command exists in a family this driver does not speak: `IQ_SET_PROFILE_ID`
-   * (0x40) followed by the slot index, zero-padded to 32 bytes, on the HS
-   * receiver — not the CMD_CONFIG/CMD_ACTION events everything here builds.
-   * Looking only at that family is what produced "there is no command".
+   * Do not reach for `IQ_SET_PROFILE_ID` (0x40): that is the HS *keyboard*
+   * path, and mistaking it for the mouse's was the third reading's error.
    *
-   * Still true: forcing the index with a parameter block would carry the
-   * previous slot's DPI, polling and parameters — the query only ever described
-   * the active slot — so it would overwrite the destination with the source.
-   * Writing the settings, which is what the editor does, stays the safe path
-   * until 0x40 is implemented and confirmed on hardware.
+   * What the vendor does 23 times over on the mouse is mutate one field of the
+   * parameter snapshot and resend the 0x15 block — so resending the current
+   * snapshot with one field changed is a legitimate shape here, not the
+   * overwrite hazard an earlier comment claimed. What is unknown is which
+   * field carries the active index. Until that is known, the editor writing
+   * the settings into the slot stays the honest fallback.
    *
-   * Also unhandled: NOTIFY_TYPE_MOUSE_ONBOARD_INDEX (0x22), the mouse
-   * announcing a switch it made on its own when its button is pressed. Until
-   * that is followed, the app keeps showing the slot the mouse already left.
+   * Also unhandled: NOTIFY_TYPE_MOUSE_ONBOARD_INDEX (0x22) and
+   * NOTIFY_TYPE_MOUSE_ONBOARD_STATUS (0x23), the mouse announcing what it
+   * changed on its own. Following those is read-only and needs no discovery;
+   * until then the app keeps showing the slot the mouse already left.
    */
 
   private enqueue(operation: () => Promise<void>): Promise<void> {
