@@ -90,13 +90,13 @@ export function DeviceWorkspace({ device, sectionId }: { device: Peripheral; sec
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {profileSlots(device)
-                    .filter((slot) => slot.settings !== null)
-                    .map((slot) => (
-                      <SelectItem key={slot.index} value={String(slot.index)}>
-                        {slot.name || `Slot ${slot.index}`}
-                      </SelectItem>
-                    ))}
+                  {/* Every onboard slot the device reports, occupied or not — the
+                      vendor hub lists all four the same way. */}
+                  {profileSlots(device).map((slot) => (
+                    <SelectItem key={slot.index} value={String(slot.index)}>
+                      {slot.name || `Slot ${slot.index}`}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
