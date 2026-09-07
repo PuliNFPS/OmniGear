@@ -33,8 +33,23 @@ function withOnboardProfiles(device: Peripheral, slots: OnboardProfileReport[]):
 }
 
 export function useDeviceReports(devices: Peripheral[]): void {
+  /**
+   * Which devices to follow, as a value that only changes when the set does.
+   *
+   * Following the array itself was a loop: a report writes to the store, the
+   * store hands back a new array, the effect tears the subscription down and
+   * builds it again — and the driver answers a new subscriber by replaying the
+   * dump it already has, which writes to the store again. React ran out of
+   * update depth and unmounted the whole app, leaving a blank screen.
+   */
+  const followed = JSON.stringify(
+    devices.filter((device) => !device.demo).map((device) => device.id),
+  );
+
   useEffect(() => {
-    const unsubscribers = devices.flatMap((device) => {
+    // Read from the store rather than the closure: the effect outlives the
+    // render that scheduled it now that device data no longer re-runs it.
+    const unsubscribers = useDeviceStore.getState().devices.flatMap((device) => {
       if (device.demo) return [];
       let driver;
       try {
@@ -64,5 +79,5 @@ export function useDeviceReports(devices: Peripheral[]): void {
     });
 
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe?.());
-  }, [devices]);
+  }, [followed]);
 }
