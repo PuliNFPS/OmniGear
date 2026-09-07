@@ -17,6 +17,7 @@ import { navigate } from '../app/useRoute';
 import { activeProfileName, isKeyboard, isMouse, profileSlots } from '../domain/settings';
 import { useDeviceStore } from '../store/deviceStore';
 import { useEditorStore } from '../store/editorStore';
+import { BatteryLevel } from './BatteryLevel';
 import { ChangeBar } from './ChangeBar';
 import { ConfirmDialog } from './ConfirmDialog';
 import { ProfileLoadConfirm } from './ProfileLoadConfirm';
@@ -67,7 +68,13 @@ export function DeviceWorkspace({ device, sectionId }: { device: Peripheral; sec
           </a>
 
           <div className="mt-3 grid grid-cols-2 items-center gap-3 lg:mt-4 lg:block">
-            <h2 className="truncate text-[15px] font-medium">{device.name}</h2>
+            {/* Below lg the name shares a wide row with the profile select, and
+                spreading the two apart would strand the charge next to the select
+                instead of the name. */}
+            <div className="flex min-w-0 items-center gap-2 lg:justify-between">
+              <h2 className="truncate text-[15px] font-medium">{device.name}</h2>
+              <BatteryLevel device={device} className="shrink-0 text-sm" />
+            </div>
             <p className="sr-only">{describeDevice(device)}</p>
 
             <div className="min-w-0 lg:mt-3">
