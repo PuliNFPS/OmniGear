@@ -1,0 +1,12 @@
+[package]
+name = "gearhub-core-wasm"
+version = "0.1.0"
+edition = "2024"
+description = "wasm-bindgen bridge for gearhub-core"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+gearhub-core = { path = "../core" }
+wasm-bindgen = "0.2"

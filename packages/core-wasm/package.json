@@ -1,0 +1,14 @@
+{
+  "name": "gearhub-core-wasm",
+  "version": "0.1.0-dev",
+  "private": true,
+  "type": "module",
+  "main": "pkg/index.js",
+  "types": "pkg/index.d.ts",
+  "scripts": {
+    "build": "wasm-pack build . --target web --out-dir pkg --out-name index --no-pack"
+  },
+  "devDependencies": {
+    "@gearhub/core": "workspace:*"
+  }
+}

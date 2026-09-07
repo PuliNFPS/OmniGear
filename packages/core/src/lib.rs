@@ -1,5 +1,3 @@
-use wasm_bindgen::prelude::*;
-
 pub mod command;
 pub mod device;
 pub mod drivers;
@@ -28,13 +26,11 @@ fn append_u16_le(bytes: &mut Vec<u8>, value: u16) {
 /// The core deliberately treats the snapshot as opaque bytes. This keeps
 /// fields introduced by newer firmware intact when a snapshot is read and
 /// written by an older app.
-#[wasm_bindgen]
 pub fn encode_mouse_param_snapshot(snapshot: &[u8]) -> Vec<u8> {
     config_event(CONFIG_TYPE_MOUSE_PARAM, snapshot)
 }
 
 /// Encodes a RAWM action event without length framing or CRC.
-#[wasm_bindgen]
 pub fn encode_action(action: u8, value: u32) -> Vec<u8> {
     let mut event = Vec::with_capacity(7);
     event.extend_from_slice(&[CMD_ACTION, 0, action]);
@@ -43,13 +39,11 @@ pub fn encode_action(action: u8, value: u32) -> Vec<u8> {
 }
 
 /// Encodes a RAWM configuration reset without length framing or CRC.
-#[wasm_bindgen]
 pub fn encode_config_reset() -> Vec<u8> {
     config_event(CONFIG_TYPE_RESET, &[])
 }
 
 /// Encodes a RAWM mouse-key mapping without length framing or CRC.
-#[wasm_bindgen]
 pub fn encode_mouse_key(
     key_ids: &[u8],
     modifier_one: u8,
@@ -65,7 +59,6 @@ pub fn encode_mouse_key(
 }
 
 /// Encodes a RAWM mouse-function mapping without length framing or CRC.
-#[wasm_bindgen]
 pub fn encode_mouse_function(
     key_ids: &[u8],
     touch_type: u8,
@@ -84,12 +77,10 @@ pub fn encode_mouse_function(
     config_event(CONFIG_TYPE_MOUSE_FUNCTION, &payload)
 }
 
-#[wasm_bindgen]
 pub fn core_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
-#[wasm_bindgen]
 pub fn is_wasm_available() -> bool {
     true
 }

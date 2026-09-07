@@ -9,6 +9,13 @@
       // Second Vite HTML entry: the read-only RAWM probe. index.html is detected.
       "entry": ["src/diagnostico.tsx"],
     },
+    "packages/core-wasm": {
+      // @gearhub/core is a Cargo path dependency, never a JS import: the edge exists
+      // only so turbo's task graph sees packages/core/src and invalidates the wasm
+      // build's dependents on a Rust-only change. knip only sees JS/TS imports, so
+      // it reads this as unused — it is not.
+      "ignoreDependencies": ["@gearhub/core"],
+    },
   },
   "ignoreIssues": {
     // Skeleton kept for the upcoming WebHID implementation.

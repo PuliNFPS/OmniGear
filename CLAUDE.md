@@ -37,19 +37,25 @@ Três regras que o núcleo não quebra, porque o stack do desktop é desconhecid
 I/O**, **é síncrono**, **não conhece `wasm-bindgen`** (a macro fica num crate de ponte, senão
 o núcleo é moldado pelo navegador e perde `Result` e enums com dados).
 
-## A armadilha do `packages/core/pkg`
+## O núcleo é gerado, nunca versionado
 
-`pkg/index.js` versionado é uma **ponte em JavaScript escrita à mão** que espelha o `lib.rs`,
-e é ela que roda em produção. `pnpm dev` chama `core:prepare`, que roda `core:build` quando
-`wasm-pack` está no PATH e **substitui essa ponte pela glue gerada**.
+`packages/core-wasm/pkg` é inteiramente gerado pelo `wasm-pack` e ignorado pelo git — nada ali
+é versionado. O `package.json` do pacote npm fica um nível acima, em
+`packages/core-wasm/package.json`, de propósito: o `wasm-pack`, mesmo com `--no-pack`, **apaga**
+qualquer `package.json` que encontre no diretório de saída.
 
-- Se testes ou o app quebrarem de forma inexplicável, cheque `git status packages/core/pkg`
-  antes de qualquer outra coisa. Restaurar: `git checkout -- packages/core/pkg`.
-- **Nunca commitar o `pkg` gerado.** O CI não instala wasm-pack e lê a ponte do git, e o
-  `index_bg.wasm` nem versionado é.
-- Para subir sem sobrescrever: `pnpm --filter @gearhub/web dev`.
-- Ao mexer em `coreBridge.ts`, rode `tsc -b` **também** com a ponte gerada: os tipos diferem
-  entre as duas, e código que só compila contra uma quebra o build de quem tem wasm-pack.
+`pnpm build` e `pnpm test` constroem o núcleo antes de rodar, e o CI instala o `wasm-pack`.
+
+- Se os testes falharem logo após um clone, rode `pnpm core:build`. Só é preciso no caminho
+  direto `pnpm --filter @gearhub/web test`; via `turbo` o build já acontece antes.
+- **Nunca commitar** o que o wasm-pack gera.
+- Os testes exercitam o WASM real, então um encoder que divergir entre o Rust e o que o app
+  espera falha aqui, não em produção.
+- Duas coisas no `turbo` existem para que uma mudança no Rust nunca seja verificada por cache
+  velho — **não remova nenhuma**: `cache: false` no build do `gearhub-core-wasm`, e o
+  devDependency `@gearhub/core` que dá ao grafo do turbo a aresta até `packages/core/src`.
+  Sem a segunda, editar o Rust deixa `@gearhub/web:test` em cache hit e a suíte verifica um
+  `.wasm` velho.
 
 ## Verificação
 

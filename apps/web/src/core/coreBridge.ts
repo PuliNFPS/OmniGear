@@ -161,16 +161,15 @@ let ready: Promise<void> | null = null;
 /**
  * Initialises the core once, handing the same promise to every later caller.
  *
- * Every encoder above is synchronous, and the wasm glue that `pnpm core:build`
- * generates throws on any call made before `init()` resolves. The checked-in
- * development bridge makes `init()` a no-op, so nothing here ever awaited it —
- * which held up right until wasm-pack was on PATH and `pnpm dev` replaced the
- * bridge. Then every apply failed instantly, on every setting, with the error
- * swallowed. So the app awaits this before it renders.
+ * Every encoder above is synchronous, and the wasm-bindgen glue that
+ * `pnpm core:build` generates throws on any call made before `init()`
+ * resolves. Skipping this await broke every apply instantly, on every
+ * setting, with the error swallowed (the 2026-09-07 bug fixed in PR #7). So
+ * the app awaits this before it renders.
  */
 export function ensureCoreReady(): Promise<void> {
-  // The development bridge resolves to nothing and the generated build resolves
-  // to its InitOutput, so the result is normalised rather than passed through.
+  // `init()` resolves to the generated build's `InitOutput`; normalise it to
+  // `undefined` so this function's signature says what callers actually need.
   const pending =
     ready ??
     Promise.resolve(init()).then(

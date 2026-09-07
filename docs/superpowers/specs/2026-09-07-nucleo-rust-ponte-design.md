@@ -33,6 +33,10 @@ A ponte web também não está ligada:
   substitui essa ponte pela glue gerada. Como os encoders são chamados de forma síncrona e
   `init()` não era aguardado, isso quebrava todo o app em silêncio (corrigido no PR #7).
 
+**Atualizado em 2026-09-07:** esta lista descreve o estado que existia antes do plano
+`docs/superpowers/plans/2026-09-07-ponte-web-do-nucleo.md`. Esse plano fechou este ponto — ver
+a nota em `## A ponte JS escrita à mão`, mais abaixo.
+
 Ou seja: a arquitetura está declarada, a ponte está desligada, e existem duas
 implementações do mesmo protocolo defendidas apenas por vetores de bytes duplicados no
 `cargo test` e no `coreBridge.test.ts`.
@@ -254,6 +258,9 @@ abaixo não é opcional nem posterior: sem ela, a migração é trabalho sem ent
 Alternativa considerada e rejeitada: manter a ponte JS como fallback permanente para quando o
 WASM não carregar. Rejeitada porque recria exatamente a duplicação que a migração existe para
 eliminar, e o fallback divergiria em silêncio — o pior modo de falha possível.
+
+**Fechado em 2026-09-07** pelo plano `docs/superpowers/plans/2026-09-07-ponte-web-do-nucleo.md`:
+a ponte foi removida, o build gera o WASM e os testes o exercitam.
 
 ## O que o CI precisa passar a fazer
 

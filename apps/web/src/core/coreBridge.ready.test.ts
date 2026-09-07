@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * The encoders are called synchronously, from the driver, with no await in
- * sight. The checked-in development bridge makes `init()` a no-op, so that goes
- * unnoticed — until `pnpm core:build` replaces it with the generated wasm glue,
- * which throws on every call made before `init()` resolves. That is what left
- * the editor saying "não foi possível aplicar os ajustes" on every change.
+ * sight. The wasm-bindgen glue that `pnpm core:build` generates throws on
+ * every call made before `init()` resolves — that is what left the editor
+ * saying "não foi possível aplicar os ajustes" on every change (the
+ * 2026-09-07 bug fixed in PR #7).
  *
  * So readiness has to be something the app can await once, before it renders.
  */
