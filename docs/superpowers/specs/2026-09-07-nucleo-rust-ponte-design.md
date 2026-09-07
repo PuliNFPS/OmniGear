@@ -46,7 +46,9 @@ desktop via ligação nativa, com uma casca fina e descartável por plataforma.
 
 - **Escolher o stack do desktop.** Ele é desconhecido, e o desenho não pode exigir que se
   saiba. Esta é a restrição que guia as decisões abaixo.
-- **Migrar a UI.** React, stores e componentes continuam onde estão.
+- **Migrar a UI.** React e componentes continuam onde estão. As stores continuam guardando
+  estado de tela — rascunho, o que está salvo, o que a tela mostra —, mas a sessão de
+  dispositivo que hoje mora dentro delas desce para o núcleo (ver Fronteira).
 - **Ganhar desempenho.** Não é o motivo e não haveria ganho: os encoders produzem arrays de
   10 a 15 bytes. O motivo é ter **uma implementação só**.
 
@@ -92,6 +94,14 @@ desktop às limitações da web.
 
 ## Fronteira: o que é núcleo e o que é casca
 
+**Decidido: o TypeScript é apenas front.** O Rust é o backend completo — protocolo, estado de
+dispositivo e as decisões sobre o que enviar. Tudo que não for renderizar, reagir a entrada do
+usuário ou executar a chamada HID que só o navegador expõe pertence ao núcleo.
+
+Isso corrige a direção que o código tomou: as funcionalidades de dispositivo foram sendo
+adicionadas em TypeScript e o núcleo ficou de fora, que é como se chegou a 211 linhas contra
+3.009.
+
 O teste é uma pergunta: **isso mudaria se a casca mudasse?** Se sim, é casca.
 
 **Vai para o núcleo** (protocolo, idêntico nos dois alvos):
@@ -110,12 +120,94 @@ O teste é uma pergunta: **isso mudaria se a casca mudasse?** Se sim, é casca.
 | ---------------------------------- | ------------------------------------------------------------ |
 | `WebHidTransport.ts`               | no desktop vira `hidapi`; timeouts e listeners são do WebHID |
 | `deviceDiscovery.ts`               | seletor e permissão são do navegador                         |
-| `deviceStore.ts`, `editorStore.ts` | estado de UI                                                 |
+| `deviceStore.ts`, `editorStore.ts` | **só** o estado de tela: rascunho, salvo, status visível     |
 | componentes React                  | UI                                                           |
 
-Note que a orquestração do driver — a fila, o `enqueue`, o debounce — é ambígua. A proposta é
-mantê-la na casca por ora: ela depende do modelo assíncrono da plataforma, e mover isso é o
-passo mais arriscado. Reavaliar quando o stack do desktop for conhecido.
+Duas ressalvas honestas sobre essa tabela.
+
+**O transporte não pode subir, e isso não é preferência.** `navigator.hid` só é alcançável a
+partir de JavaScript, e a permissão exige gesto do usuário no navegador. O `WebHidTransport`
+fica sendo um braço mecânico: o núcleo decide o que enviar e devolve `HidCommand`, a casca
+executa `sendReport` e devolve os bytes que chegaram. Nenhuma decisão vive ali.
+
+**A orquestração se divide.** Com o TypeScript sendo apenas front, ela deixa de ser ambígua:
+
+- **Núcleo:** serialização por dispositivo, a fila de aplicação, o que é "última escrita
+  vence", saber que mapeamentos o dispositivo já tem, decidir se um apply precisa reescrever
+  tudo ou só os parâmetros. Isso é sessão de dispositivo, não interface.
+- **Casca:** o debounce de 180 ms. Ele existe porque arrastar um slider gera um evento por
+  pixel — é uma decisão sobre entrada do usuário, e o desktop teria a sua própria.
+
+O `editorStore` continua guardando rascunho e o que está salvo, porque isso é estado de tela.
+Mas "o que o dispositivo de fato tem" passa a ser pergunta para o núcleo.
+
+## Modelagem: enums, e o que muda com vários periféricos
+
+O andaime já aponta para a forma certa. `MouseDriver` devolve
+`HidCommand { report_id, data }` — o núcleo monta comandos e a casca envia — e nenhum dos
+tipos de domínio carrega `#[wasm_bindgen]`. Só as funções livres do `lib.rs` carregam.
+
+### O caso concreto que exige enum com dados
+
+O vocabulário de ações do app hoje é uma união plana de onze strings em TypeScript. Ela **não
+representa** macro, tecla de teclado, mídia ou pan horizontal — todos coisas que o mouse
+reporta de verdade no dump `0x14`. O contorno atual, em `onboardConfig.ts`, é guardar os bytes
+num campo paralelo e deixar `action: null`.
+
+Em Rust isso é uma variante:
+
+```rust
+pub enum MouseAction {
+    Button(MouseButton),
+    Wheel(WheelDirection),
+    Dpi(DpiAction),
+    Keyboard { modifiers: Modifiers, key: KeyCode },
+    Media(MediaKey),
+    Macro(MacroId),
+    Disabled,
+    /// O que esta versão não sabe nomear, preservado byte a byte.
+    Unknown(Vec<u8>),
+}
+```
+
+`Unknown(Vec<u8>)` transforma num tipo aquilo que hoje é um remendo, e o compilador passa a
+**exigir** que todo caminho trate o caso — em vez de depender de alguém lembrar. É também a
+prova concreta da Regra 3: `wasm-bindgen` não atravessa enum com dados, então essa modelagem
+só existe se o núcleo não conhecer a macro.
+
+### Conjunto fechado ou aberto
+
+São dois eixos diferentes, e tratá-los igual é o erro comum:
+
+- **Registry de drivers: aberto.** `Box<dyn MouseDriver>` em vez do `RegisteredDriver` enum
+  de hoje. A lista cresce a cada periférico e nada precisa casar exaustivamente sobre ela;
+  um enum aqui vira um ponto central editado a cada dispositivo novo.
+- **Vocabulário de ações e capacidades: fechado.** Enum, porque a exaustividade é justamente
+  a proteção — adicionar uma ação deve quebrar o build onde ela não é tratada.
+
+### O que ainda não decidir
+
+Se as ações forem um enum **compartilhado**, um mouse simples ganha variantes que não suporta;
+se forem **por periférico**, os tipos multiplicam e a UI genérica fica difícil. O padrão que
+costuma segurar é vocabulário compartilhado mais `Capabilities` por dispositivo declarando o
+subconjunto válido — que é o que `MouseCapabilities` já esboça.
+
+Decidir isso agora, com uma amostra de um periférico, é como se erra. A recomendação é
+esperar o segundo dispositivo real.
+
+## Tipos do TypeScript: gerados, nunca espelhados
+
+**Decidido.** Com o vocabulário morando no Rust, os tipos do TypeScript são **gerados** a
+partir dele (`ts-rs`, `typeshare` ou equivalente), como artefato de build.
+
+Espelhar à mão recria exatamente a divergência que esta migração existe para eliminar — e o
+repositório já tem a prova de que ela acontece: a ponte JS escrita à mão ao lado do `lib.rs`,
+defendida só por vetores de bytes duplicados, mais duas assinaturas de `init()` que já
+divergiram e reprovaram um typecheck.
+
+Consequência prática: `@gearhub/shared` deixa de ser a fonte da verdade do vocabulário de
+dispositivos e passa a consumir o que o núcleo gera. Tipos de UI que não descrevem
+dispositivo continuam onde estão.
 
 ## Ordem da migração
 
@@ -192,15 +284,39 @@ o comportamento que o PR #7 já implementa no bootstrap.
 - **O `.wasm` não está no git.** Qualquer passo em falso no CI publica um app que não
   configura nada. Vale um smoke test de produção que carregue o núcleo e falhe o deploy se
   não carregar.
-- **O stack do desktop pode contradizer a fronteira.** Se ele exigir que a orquestração viva
-  no núcleo, o passo 5 muda de forma. As regras 1 a 3 existem para que essa descoberta custe
-  pouco.
+- **A fronteira ficou mais ambiciosa.** Com o TypeScript sendo apenas front, a sessão de
+  dispositivo desce para o núcleo — e ela é justamente o código que acabou de ser
+  estabilizado contra hardware (fila, última-escrita-vence, saber o que o mouse já tem). É o
+  passo mais arriscado da migração e o que mais precisa de confirmação no mouse.
+- **O stack do desktop pode contradizer a fronteira.** Se ele exigir mais ou menos do núcleo
+  do que o previsto, o passo 5 muda de forma. As regras 1 a 3 existem para que essa
+  descoberta custe pouco.
+
+## Como isto não volta a acontecer
+
+O núcleo não ficou para trás por decisão: funcionalidade de dispositivo foi sendo pedida e
+entregue em TypeScript, que é onde o app já estava, e ninguém parou para perguntar de que lado
+da fronteira aquilo caía. Sem uma regra escrita, o caminho de menor resistência sempre aponta
+para a casca.
+
+**Regra:** comportamento novo de dispositivo — protocolo, decodificação, decisão sobre o que
+enviar, estado do que o dispositivo tem — entra no Rust. TypeScript recebe apenas o que
+renderiza, o que reage a entrada do usuário, e a chamada HID que só o navegador expõe.
+
+Na prática isso significa que uma tarefa de dispositivo que só produza `.ts` merece a
+pergunta: por que isto não está no núcleo? Enquanto a migração não fechar haverá exceções
+legítimas — mas devem ser exceções declaradas, não o padrão.
+
+Vale replicar essa regra no `CLAUDE.md`, que é o que um agente lê antes de escolher onde
+escrever.
 
 ## Questões em aberto
 
 - **Qual será o stack do desktop.** Se for Tauri, a casca TypeScript é reaproveitada e a
-  fronteira acima está certa como está. Se for uma UI nativa própria, a casca web é
-  descartada e vale reavaliar se mais orquestração deveria descer para o núcleo.
+  fronteira acima serve como está. Se for uma UI nativa própria, a casca web é descartada —
+  o que reforça a decisão de manter em TypeScript só o que é descartável.
 - **Se o app web deve ter fallback.** Este spec propõe que não. Se a taxa de falha de
   carregamento do WASM em produção se mostrar relevante, a decisão volta à mesa — mas com
   dados, não por precaução.
+- **Enum de ações compartilhado ou por periférico.** Decidir com o segundo dispositivo real
+  na mão, não agora.
