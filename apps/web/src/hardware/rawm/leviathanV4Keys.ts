@@ -8,8 +8,9 @@ import type { MouseActionId } from '@gearhub/shared';
  */
 
 export const TOUCH_TYPE_PRESS = 0x02;
-export const MOUSE_KEY_TYPE_MKEY = 0x01;
-export const MOUSE_KEY_TYPE_WHEEL = 0x03;
+/** Only the `actions` table below names these, so they stay in this file. */
+const MOUSE_KEY_TYPE_MKEY = 0x01;
+const MOUSE_KEY_TYPE_WHEEL = 0x03;
 
 /**
  * Key ids as the mouse reports them in its own config dump: 0x0a left, 0x0b

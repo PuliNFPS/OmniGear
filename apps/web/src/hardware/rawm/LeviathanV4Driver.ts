@@ -26,9 +26,6 @@ import { subscribeToNotifications } from './notifications';
 import { OnboardConfigCollector, type OnboardSlotConfig } from './onboardConfig';
 import { frameEvent, withProtocolEnvelope } from './protocol';
 
-export { actions, physicalKeyIds, SHOW_POWER_KEY_ID, FUNCTION_SHOW_POWER };
-export type { EncodedAction } from './leviathanV4Keys';
-
 const ACTION_SAVE_CONFIG_TO_FDS = 0x34;
 
 export function encodeLeviathanAction(
