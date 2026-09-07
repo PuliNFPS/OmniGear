@@ -21,7 +21,7 @@
     "graph:update": "pnpm graph:index",
     "graph:status": "graphify check-update .",
     "graph:query": "graphify query",
-    "core:build": "pnpm --filter @gearhub/core build:wasm",
+    "core:build": "pnpm --filter gearhub-core-wasm build",
     "core:prepare": "node scripts/prepare-core.mjs"
   },
   "devDependencies": {

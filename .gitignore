@@ -4,8 +4,7 @@ dist/
 .turbo/
 target/
 packages/core/target/
-packages/core/pkg/*.wasm
-packages/core/pkg/.gitignore
+packages/core-wasm/pkg/
 *.log
 *.tsbuildinfo
 .env
@@ -39,7 +38,11 @@ apps/web/.impeccable/hook.cache.json
 
 # Agent tooling: bundled runtimes and per-machine state. Skills are versioned as
 # markdown, matching every skill already tracked here; none ships a scripts/ dir.
+# Sibling git worktrees under .claude/worktrees/ are untracked but not otherwise
+# ignored, so repo-wide gate tools (prettier, knip, dependency-cruiser) would
+# walk into them and lint duplicate copies of the whole tree.
 .agents/skills/*/scripts/
 .claude/skills/
 .claude/settings.local.json
+.claude/worktrees/
 .superpowers/
