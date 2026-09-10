@@ -62,6 +62,21 @@ describe('Leviathan V4 peripheral projection', () => {
 });
 
 describe('createLeviathanV4Peripheral on the real capture', () => {
+  it('uses the sensor range even when saved stages stop at 800 DPI', () => {
+    const mouse = createLeviathanV4Peripheral(
+      { ...leviathanV4QueryFixture, cpi_l: [400, 800, 0, 0, 0, 0, 0, 0] },
+      'real',
+    );
+    expect(mouse.capabilities.dpi).toMatchObject({ min: 100, max: 45000 });
+  });
+
+  it('initializes all four onboard memories with independent editable settings', () => {
+    const mouse = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real');
+    expect(mouse.profiles.every((slot) => slot.settings !== null)).toBe(true);
+    expect(mouse.profiles[1].settings).not.toBe(mouse.profiles[0].settings);
+    expect(mouse.profiles[1].initial).toBe(true);
+  });
+
   it('reads the model, firmware and battery the firmware reports', () => {
     const mouse = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real');
 

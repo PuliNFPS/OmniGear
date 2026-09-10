@@ -25,6 +25,8 @@ export interface ProfileSlot<TSettings> {
   index: number;
   name: string;
   settings: TSettings | null;
+  /** Seeded from the current configuration; not yet read or written for this memory. */
+  initial?: boolean;
 }
 
 interface PeripheralBase<TType extends PeripheralType, TCapabilities, TSettings> {
@@ -45,11 +47,14 @@ interface PeripheralBase<TType extends PeripheralType, TCapabilities, TSettings>
   /** Factory values reported by the device, used by "Restaurar padrões". */
   defaults: TSettings;
   profiles: ProfileSlot<TSettings>[];
-  /** Slot index (1-based) currently in use on the device. */
+  /** Slot index (1-based) last reported as active by the device, not the editor cursor. */
   activeProfileSlot: number;
 }
 
-export type MousePeripheral = PeripheralBase<'mouse', MouseCapabilities, MouseSettings>;
+export type MousePeripheral = PeripheralBase<'mouse', MouseCapabilities, MouseSettings> & {
+  /** Last DPI reported by the mouse, independent of the memory being edited. */
+  liveDpi?: { x: number; y: number };
+};
 export type KeyboardPeripheral = PeripheralBase<'keyboard', KeyboardCapabilities, KeyboardSettings>;
 
 export type Peripheral = MousePeripheral | KeyboardPeripheral;

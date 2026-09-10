@@ -3,7 +3,7 @@ import type { MouseSettings } from '@gearhub/shared';
 import { leviathanV4QueryFixture } from './leviathanV4Fixture';
 import { createLeviathanV4Peripheral } from './leviathanV4';
 import { LeviathanV4Driver, mappingEvents } from './LeviathanV4Driver';
-import { withProtocolEnvelope } from './protocol';
+import { frameEvent, withProtocolEnvelope } from './protocol';
 
 const CMD_NOTIFY = 0x0b;
 const NOTIFY_TYPE_MOUSE_CONFIG = 0x14;
@@ -51,7 +51,8 @@ function harness({ failAfter }: { failAfter?: number } = {}) {
     listener?.(0, notifyReport([0xff]));
   };
 
-  return { sent, driver, settings, reportSlot };
+  const notify = (payload: number[]) => listener?.(0, notifyReport(payload));
+  return { sent, driver, settings, reportSlot, notify };
 }
 
 const innerType = (report: Uint8Array) => report[9];
@@ -141,16 +142,30 @@ describe('reading the onboard slots', () => {
   });
 });
 
-/**
- * The vendor library has no command for selecting a slot: `onboard` is only
- * ever read from the query, the active slot is named by a different field, and
- * the mouse announces its own switches. Offering one here would mean sending
- * the previous slot's parameters to the destination.
- */
+// The vendor's mouse dropdown only selects which onboard slot to edit.
 describe('switching the active onboard slot', () => {
-  it('is not offered, so the editor writes the settings instead', () => {
+  it('is not offered without a verified mouse-side switch command', () => {
     const { driver } = harness();
 
     expect((driver as { switchProfile?: unknown }).switchProfile).toBeUndefined();
   });
+});
+
+it('preserves opaque entries from the write destination rather than the active slot', async () => {
+  const { driver, settings, notify, sent } = harness();
+  // Unknown key IDs keep these raw entries outside the editor's mapping set.
+  const activeEntry = [3, 8, 0x05, 1, 0x60, 1, 2, 3];
+  const editedEntry = [3, 8, 0x05, 1, 0x61, 4, 5, 6];
+  notify([0]);
+  notify(activeEntry);
+  notify([1]);
+  notify(editedEntry);
+  notify([0xff]);
+
+  await driver.writeProfile(2, 'Perfil 2', settings);
+
+  const framed = (entry: number[]) =>
+    frameEvent(withProtocolEnvelope(Uint8Array.from(entry), true), true)[0];
+  expect(sent).toContainEqual(framed(editedEntry));
+  expect(sent).not.toContainEqual(framed(activeEntry));
 });

@@ -27,7 +27,7 @@ function withOnboardProfiles(device: Peripheral, slots: OnboardProfileReport[]):
     profiles: device.profiles.map((profile) => {
       const slot = bySlotIndex.get(profile.index);
       if (!slot) return profile;
-      return { ...profile, settings: settingsFromSlot(device.defaults, slot) };
+      return { ...profile, settings: settingsFromSlot(profile.settings ?? device.defaults, slot) };
     }),
   };
 }
@@ -61,7 +61,9 @@ export function useDeviceReports(devices: Peripheral[]): void {
 
       const followDpi = driver.onDeviceReport?.((report) => {
         if (report.kind === 'dpi') {
-          useEditorStore.getState().syncActiveDpi(device.id, report.value);
+          useEditorStore.getState().syncActiveDpi(device.id, report.value, report.y);
+        } else if (report.kind === 'active-profile') {
+          useEditorStore.getState().syncActiveProfile(device.id, report.slotIndex);
         }
       });
 
@@ -69,10 +71,12 @@ export function useDeviceReports(devices: Peripheral[]): void {
         const store = useDeviceStore.getState();
         store.updateDevice(device.id, (current) => withOnboardProfiles(current, slots));
         const updated = useDeviceStore.getState().devices.find((item) => item.id === device.id);
-        const active = updated?.profiles.find(
-          (profile) => profile.index === updated.activeProfileSlot,
-        );
-        if (active?.settings) useEditorStore.getState().rebase(device.id, active.settings);
+        for (const slot of slots) {
+          const profile = updated?.profiles.find((item) => item.index === slot.index + 1);
+          if (profile?.settings) {
+            useEditorStore.getState().rebase(device.id, profile.index, profile.settings);
+          }
+        }
       });
 
       return [followDpi, followProfiles];

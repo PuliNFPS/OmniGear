@@ -14,7 +14,13 @@ import { defaultSectionFor, deviceRoute, routeToHash } from '../app/routes';
 import { findSection, sectionsFor } from '../app/sections';
 import { useChangeCount, useEditorEntry, useProfileLoad } from '../app/useEditor';
 import { navigate } from '../app/useRoute';
-import { activeProfileName, isKeyboard, isMouse, profileSlots } from '../domain/settings';
+import {
+  activeProfileName,
+  isKeyboard,
+  isMouse,
+  profileName,
+  profileSlots,
+} from '../domain/settings';
 import { useDeviceStore } from '../store/deviceStore';
 import { useEditorStore } from '../store/editorStore';
 import { BatteryLevel } from './BatteryLevel';
@@ -78,27 +84,51 @@ export function DeviceWorkspace({ device, sectionId }: { device: Peripheral; sec
             <p className="sr-only">{describeDevice(device)}</p>
 
             <div className="min-w-0 lg:mt-3">
-              <label className="sr-only" htmlFor="perfil-ativo">
-                Perfil em uso
+              <label className="mb-1.5 block text-sm text-muted-foreground" htmlFor="perfil-edicao">
+                Perfil em edição
               </label>
               <Select
-                disabled={saving}
-                value={String(device.activeProfileSlot)}
+                disabled={saving || entry.status === 'aplicando'}
+                value={String(entry.editingProfileSlot)}
                 onValueChange={(value) => requestLoad(Number(value))}
               >
-                <SelectTrigger id="perfil-ativo" className="w-full">
+                <SelectTrigger
+                  id="perfil-edicao"
+                  className="w-full"
+                  aria-describedby="perfil-contexto"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {/* Every onboard slot the device reports, occupied or not — the
                       vendor hub lists all four the same way. */}
                   {profileSlots(device).map((slot) => (
-                    <SelectItem key={slot.index} value={String(slot.index)}>
+                    <SelectItem
+                      key={slot.index}
+                      value={String(slot.index)}
+                      disabled={!slot.settings}
+                    >
                       {slot.name || `Slot ${slot.index}`}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <div id="perfil-contexto" className="mt-2 space-y-1 text-xs text-muted-foreground">
+                <p title="Último slot informado pelo dispositivo.">
+                  {device.type === 'mouse' ? 'Ativo no mouse' : 'Ativo no teclado'}:{' '}
+                  {activeProfileName(device)}
+                </p>
+                {device.type === 'mouse' && (
+                  <p>Selecionar carrega o editor. O slot ativo não muda.</p>
+                )}
+                {profileSlots(device).find((slot) => slot.index === entry.editingProfileSlot)
+                  ?.initial && (
+                  <p>
+                    Valores iniciais copiados da configuração atual. Revise antes de aplicar nesta
+                    memória.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
@@ -149,8 +179,10 @@ export function DeviceWorkspace({ device, sectionId }: { device: Peripheral; sec
         <ChangeBar
           status={entry.status}
           changes={changes}
-          profileName={activeProfileName(device)}
+          profileName={profileName(device, entry.editingProfileSlot)}
+          onboardSlot={device.type === 'mouse' ? entry.editingProfileSlot : undefined}
           savedProfileName={entry.savedProfileName}
+          stateRefreshFailed={entry.stateRefreshFailed}
           offline={device.status === 'desconectado'}
           hint={section.hint}
           onDiscard={() => setDiscardOpen(true)}

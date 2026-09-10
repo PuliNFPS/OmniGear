@@ -7,7 +7,7 @@ import {
   encodeMouseParamSnapshot,
 } from '../../core/coreBridge';
 import { isMouseSettings } from '../../domain/settings';
-import type { DeviceDriver, DeviceReport } from '../deviceDriver';
+import type { DeviceDriver, DeviceReport, DeviceState } from '../deviceDriver';
 import type { HardwareTransport } from '../WebHidTransport';
 import {
   FUNCTION_SHOW_POWER,
@@ -25,6 +25,8 @@ import {
 import { subscribeToNotifications } from './notifications';
 import { OnboardConfigCollector, type OnboardSlotConfig } from './onboardConfig';
 import { frameEvent, withProtocolEnvelope } from './protocol';
+import { queryRawmDevice } from './session';
+import { dpiAxes } from './dpiValue';
 
 const ACTION_SAVE_CONFIG_TO_FDS = 0x34;
 
@@ -133,6 +135,11 @@ function pause(milliseconds: number): Promise<void> {
 
 export class LeviathanV4Driver implements DeviceDriver {
   private snapshot: RawmMouseParamState;
+  private activeOnboardIndex: number;
+  private readonly slotCount: number;
+  private dpiRevision = 0;
+  private slotRevision = 0;
+  private applyingSlotRevision: number | null = null;
   private tail: Promise<void> = Promise.resolve();
   private readonly collector = new OnboardConfigCollector();
   private slots: OnboardSlotConfig[] | null = null;
@@ -152,12 +159,24 @@ export class LeviathanV4Driver implements DeviceDriver {
     private readonly crcSupported: boolean,
   ) {
     this.snapshot = parseMouseParamState(rawSnapshot);
+    this.slotCount = Array.isArray(rawSnapshot.ocs) ? rawSnapshot.ocs.length : 1;
+    this.activeOnboardIndex = this.readOnboardIndex(rawSnapshot.oci ?? 0);
     // The dump answers the query the connect already sent, so it can land
     // before anything subscribes. Listening from here is what catches it.
     subscribeToNotifications(this.transport, (notification) => {
       if (notification.kind === 'dpi' || notification.kind === 'dpi-xy') {
+        this.dpiRevision += 1;
+        this.snapshot = { ...this.snapshot, resolution: notification.value };
+        this.reportDpi();
+        return;
+      }
+      if (notification.kind === 'onboard-index') {
+        if (notification.index >= this.slotCount) return;
+        if (notification.index !== this.activeOnboardIndex) this.slotRevision += 1;
+        this.activeOnboardIndex = notification.index;
+        this.appliedMappings = this.activeSlotSignature();
         for (const listener of this.reportListeners) {
-          listener({ kind: 'dpi', value: notification.value });
+          listener({ kind: 'active-profile', slotIndex: notification.index + 1 });
         }
         return;
       }
@@ -171,7 +190,7 @@ export class LeviathanV4Driver implements DeviceDriver {
   }
 
   private activeSlot(): OnboardSlotConfig | undefined {
-    return this.slots?.find((item) => item.index === this.snapshot.onboard);
+    return this.slots?.find((item) => item.index === this.activeOnboardIndex);
   }
 
   private activeSlotSignature(): string | null {
@@ -182,9 +201,44 @@ export class LeviathanV4Driver implements DeviceDriver {
   /** The mouse announces a DPI cycled by its own button; the editor follows. */
   onDeviceReport(listener: (report: DeviceReport) => void): () => void {
     this.reportListeners.add(listener);
+    listener({ kind: 'active-profile', slotIndex: this.activeOnboardIndex + 1 });
+    const dpi = dpiAxes(this.snapshot.resolution);
+    listener({ kind: 'dpi', value: dpi.x, y: dpi.y });
     return () => {
       this.reportListeners.delete(listener);
     };
+  }
+
+  private readOnboardIndex(value: unknown): number {
+    if (
+      typeof value !== 'number' ||
+      !Number.isInteger(value) ||
+      value < 0 ||
+      value >= this.slotCount
+    ) {
+      throw new Error('Indice onboard ausente ou invalido na resposta do mouse.');
+    }
+    return value;
+  }
+
+  private reportDpi(): void {
+    const dpi = dpiAxes(this.snapshot.resolution);
+    if (dpi.x === 0 || dpi.y === 0) return;
+    for (const listener of this.reportListeners) {
+      listener({ kind: 'dpi', value: dpi.x, y: dpi.y });
+    }
+  }
+
+  readState(): Promise<DeviceState> {
+    return this.enqueue(async () => {
+      const { raw } = await queryRawmDevice(this.transport, { virtualMouse: true });
+      const activeIndex = this.readOnboardIndex(raw.oci);
+      const snapshot = parseMouseParamState(raw);
+      this.activeOnboardIndex = activeIndex;
+      this.snapshot = snapshot;
+      this.appliedMappings = this.activeSlotSignature();
+      return { activeProfileSlot: activeIndex + 1, dpi: dpiAxes(snapshot.resolution) };
+    });
   }
 
   /**
@@ -210,14 +264,22 @@ export class LeviathanV4Driver implements DeviceDriver {
    */
   applyToSession(settings: PeripheralSettings): Promise<void> {
     return this.enqueue(async () => {
-      const selected = mouseSettings(settings);
-      const intended = intendedMappings(selected);
-      if (this.appliedMappings !== null && this.appliedMappings === intended) {
-        await this.writeParameters(selected);
-        return;
+      this.applyingSlotRevision = this.slotRevision;
+      try {
+        const selected = mouseSettings(settings);
+        const intended = intendedMappings(selected);
+        if (this.appliedMappings !== null && this.appliedMappings === intended) {
+          await this.writeParameters(selected);
+          return;
+        }
+        await this.sendEvent(encodeConfigReset());
+        await this.writeConfigurationBody(selected, intended);
+      } catch (error) {
+        this.appliedMappings = null;
+        throw error;
+      } finally {
+        this.applyingSlotRevision = null;
       }
-      await this.sendEvent(encodeConfigReset());
-      await this.writeConfigurationBody(selected, intended);
     });
   }
 
@@ -228,58 +290,55 @@ export class LeviathanV4Driver implements DeviceDriver {
    * otherwise commit a slot with its mappings cleared.
    */
   writeProfile(slotIndex: number, _name: string, settings: PeripheralSettings): Promise<void> {
-    if (!Number.isInteger(slotIndex) || slotIndex < 1 || slotIndex > 255) {
+    if (!Number.isInteger(slotIndex) || slotIndex < 1 || slotIndex > this.slotCount) {
       return Promise.reject(new RangeError('Indice de perfil RAWM invalido.'));
     }
     return this.enqueue(async () => {
       const selected = mouseSettings(settings);
       await this.sendEvent(encodeConfigReset());
       await this.sendEvent(encodeAction(ACTION_SAVE_CONFIG_TO_FDS, 1 | ((slotIndex - 1) << 8)));
-      await this.writeConfigurationBody(selected, intendedMappings(selected));
+      await this.writeConfigurationBody(selected, intendedMappings(selected), slotIndex - 1);
       await this.sendEvent(encodeAction(ACTION_SAVE_CONFIG_TO_FDS, 0));
     });
   }
 
   /**
-   * There is no `switchProfile` here: no mouse-side command for it has been
-   * found. Found, not proven absent — see `docs/rawm-onboard-config.md` §5,
-   * which records three readings of this question, two of them wrong.
-   *
-   * Do not reach for `IQ_SET_PROFILE_ID` (0x40): that is the HS *keyboard*
-   * path, and mistaking it for the mouse's was the third reading's error.
-   *
-   * What the vendor does 23 times over on the mouse is mutate one field of the
-   * parameter snapshot and resend the 0x15 block — so resending the current
-   * snapshot with one field changed is a legitimate shape here, not the
-   * overwrite hazard an earlier comment claimed. What is unknown is which
-   * field carries the active index. Until that is known, the editor writing
-   * the settings into the slot stays the honest fallback.
-   *
-   * Also unhandled: NOTIFY_TYPE_MOUSE_ONBOARD_INDEX (0x22) and
-   * NOTIFY_TYPE_MOUSE_ONBOARD_STATUS (0x23), the mouse announcing what it
-   * changed on its own. Following those is read-only and needs no discovery;
-   * until then the app keeps showing the slot the mouse already left.
+   * The vendor's Onboard config dropdown is an editing cursor, not a switch.
+   * Loading it is local to the editor; only an explicit save calls writeProfile.
+   * No mouse-side switch command has been verified. IQ_SET_PROFILE_ID (0x40)
+   * belongs to HS keyboards; see docs/rawm-onboard-config.md §5.
+   * Notification 0x22 and readState supply the active index independently.
    */
 
-  private enqueue(operation: () => Promise<void>): Promise<void> {
+  private enqueue<T>(operation: () => Promise<T>): Promise<T> {
     const current = this.tail.then(operation, operation);
-    this.tail = current.catch(() => undefined);
+    this.tail = current.then(
+      () => undefined,
+      () => undefined,
+    );
     return current;
   }
 
   private async writeParameters(settings: MouseSettings): Promise<void> {
     const next = applySettingsToMouseParam(this.snapshot, settings);
+    const revision = this.dpiRevision;
     await this.sendEvent(encodeMouseParamSnapshot(encodeMouseParamBody(next)));
-    this.snapshot = next;
+    // A button report during the send is newer than the value being sent.
+    this.snapshot =
+      revision === this.dpiRevision ? next : { ...next, resolution: this.snapshot.resolution };
   }
 
-  private async writeConfigurationBody(settings: MouseSettings, intended: string): Promise<void> {
+  private async writeConfigurationBody(
+    settings: MouseSettings,
+    intended: string,
+    onboardIndex = this.activeOnboardIndex,
+  ): Promise<void> {
     // Cleared before the set goes out: a failure part way through leaves the
     // mouse holding neither, and the next apply has to write everything again.
     this.appliedMappings = null;
     await this.writeParameters(settings);
     for (const event of mappingEvents(settings)) await this.sendEvent(event);
-    for (const event of this.preservedEvents(settings)) await this.sendEvent(event);
+    for (const event of this.preservedEvents(settings, onboardIndex)) await this.sendEvent(event);
     this.appliedMappings = intended;
   }
 
@@ -289,8 +348,8 @@ export class LeviathanV4Driver implements DeviceDriver {
    * erase them from flash, so the bytes go back out untouched. Anything the
    * editor rebuilds is left out: two events for one key would fight.
    */
-  private preservedEvents(settings: MouseSettings): Uint8Array[] {
-    const slot = this.activeSlot();
+  private preservedEvents(settings: MouseSettings, onboardIndex: number): Uint8Array[] {
+    const slot = this.slots?.find((item) => item.index === onboardIndex);
     if (!slot) return [];
     const rebuilt = new Set(editorKeySets(settings).map(({ keyIds }) => keyOf(keyIds)));
     rebuilt.add(keyOf([SHOW_POWER_KEY_ID]));
@@ -300,10 +359,20 @@ export class LeviathanV4Driver implements DeviceDriver {
   }
 
   private async sendEvent(inner: Uint8Array): Promise<void> {
+    const checkSlot = () => {
+      if (this.applyingSlotRevision !== null && this.applyingSlotRevision !== this.slotRevision) {
+        throw new Error(
+          'A memória ativa mudou durante a aplicação. Revise o perfil antes de aplicar novamente.',
+        );
+      }
+    };
+    checkSlot();
     const event = withProtocolEnvelope(inner, this.crcSupported);
     for (const report of frameEvent(event, true)) {
+      checkSlot();
       await this.transport.send({ reportId: 0, data: report });
     }
     await pause(8);
+    checkSlot();
   }
 }

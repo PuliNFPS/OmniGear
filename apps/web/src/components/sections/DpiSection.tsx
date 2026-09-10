@@ -24,13 +24,14 @@ import { SectionHeader } from './SectionHeader';
 export function DpiSection({ device }: { device: MousePeripheral }) {
   const section = findSection('mouse', 'dpi');
   const { draft, update } = useMouseEditor(device);
-  const { resetRevision } = useEditorEntry(device);
+  const { resetRevision, editingProfileSlot } = useEditorEntry(device);
+  const editingActive = editingProfileSlot === device.activeProfileSlot;
   const capability = device.capabilities.dpi;
   const axesId = useId();
   /** Y values from before the axes were linked, restored if they are separated again. */
   const [keptY, setKeptY] = useState<Record<string, number>>({});
 
-  useEffect(() => setKeptY({}), [device.activeProfileSlot, resetRevision]);
+  useEffect(() => setKeptY({}), [resetRevision]);
 
   function changeAxis(stageId: string, axis: 'x' | 'y', value: number) {
     if (!draft.independentAxes) {
@@ -82,6 +83,11 @@ export function DpiSection({ device }: { device: MousePeripheral }) {
         }
       />
 
+      {!editingActive && (
+        <p role="status" className="mb-4 text-sm text-muted-foreground">
+          Editando outra memória.
+        </p>
+      )}
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         <div className="hidden grid-cols-[110px_minmax(0,1fr)_150px_170px] gap-6 border-b border-border px-5 py-3 text-xs text-muted-foreground md:grid">
           <span>Estágio</span>
@@ -99,6 +105,7 @@ export function DpiSection({ device }: { device: MousePeripheral }) {
                 capability={capability}
                 independentAxes={draft.independentAxes}
                 active={stage.id === draft.activeStageId}
+                editingActive={editingActive}
                 removable={canRemoveStage(draft.dpiStages, capability)}
                 onChangeAxis={(axis, value) => changeAxis(stage.id, axis, value)}
                 onActivate={() => update((current) => ({ ...current, activeStageId: stage.id }))}
@@ -152,6 +159,7 @@ interface StageRowProps {
   capability: DpiCapability;
   independentAxes: boolean;
   active: boolean;
+  editingActive: boolean;
   removable: boolean;
   onChangeAxis(axis: 'x' | 'y', value: number): void;
   onActivate(): void;
@@ -164,6 +172,7 @@ function StageRow({
   capability,
   independentAxes,
   active,
+  editingActive,
   removable,
   onChangeAxis,
   onActivate,
@@ -215,12 +224,12 @@ function StageRow({
       <div className="flex items-center gap-2 md:justify-start">
         {active ? (
           <span className="inline-flex items-center gap-2 text-sm">
-            Ativo
+            {editingActive ? 'Ativo' : 'Selecionado'}
             <Check className="size-4" aria-hidden="true" />
           </span>
         ) : (
           <Button variant="ghost" size="sm" onClick={onActivate}>
-            Tornar ativo
+            {editingActive ? 'Tornar ativo' : 'Selecionar'}
           </Button>
         )}
         <Button

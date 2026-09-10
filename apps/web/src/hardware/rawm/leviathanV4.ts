@@ -8,6 +8,7 @@ import type {
 } from '@gearhub/shared';
 import { LEVIATHAN_V4_LOD_LEVELS } from './leviathanV4Lod';
 import { createRPlusSettings } from '../../domain/mouseCapabilities';
+import { dpiAxes } from './dpiValue';
 
 export const RAWM_VENDOR_ID = 0x1915;
 export const LEVIATHAN_V4_RECEIVER_PRODUCT_ID = 0x2346;
@@ -146,7 +147,7 @@ export function createLeviathanV4Peripheral(
       'lateral-dianteiro': 'avancar',
       dpi: 'dpi-ciclo',
     },
-    dpiStages: dpiLevels.map((dpi, index) => ({ id: `estagio-${index + 1}`, x: dpi, y: dpi })),
+    dpiStages: dpiLevels.map((dpi, index) => ({ id: `estagio-${index + 1}`, ...dpiAxes(dpi) })),
     activeStageId: `estagio-${activeIndex + 1}`,
     independentAxes: false,
     pollingRate,
@@ -182,8 +183,10 @@ export function createLeviathanV4Peripheral(
     photo: { src: '/dispositivos/leviathan-v4.png', aspect: 213 / 420 },
     capabilities: {
       dpi: {
-        min: Math.min(...dpiLevels),
-        max: Math.max(...dpiLevels),
+        // Sensor range, not the smallest/largest saved stage. RAWM specifies
+        // 100–45000 for this model: rawmshop.com/products/leviathan-v4.
+        min: 100,
+        max: 45000,
         step: 50,
         minStages: 1,
         maxStages: 8,
@@ -204,8 +207,10 @@ export function createLeviathanV4Peripheral(
       // follows the vendor hub's "Onboard Memory 1-4" rather than inventing a
       // separate vocabulary for the same four slots.
       name: `Memória ${index + 1}`,
-      settings: index + 1 === activeProfileSlot ? structuredClone(settings) : null,
+      settings: structuredClone(settings),
+      initial: index + 1 !== activeProfileSlot,
     })),
     activeProfileSlot,
+    liveDpi: dpiAxes(activeDpi),
   };
 }

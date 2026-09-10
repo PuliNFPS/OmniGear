@@ -36,8 +36,12 @@ export function activeSettings(device: Peripheral): PeripheralSettings {
 }
 
 export function activeProfileName(device: Peripheral): string {
-  const slot = profileSlots(device).find((profile) => profile.index === device.activeProfileSlot);
-  return slot && slot.name ? slot.name : `Slot ${device.activeProfileSlot}`;
+  return profileName(device, device.activeProfileSlot);
+}
+
+export function profileName(device: Peripheral, slotIndex: number): string {
+  const slot = profileSlots(device).find((profile) => profile.index === slotIndex);
+  return slot?.name || `Slot ${slotIndex}`;
 }
 
 /**
@@ -54,7 +58,7 @@ export function withWrittenProfile(
     return {
       ...device,
       profiles: device.profiles.map((slot) =>
-        slot.index === slotIndex ? { ...slot, name, settings } : slot,
+        slot.index === slotIndex ? { ...slot, name, settings, initial: false } : slot,
       ),
     };
   }

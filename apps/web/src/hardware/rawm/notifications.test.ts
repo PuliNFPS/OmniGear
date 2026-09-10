@@ -13,6 +13,10 @@ function notifyEvent(type: number, payload: number[]): Uint8Array {
 }
 
 describe('parseNotification', () => {
+  it('reads the onboard index notification as a zero-based byte', () => {
+    expect(parseNotification(notifyEvent(0x22, [2]))).toEqual({ kind: 'onboard-index', index: 2 });
+    expect(parseNotification(notifyEvent(0x22, []))).toBeNull();
+  });
   // Cycling DPI with the button is the case this exists for.
   it('reads a DPI change as a little-endian 16-bit value', () => {
     expect(parseNotification(notifyEvent(0x00, [0x20, 0x03]))).toEqual({

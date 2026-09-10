@@ -19,7 +19,7 @@ import { findSection } from '../../app/sections';
 import { useChangeCount, useEditorEntry, useProfileLoad } from '../../app/useEditor';
 import { describeSlotOccupancy, validateProfileName } from '../../domain/profiles';
 import { buildProfileFile, profileFileName, readProfileFile } from '../../domain/profileFile';
-import { activeProfileName, profileSlots } from '../../domain/settings';
+import { profileName, profileSlots } from '../../domain/settings';
 import { useEditorStore } from '../../store/editorStore';
 import { ConfirmDialog } from '../ConfirmDialog';
 import { ProfileLoadConfirm } from '../ProfileLoadConfirm';
@@ -45,6 +45,7 @@ export function ProfilesSection({ device }: { device: Peripheral }) {
   const fileInput = useRef<HTMLInputElement>(null);
 
   const slots = profileSlots(device);
+  const editingName = profileName(device, entry.editingProfileSlot);
 
   async function handleFile(file: File) {
     let parsed: unknown;
@@ -105,6 +106,8 @@ export function ProfilesSection({ device }: { device: Peripheral }) {
               device={device}
               slot={slot}
               active={slot.index === device.activeProfileSlot}
+              editing={slot.index === entry.editingProfileSlot}
+              loadingDisabled={entry.status === 'aplicando' || entry.status === 'gravando'}
               onLoad={() => requestLoad(slot.index)}
               onRename={() =>
                 setNameDialog({ slotIndex: slot.index, mode: 'renomear', initial: slot.name })
@@ -133,14 +136,13 @@ export function ProfilesSection({ device }: { device: Peripheral }) {
       <ExportDialog
         open={exportOpen}
         onOpenChange={setExportOpen}
-        profileName={activeProfileName(device)}
+        profileName={editingName}
         hasChanges={changes > 0}
         onExport={(source) => {
           const settings = source === 'atual' ? entry.draft : entry.saved;
-          const profileName = activeProfileName(device);
           downloadJson(
-            profileFileName(device, profileName),
-            buildProfileFile(device, profileName, settings),
+            profileFileName(device, editingName),
+            buildProfileFile(device, editingName, settings),
           );
         }}
       />
@@ -189,7 +191,7 @@ export function ProfilesSection({ device }: { device: Peripheral }) {
                 <FileText className="size-4" aria-hidden="true" />
                 {importState.fileName}
               </span>
-              <span>Destino: {activeProfileName(device)}</span>
+              <span>Destino: {editingName} (em edição)</span>
             </span>
           }
           note="O arquivo foi validado. Os ajustes serão carregados para revisão antes de salvar."
@@ -211,6 +213,8 @@ function SlotCard({
   device,
   slot,
   active,
+  editing,
+  loadingDisabled,
   onLoad,
   onRename,
   onWrite,
@@ -218,6 +222,8 @@ function SlotCard({
   device: Peripheral;
   slot: ProfileSlot<PeripheralSettings>;
   active: boolean;
+  editing: boolean;
+  loadingDisabled: boolean;
   onLoad(): void;
   onRename(): void;
   onWrite(): void;
@@ -228,14 +234,19 @@ function SlotCard({
     <div
       className={cn(
         'flex h-full flex-col rounded-xl border bg-card p-4',
-        active ? 'border-foreground' : 'border-border',
+        editing ? 'border-foreground' : 'border-border',
       )}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm font-medium">Slot {slot.index}</span>
         {active && (
           <Badge variant="secondary" className="font-normal">
-            Em uso
+            {device.type === 'mouse' ? 'Ativo no mouse' : 'Ativo no teclado'}
+          </Badge>
+        )}
+        {editing && (
+          <Badge variant="outline" className="font-normal">
+            Em edição
           </Badge>
         )}
       </div>
@@ -266,10 +277,15 @@ function SlotCard({
           <p className="mt-2 text-sm text-muted-foreground">
             {slot.settings ? describeSettings(device, slot.settings) : ''}
           </p>
+          {slot.initial && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Configuração inicial · revise antes de aplicar.
+            </p>
+          )}
           <div className="mt-4 flex flex-1 items-end justify-end">
-            {!active && (
-              <Button variant="outline" onClick={onLoad}>
-                Carregar
+            {!editing && (
+              <Button variant="outline" onClick={onLoad} disabled={loadingDisabled}>
+                {device.type === 'mouse' ? 'Carregar para edição' : 'Carregar'}
               </Button>
             )}
           </div>

@@ -53,24 +53,25 @@ export function useKeyboardEditor(device: KeyboardPeripheral) {
 }
 
 /**
- * Loading another profile replaces what the device is running, so a dirty
- * draft has to be resolved first.
+ * Loading another profile replaces the editor's draft, so unsaved changes
+ * must be resolved before moving the editing cursor.
  */
 export function useProfileLoad(device: Peripheral) {
   const changes = useChangeCount(device);
+  const { editingProfileSlot } = useEditorEntry(device);
   const loadProfile = useEditorStore((state) => state.loadProfile);
   const [pendingSlot, setPendingSlot] = useState<number | null>(null);
 
   const requestLoad = useCallback(
     (slotIndex: number) => {
-      if (slotIndex === device.activeProfileSlot) return;
+      if (slotIndex === editingProfileSlot) return;
       if (changes > 0) {
         setPendingSlot(slotIndex);
         return;
       }
       void loadProfile(device, slotIndex);
     },
-    [changes, device, loadProfile],
+    [changes, device, editingProfileSlot, loadProfile],
   );
 
   return { requestLoad, pendingSlot, clearPendingSlot: () => setPendingSlot(null) };

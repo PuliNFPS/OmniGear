@@ -5,8 +5,9 @@ import { RotateCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { connectionLabels } from '../../app/labels';
 import { findSection } from '../../app/sections';
+import { useEditorEntry } from '../../app/useEditor';
 import { loadCore, type CoreStatus } from '../../core/coreBridge';
-import { activeProfileName } from '../../domain/settings';
+import { activeProfileName, profileName } from '../../domain/settings';
 import { useEditorStore } from '../../store/editorStore';
 import { ConfirmDialog } from '../ConfirmDialog';
 import { DevicePhoto } from '../devices/DevicePhoto';
@@ -14,6 +15,8 @@ import { SectionHeader } from './SectionHeader';
 
 export function GeneralSection({ device }: { device: Peripheral }) {
   const section = findSection(device.type, 'geral');
+  const { editingProfileSlot } = useEditorEntry(device);
+  const editingName = profileName(device, editingProfileSlot);
   const restoreDefaults = useEditorStore((state) => state.restoreDefaults);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [core, setCore] = useState<CoreStatus | null>(null);
@@ -40,7 +43,11 @@ export function GeneralSection({ device }: { device: Peripheral }) {
     { label: 'Modelo', value: device.name },
     { label: 'Conexão', value: connection },
     { label: 'Firmware', value: device.firmware ?? 'Não informado' },
-    { label: 'Perfil em uso', value: activeProfileName(device) },
+    {
+      label: device.type === 'mouse' ? 'Ativo no mouse' : 'Ativo no teclado',
+      value: activeProfileName(device),
+    },
+    { label: 'Perfil em edição', value: editingName },
     {
       label: 'Núcleo',
       value: core ? `${core.version} · ${core.wasm ? 'WASM' : 'falha ao carregar'}` : 'Carregando…',
@@ -83,7 +90,7 @@ export function GeneralSection({ device }: { device: Peripheral }) {
           <section className="mt-7">
             <h2 className="text-lg font-medium tracking-tight">Restaurar ajustes</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Redefine os ajustes do perfil atual. Os demais perfis são mantidos.
+              Redefine os ajustes do {editingName}, aberto para edição.
             </p>
             <Button
               variant="outline"
@@ -104,7 +111,7 @@ export function GeneralSection({ device }: { device: Peripheral }) {
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Restaurar o perfil atual?"
+        title={`Restaurar ${editingName}?`}
         description="Os ajustes padrão serão carregados para revisão. Os demais perfis serão mantidos."
         note="A gravação acontece somente ao salvar."
         actions={[

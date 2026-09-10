@@ -165,12 +165,11 @@ apenas para **contar** os slots (`onboardSlotCount`) e guarda os bytes opacos no
 LED daquele slot via `0x15`. O mouse reage visivelmente, o que é fácil de ler como "ele
 trocou de slot" sem que troca alguma tenha acontecido.
 
-### As notificações seguem sem tratamento
+### Notificações do mouse
 
 `NOTIFY_TYPE_MOUSE_ONBOARD_INDEX` (`0x22`) e `NOTIFY_TYPE_MOUSE_ONBOARD_STATUS` (`0x23`): o
-mouse anunciando o que ele mesmo mudou. **Este app não trata nenhum dos dois**, então não
-segue o mouse quando o slot troca pelo botão. Isso é implementável hoje, sem depender de
-descobrir comando nenhum — é leitura, não escrita.
+mouse anunciando o que ele mesmo mudou. O app agora consome `0x22`: seu primeiro byte é o
+índice ativo, começando em zero. `0x23` ainda não é representado na interface.
 
 Ligáveis a botão, executadas pelo firmware: `FUNCTION_TOGGLE_ONBOARD = 0x11`,
 `FUNCTION_NEXT_ONBOARD = 0x12`, `FUNCTION_PREVIOUS_ONBOARD = 0x13`,
@@ -184,6 +183,52 @@ send_event_action(client, ACTION_SAVE_CONFIG_TO_FDS, 1 | (indice << 8))
 ...corpo...
 send_event_action(client, ACTION_SAVE_CONFIG_TO_FDS, 0)
 ```
+
+### Separação no editor, 2026-09-09
+
+O editor agora mantém `editingProfileSlot` separado de `activeProfileSlot`, que continua
+sendo o último slot informado pelo dispositivo. Selecionar um perfil de mouse carrega
+somente seu rascunho e sua versão salva, sem trocar o slot ativo nem enviar configurações.
+O seletor e os cartões distinguem **Em edição** de **Ativo no mouse**; salvar, importar,
+exportar e as confirmações usam o nome do perfil em edição.
+
+No mouse, o botão **Aplicar no onboard · Slot N** aplica e persiste o rascunho no slot
+indicado. É a ação explícita de gravação, equivalente ao fluxo “Apply & onboard”;
+ela não confirma sozinha uma troca do slot ativo. O botão também funciona sem alterações
+pendentes, permitindo aplicar uma memória já preenchida.
+
+`save` grava no cursor de edição; `saveToSlot` e `renameProfile` usam seu destino explícito.
+Uma tentativa após falha conserva o destino e o conteúdo da operação original. No driver,
+as entradas opacas preservadas na gravação também são buscadas no slot de destino.
+
+A prévia de ajustes permanece disponível ao editar o slot ativo. Em outro slot, os ajustes
+ficam no rascunho até salvar. **Descartar e carregar** desfaz explicitamente a prévia do
+slot ativo antes de carregar o destino; a seleção simples continua sem escrita. Durante
+uma aplicação em andamento, a troca de cursor aguarda seu resultado. Dumps de perfis e
+notificações de DPI não substituem o rascunho de outro slot.
+
+Após gravar, uma consulta de leitura atualiza o indicador com `oci` e o DPI com `cpi`.
+Não há atribuição otimista do destino ao slot ativo. Falha nessa consulta mantém a gravação
+como concluída e informa que o slot ativo não foi confirmado. A notificação `0x22` também
+atualiza o indicador; o parâmetro opaco `ob` continua preservado nos pacotes de parâmetros.
+
+As quatro memórias vêm preenchidas com cópias independentes da configuração da conexão.
+As que ainda não tiveram seus parâmetros lidos ou gravados são identificadas como
+**Configuração inicial**, sem apresentá-las como uma leitura completa da flash. Os dumps
+substituem os bindings conhecidos sem repor DPI e polling com valores antigos.
+
+O DPI de sessão (`liveDpi`) é independente do rascunho. O botão físico é acompanhado mesmo
+antes da primeira edição e enquanto outra memória está aberta. Reportes recebidos durante
+uma operação são reconciliados ao seu término; ecos antigos não substituem uma nova edição
+pendente. Uma troca física de memória interrompe os próximos eventos da prévia em andamento.
+
+A faixa de DPI é a do sensor do modelo, 100–45.000, conforme a
+[especificação oficial](https://www.rawmshop.com/pt/products/leviathan-v4), e não o mínimo/máximo
+dos estágios salvos em `cpi_l`. As notificações `0x00` e `0x06` atualizam o DPI, com X/Y
+decodificados separadamente quando empacotados.
+
+A validação automatizada cobre store, UI, leitura de retorno e eventos enviados pelo
+driver usando o WASM real; a alteração não foi validada por gravação em hardware nesta etapa.
 
 ## 6. O que o app ainda não sabe representar
 

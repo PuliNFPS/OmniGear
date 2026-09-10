@@ -1,5 +1,6 @@
 import type { Peripheral } from '@gearhub/shared';
-import { activeProfileName, profileSlots } from '../domain/settings';
+import { useEditorEntry } from '../app/useEditor';
+import { profileName, profileSlots } from '../domain/settings';
 import { useEditorStore } from '../store/editorStore';
 import { ConfirmDialog } from './ConfirmDialog';
 
@@ -17,7 +18,8 @@ export function ProfileLoadConfirm({
   onClose(): void;
 }) {
   const saveAndLoad = useEditorStore((state) => state.saveAndLoad);
-  const loadProfile = useEditorStore((state) => state.loadProfile);
+  const { editingProfileSlot } = useEditorEntry(device);
+  const discardAndLoad = useEditorStore((state) => state.discardAndLoad);
   const slot = profileSlots(device).find((item) => item.index === slotIndex);
   const targetName = slot?.name || `Slot ${slotIndex ?? ''}`;
 
@@ -28,7 +30,12 @@ export function ProfileLoadConfirm({
         if (!open) onClose();
       }}
       title={`Carregar ${targetName}?`}
-      description={`Há alterações não salvas no ${activeProfileName(device)}.`}
+      description={`Há alterações não salvas no ${profileName(device, editingProfileSlot)}.`}
+      note={
+        device.type === 'mouse'
+          ? 'O perfil será carregado para edição. O slot ativo no mouse não muda.'
+          : undefined
+      }
       actions={[
         { label: 'Cancelar', onSelect: () => undefined },
         {
@@ -41,7 +48,7 @@ export function ProfileLoadConfirm({
           label: 'Descartar e carregar',
           variant: 'default',
           onSelect: () => {
-            if (slotIndex !== null) void loadProfile(device, slotIndex);
+            if (slotIndex !== null) void discardAndLoad(device, slotIndex);
           },
         },
       ]}

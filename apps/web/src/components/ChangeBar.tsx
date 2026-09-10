@@ -9,7 +9,10 @@ interface ChangeBarProps {
   status: EditorStatus;
   changes: number;
   profileName: string;
+  /** Mouse flash destination, independent of the slot currently running. */
+  onboardSlot?: number;
   savedProfileName?: string;
+  stateRefreshFailed?: boolean;
   offline: boolean;
   /** Contextual guidance for the current screen, shown while editing. */
   hint?: string;
@@ -38,7 +41,9 @@ export function ChangeBar({
   status,
   changes,
   profileName,
+  onboardSlot,
   savedProfileName,
+  stateRefreshFailed,
   offline,
   hint,
   onDiscard,
@@ -47,8 +52,15 @@ export function ChangeBar({
   onReconnect,
 }: ChangeBarProps) {
   const saveButton = (disabled: boolean) => (
-    <Button key="save" onClick={onSave} disabled={disabled}>
-      Salvar no perfil
+    <Button
+      key="save"
+      className="h-auto min-h-9 max-w-full whitespace-normal"
+      onClick={onSave}
+      disabled={disabled}
+    >
+      {onboardSlot === undefined
+        ? `Salvar no ${profileName}`
+        : `Aplicar no onboard · Slot ${onboardSlot}`}
     </Button>
   );
 
@@ -94,11 +106,12 @@ export function ChangeBar({
           key: 'gravado',
           icon: <CircleCheck className="size-4" aria-hidden="true" />,
           title: `Alterações salvas no ${savedProfileName ?? profileName}`,
-          detail:
-            changes > 0
+          detail: stateRefreshFailed
+            ? 'Perfil salvo. Não foi possível confirmar o slot ativo; reconecte para atualizar.'
+            : changes > 0
               ? `O ${profileName} ainda tem ${describeChangeCount(changes)}.`
               : 'Nenhuma alteração pendente.',
-          actions: saveButton(changes === 0),
+          actions: saveButton(changes === 0 && onboardSlot === undefined),
         };
       case 'falha-gravacao':
       case 'falha-aplicacao':
@@ -108,7 +121,7 @@ export function ChangeBar({
           icon: <CircleAlert className="size-4 text-destructive" aria-hidden="true" />,
           title:
             status === 'falha-gravacao'
-              ? 'Não foi possível salvar.'
+              ? `Não foi possível salvar no ${savedProfileName ?? profileName}.`
               : 'Não foi possível aplicar os ajustes.',
           detail: 'Suas alterações foram preservadas.',
           actions: (
@@ -127,7 +140,7 @@ export function ChangeBar({
             muted: true,
             icon: <span className="size-1.5 rounded-full bg-strong" aria-hidden="true" />,
             title: 'Nenhuma alteração pendente.',
-            actions: saveButton(true),
+            actions: saveButton(onboardSlot === undefined),
           };
         }
         return {

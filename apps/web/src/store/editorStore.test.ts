@@ -196,13 +196,14 @@ describe('loading another profile', () => {
     expect(useEditorStore.getState().entries[device.id]).toBeUndefined();
   });
 
-  it('replaces the draft and marks the loaded slot as the one in use', async () => {
+  it('replaces the draft and selects the loaded slot for editing', async () => {
     const device = currentDevice();
     const loading = useEditorStore.getState().loadProfile(device, 3);
     await vi.runAllTimersAsync();
     await loading;
 
-    expect(currentDevice().activeProfileSlot).toBe(3);
+    expect(currentDevice().activeProfileSlot).toBe(1);
+    expect(useEditorStore.getState().entries[device.id].editingProfileSlot).toBe(3);
     expect(draftOf(device.id).pollingRate).toBe(500);
     const entry = useEditorStore.getState().entries[device.id];
     expect(countChanges(entry.saved, entry.draft)).toBe(0);

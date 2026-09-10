@@ -18,11 +18,13 @@ const NOTIFY_TYPE_MOUSE_POLLING = 0x01;
 const NOTIFY_TYPE_MOUSE_CPI2 = 0x06;
 /** The mappings each onboard slot holds, streamed unprompted after a query. */
 const NOTIFY_TYPE_MOUSE_CONFIG = 0x14;
+const NOTIFY_TYPE_MOUSE_ONBOARD_INDEX = 0x22;
 
 export type RawmNotification =
   | { kind: 'dpi'; value: number }
   | { kind: 'dpi-xy'; value: number }
   | { kind: 'polling'; value: number }
+  | { kind: 'onboard-index'; index: number }
   | { kind: 'onboard-config'; payload: Uint8Array };
 
 function isNotification(event: Uint8Array): boolean {
@@ -50,6 +52,8 @@ export function parseNotification(event: Uint8Array): RawmNotification | null {
     // Delimiters and entries alike; onboardConfig.ts assembles the stream.
     case NOTIFY_TYPE_MOUSE_CONFIG:
       return payload.length >= 1 ? { kind: 'onboard-config', payload } : null;
+    case NOTIFY_TYPE_MOUSE_ONBOARD_INDEX:
+      return payload.length >= 1 ? { kind: 'onboard-index', index: payload[0] } : null;
     default:
       return null;
   }
