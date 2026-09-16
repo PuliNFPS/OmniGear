@@ -1666,8 +1666,11 @@ git commit -m "feat: mover a decodificação de notificações RAWM para o núcl
 **Files:**
 
 - Delete: `apps/web/src/hardware/rawm/protocol.ts`, `apps/web/src/hardware/rawm/protocol.test.ts`
-- Modify: `apps/web/src/hardware/rawm/session.ts`, `notifications.ts`, `diagnostics.ts`, `writeProbe.ts`, `LeviathanV4Driver.ts`
+- Modify, código de produção: `apps/web/src/hardware/rawm/session.ts`, `notifications.ts`, `diagnostics.ts`, `writeProbe.ts`, `LeviathanV4Driver.ts`
+- Modify, testes que importam de `./protocol`: `connectLeviathanV4.test.ts`, `diagnostics.test.ts`, `LeviathanV4Driver.onboard.test.ts`, `LeviathanV4Driver.state.test.ts`, `onboardConfig.test.ts`, `onboardConfig.settings.test.ts`, `session.test.ts`, `writeProbe.test.ts`, `notifications.test.ts`, `vectors.test.ts`
 - Modify: `docs/superpowers/specs/2026-09-07-nucleo-rust-ponte-design.md`
+
+**Alcance medido em 2026-09-16:** são **15** arquivos importando de `./protocol`, não os 5 de produção. Os testes sobrevivem intactos às Tarefas 2 a 6 porque `protocol.ts` segue reexportando; só esta tarefa os obriga a mudar. O grep do Passo 2 é a fonte da verdade — se ele listar um arquivo que não está acima, reaponte-o do mesmo jeito.
 
 **Interfaces:**
 
