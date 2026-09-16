@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "crc16": [
+    {
+      "name": "valor de verificação CCITT",
+      "input": "313233343536373839",
+      "expected": "29b1"
+    }
+  ],
+  "envelope": [
+    {
+      "name": "comprimento de 12 bits no cabeçalho",
+      "input": "030015",
+      "crc": false,
+      "expected": "030315"
+    },
+    {
+      "name": "CRC little-endian em volta do evento já medido",
+      "input": "06003400000000",
+      "crc": true,
+      "expected": "030c24421d06073400000000"
+    }
+  ],
+  "queryEvent": [
+    {
+      "name": "consulta PC com timestamp de oito bytes",
+      "epochSeconds": 305419896,
+      "expected": "010d0300007856341200000000"
+    }
+  ]
+}

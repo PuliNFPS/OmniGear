@@ -22,5 +22,7 @@
     "apps/web/src/hardware/WebHidTransport.ts": ["files"],
     // Public while the store API is still being shaped.
     "apps/web/src/store/deviceStore.ts": ["types"],
+    // Test utility: interfaces exported for conformance vector tests.
+    "apps/web/src/test/vectors.ts": ["types"],
   },
 }
