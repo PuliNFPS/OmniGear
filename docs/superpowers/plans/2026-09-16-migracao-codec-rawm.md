@@ -565,10 +565,19 @@ export function rawmErrorMessage(code: string): string {
   return MESSAGES[code] ?? `Falha de protocolo RAWM: ${code}.`;
 }
 
-/** Reveste um erro vindo da ponte com o texto que a interface mostra. */
+/**
+ * Reveste um erro vindo da ponte com o texto que a interface mostra, sem
+ * perder o código.
+ *
+ * O código fica em `cause` de propósito: a mensagem é para o usuário, mas
+ * `subscribeToNotifications` precisa distinguir uma falha do montador de uma
+ * falha de decodificação, e o passo 5 vai precisar separar o erro da guarda de
+ * memória ativa de um erro de transporte. Descartar o código aqui fecharia essa
+ * porta em silêncio.
+ */
 export function asRawmError(error: unknown): Error {
   const code = error instanceof Error ? error.message : String(error);
-  return new Error(rawmErrorMessage(code));
+  return new Error(rawmErrorMessage(code), { cause: code });
 }
 ```
 
@@ -652,6 +661,8 @@ git commit -m "feat: mover o envelope e o CRC do RAWM para o núcleo"
 - Produces:
   - Rust: `frame_event(event: &[u8], virtual_mouse: bool) -> Vec<[u8; 64]>`; `decode_report_chunk(report: &[u8], virtual_mouse: bool) -> Result<Option<Vec<u8>>, RawmError>`.
   - TS: `frameEvent(event: ArrayLike<number>, virtualMouse: boolean): Uint8Array[]`; `decodeReportChunk(report: ArrayLike<number>, virtualMouse: boolean): Uint8Array | null`.
+
+**Por que só um dos dois invólucros tem `try`:** `frame_event` é infalível — ele recebe um evento que `with_protocol_envelope` já mediu e validou, e partir bytes em pedaços de tamanho fixo não tem caso de falha. `decode_report_chunk` recebe bytes de fora, então falha. Os chamadores (`writeProbe.ts`, `LeviathanV4Driver.ts`) usam os dois em par, e só o primeiro da dupla lança.
 
 - [ ] **Step 1: Escrever o teste Rust que falha**
 
@@ -1685,8 +1696,11 @@ Os casos de `protocol.test.ts` já vivem em `envelope.rs`, `framing.rs`, `assemb
 
 - [ ] **Step 4: Provar que nada em TypeScript ainda implementa o codec**
 
-Run: `grep -rn "0xffff\|crc\|0x80 | \|VIRTUAL_MOUSE_CHANNEL" apps/web/src/hardware/rawm/`
-Expected: nenhum resultado em código de produção. Qualquer ocorrência é implementação que sobreviveu e precisa sair.
+Run: `grep -rn "0x29b1\|0xf0) << 4\|PHYSICAL_PAYLOAD\|VIRTUAL_MOUSE_CHANNEL\|preâmbulo" apps/web/src/hardware/`
+Expected: nenhum resultado. Cada padrão é uma assinatura de uma parte do codec — a constante do CRC, o deslocamento do comprimento de 12 bits, os tamanhos de carga, o canal virtual e a mensagem do montador. Qualquer ocorrência é implementação que sobreviveu à migração.
+
+Run: `test ! -f apps/web/src/hardware/rawm/protocol.ts && echo removido`
+Expected: `removido`.
 
 - [ ] **Step 5: Rodar o gate completo**
 
