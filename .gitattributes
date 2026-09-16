@@ -1,0 +1,24 @@
+# Fim de linha normalizado no repositório e no disco.
+#
+# Sem isto, um checkout com `core.autocrlf=true` (o padrão do Git no Windows)
+# escreve CRLF, e o Prettier — configurado com `endOfLine: lf` — reprova
+# centenas de arquivos que ninguém tocou. O `pnpm verify` passava no CI, onde o
+# checkout é LF, e falhava na máquina de quem escreve o código.
+#
+# `text=auto eol=lf` diz as duas coisas: o git decide o que é texto, e texto vai
+# para o disco em LF em qualquer sistema.
+* text=auto eol=lf
+
+# Binários, para o git nunca tentar converter.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.wasm binary
+*.pdf binary
