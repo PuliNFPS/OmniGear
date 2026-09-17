@@ -2,6 +2,7 @@ import init, {
   buildQueryEvent as wasmBuildQueryEvent,
   core_version,
   decodeReportChunk as wasmDecodeReportChunk,
+  dpiAxes as wasmDpiAxes,
   encode_action as wasmEncodeAction,
   encode_config_reset as wasmEncodeConfigReset,
   encode_mouse_function as wasmEncodeMouseFunction,
@@ -10,6 +11,7 @@ import init, {
   frameEvent as wasmFrameEvent,
   is_wasm_available,
   isQueryResult as wasmIsQueryResult,
+  parseNotification as wasmParseNotification,
   queryJson as wasmQueryJson,
   RawEventAssembler as WasmRawEventAssembler,
   withProtocolEnvelope as wasmWithProtocolEnvelope,
@@ -211,6 +213,44 @@ export function decodeReportChunk(
   } catch (error) {
     throw asRawmError(error);
   }
+}
+
+/** O que o mouse anuncia por conta própria, sem que o app pergunte. */
+export type RawmNotification =
+  | { kind: 'dpi'; value: number }
+  | { kind: 'dpi-xy'; value: number }
+  | { kind: 'polling'; value: number }
+  | { kind: 'onboard-index'; index: number }
+  | { kind: 'onboard-config'; payload: Uint8Array };
+
+/**
+ * O núcleo carrega o enum com dados; a ponte wasm-bindgen o achata num
+ * `struct` de `kind`/`value`/`payload`. Esta função o remonta na união acima,
+ * para que nenhum consumidor perceba a travessia.
+ */
+export function parseNotification(event: Uint8Array): RawmNotification | null {
+  const decoded = wasmParseNotification(event);
+  if (!decoded) return null;
+  switch (decoded.kind) {
+    case 'dpi':
+      return { kind: 'dpi', value: decoded.value };
+    case 'dpi-xy':
+      return { kind: 'dpi-xy', value: decoded.value };
+    case 'polling':
+      return { kind: 'polling', value: decoded.value };
+    case 'onboard-index':
+      return { kind: 'onboard-index', index: decoded.value };
+    case 'onboard-config':
+      return { kind: 'onboard-config', payload: decoded.payload ?? new Uint8Array() };
+    default:
+      return null;
+  }
+}
+
+/** CPI2 empacota X nos 16 bits baixos e Y nos altos. */
+export function dpiAxes(value: number): { x: number; y: number } {
+  const [x, y] = wasmDpiAxes(value);
+  return { x, y };
 }
 
 /**

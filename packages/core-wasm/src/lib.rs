@@ -113,6 +113,71 @@ impl Default for WasmRawEventAssembler {
     }
 }
 
+/// O enum com dados não atravessa `wasm-bindgen`; esta é a forma achatada.
+/// `kind` vazio significa nenhuma notificação de interesse.
+#[wasm_bindgen]
+pub struct Notification {
+    kind: String,
+    value: u32,
+    payload: Option<Vec<u8>>,
+}
+
+#[wasm_bindgen]
+impl Notification {
+    #[wasm_bindgen(getter)]
+    pub fn kind(&self) -> String {
+        self.kind.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn value(&self) -> u32 {
+        self.value
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn payload(&self) -> Option<Vec<u8>> {
+        self.payload.clone()
+    }
+}
+
+#[wasm_bindgen(js_name = parseNotification)]
+pub fn parse_notification(event: &[u8]) -> Option<Notification> {
+    use rawm::RawmNotification as N;
+    rawm::parse_notification(event).map(|notification| match notification {
+        N::Dpi(value) => Notification {
+            kind: "dpi".into(),
+            value: u32::from(value),
+            payload: None,
+        },
+        N::DpiXy(value) => Notification {
+            kind: "dpi-xy".into(),
+            value,
+            payload: None,
+        },
+        N::Polling(value) => Notification {
+            kind: "polling".into(),
+            value: u32::from(value),
+            payload: None,
+        },
+        N::OnboardIndex(index) => Notification {
+            kind: "onboard-index".into(),
+            value: u32::from(index),
+            payload: None,
+        },
+        N::OnboardConfig(payload) => Notification {
+            kind: "onboard-config".into(),
+            value: 0,
+            payload: Some(payload),
+        },
+    })
+}
+
+#[wasm_bindgen(js_name = dpiAxes)]
+pub fn dpi_axes(value: u32) -> Vec<u32> {
+    let (x, y) = rawm::dpi_axes(value);
+    vec![u32::from(x), u32::from(y)]
+}
+
 #[wasm_bindgen]
 pub fn core_version() -> String {
     gearhub_core::core_version()

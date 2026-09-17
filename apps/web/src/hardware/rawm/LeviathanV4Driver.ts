@@ -26,7 +26,7 @@ import { subscribeToNotifications } from './notifications';
 import { OnboardConfigCollector, type OnboardSlotConfig } from './onboardConfig';
 import { frameEvent, withProtocolEnvelope } from './protocol';
 import { queryRawmDevice } from './session';
-import { dpiAxes } from './dpiValue';
+import { dpiAxes } from '../../core/coreBridge';
 
 const ACTION_SAVE_CONFIG_TO_FDS = 0x34;
 

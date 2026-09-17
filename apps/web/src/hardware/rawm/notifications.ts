@@ -1,64 +1,8 @@
-import { RawEventAssembler } from '../../core/coreBridge';
+import { RawEventAssembler, decodeReportChunk, parseNotification } from '../../core/coreBridge';
+import type { RawmNotification } from '../../core/coreBridge';
 import type { HardwareTransport } from '../WebHidTransport';
-import { decodeReportChunk } from './protocol';
 
-/**
- * The mouse reports its own changes.
- *
- * Cycling DPI with a button changes the device without the app asking, so
- * without listening the screen keeps showing the stage the mouse left behind.
- *
- * Layout and payloads follow the vendor library's notify handler: the event
- * carries the type at index 2 and the value from index 3, little endian.
- */
-
-const CMD_NOTIFY = 0x0b;
-const NOTIFY_TYPE_MOUSE_CPI = 0x00;
-const NOTIFY_TYPE_MOUSE_POLLING = 0x01;
-/** Independent axes pack X and Y into 32 bits. */
-const NOTIFY_TYPE_MOUSE_CPI2 = 0x06;
-/** The mappings each onboard slot holds, streamed unprompted after a query. */
-const NOTIFY_TYPE_MOUSE_CONFIG = 0x14;
-const NOTIFY_TYPE_MOUSE_ONBOARD_INDEX = 0x22;
-
-export type RawmNotification =
-  | { kind: 'dpi'; value: number }
-  | { kind: 'dpi-xy'; value: number }
-  | { kind: 'polling'; value: number }
-  | { kind: 'onboard-index'; index: number }
-  | { kind: 'onboard-config'; payload: Uint8Array };
-
-function isNotification(event: Uint8Array): boolean {
-  return (event[0] & 0x0f) === CMD_NOTIFY;
-}
-
-/** Returns null for notifications this app has no use for. */
-export function parseNotification(event: Uint8Array): RawmNotification | null {
-  if (!isNotification(event) || event.length < 3) return null;
-  const payload = event.slice(3);
-  const u16 = () => payload[0] | (payload[1] << 8);
-
-  switch (event[2]) {
-    case NOTIFY_TYPE_MOUSE_CPI:
-      return payload.length >= 2 ? { kind: 'dpi', value: u16() } : null;
-    case NOTIFY_TYPE_MOUSE_CPI2:
-      return payload.length >= 4
-        ? {
-            kind: 'dpi-xy',
-            value: (payload[0] | (payload[1] << 8) | (payload[2] << 16) | (payload[3] << 24)) >>> 0,
-          }
-        : null;
-    case NOTIFY_TYPE_MOUSE_POLLING:
-      return payload.length >= 2 ? { kind: 'polling', value: u16() } : null;
-    // Delimiters and entries alike; onboardConfig.ts assembles the stream.
-    case NOTIFY_TYPE_MOUSE_CONFIG:
-      return payload.length >= 1 ? { kind: 'onboard-config', payload } : null;
-    case NOTIFY_TYPE_MOUSE_ONBOARD_INDEX:
-      return payload.length >= 1 ? { kind: 'onboard-index', index: payload[0] } : null;
-    default:
-      return null;
-  }
-}
+export type { RawmNotification } from '../../core/coreBridge';
 
 /**
  * Listens for as long as the device stays connected. Reports that fail to

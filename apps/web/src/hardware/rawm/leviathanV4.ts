@@ -8,7 +8,7 @@ import type {
 } from '@gearhub/shared';
 import { LEVIATHAN_V4_LOD_LEVELS } from './leviathanV4Lod';
 import { createRPlusSettings } from '../../domain/mouseCapabilities';
-import { dpiAxes } from './dpiValue';
+import { dpiAxes } from '../../core/coreBridge';
 
 export const RAWM_VENDOR_ID = 0x1915;
 export const LEVIATHAN_V4_RECEIVER_PRODUCT_ID = 0x2346;
