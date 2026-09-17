@@ -117,4 +117,18 @@ mod tests {
             Err(RawmError::WrongChannel)
         );
     }
+
+    /// Só alcançável no canal virtual: o físico tem 63 bytes de carga e a
+    /// máscara de 0x3f cabe exatamente neles, então nenhum comprimento
+    /// declarado consegue exceder o que o relatório carrega.
+    #[test]
+    fn rejects_a_virtual_report_whose_declared_length_overruns_it() {
+        let mut report = [0u8; 64];
+        report[0] = VIRTUAL_MOUSE_CHANNEL;
+        report[1] = DATA_MARKER | 0x3f; // declara 63 bytes; só 62 cabem.
+        assert_eq!(
+            decode_report_chunk(&report, true),
+            Err(RawmError::TruncatedReport)
+        );
+    }
 }

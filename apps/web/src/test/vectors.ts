@@ -36,6 +36,9 @@ export function readProtocolVectors(): ProtocolVectors {
 }
 
 export function fromHex(value: string): Uint8Array {
+  if (value.length % 2 !== 0) {
+    throw new Error(`fromHex: comprimento ímpar (${value.length}): ${value}`);
+  }
   const bytes = value.match(/.{2}/g) ?? [];
   return Uint8Array.from(bytes.map((byte) => Number.parseInt(byte, 16)));
 }

@@ -35,3 +35,13 @@ describe('vetores de conformidade do protocolo RAWM', () => {
     expect(toHex(buildQueryEvent(epochSeconds))).toBe(expected);
   });
 });
+
+describe('fromHex', () => {
+  it('rejeita uma string hexadecimal de comprimento ímpar em vez de truncá-la', () => {
+    expect(() => fromHex('abc')).toThrow(/ímpar/);
+  });
+
+  it('aceita a string vazia', () => {
+    expect(fromHex('')).toEqual(new Uint8Array());
+  });
+});

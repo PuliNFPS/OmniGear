@@ -90,4 +90,19 @@ mod tests {
             Err(RawmError::EventTooShort)
         );
     }
+
+    /// Pina a fronteira de `MAX_EVENT_BYTES` para que um futuro deslizamento
+    /// `usize` → `u8` no cabeçalho seja pego aqui, não em produção.
+    #[test]
+    fn pins_the_four_thousand_ninety_five_byte_boundary() {
+        let mut at_limit = vec![0u8; 4095];
+        at_limit[0] = 0x03;
+        assert!(with_protocol_envelope(&at_limit, false).is_ok());
+
+        let over_limit = vec![0u8; 4096];
+        assert_eq!(
+            with_protocol_envelope(&over_limit, false),
+            Err(RawmError::EventTooLong)
+        );
+    }
 }

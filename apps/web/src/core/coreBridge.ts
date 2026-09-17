@@ -246,6 +246,11 @@ export function parseNotification(event: Uint8Array): RawmNotification | null {
     case 'onboard-index':
       return { kind: 'onboard-index', index: value };
     case 'onboard-config':
+      // The core's wasm-bindgen return type is `Uint8Array | undefined` because the flattened
+      // array slot is optional in general, but for `onboard-config` the core only ever produces
+      // this variant from a non-empty 0x14 payload (`notify.rs`'s `NOTIFY_MOUSE_CONFIG` arm
+      // requires `!payload.is_empty()`), so `payload` is never actually `undefined` here. The
+      // fallback is not a live path; it exists to satisfy the wider type.
       return { kind: 'onboard-config', payload: payload ?? new Uint8Array() };
     default:
       return null;

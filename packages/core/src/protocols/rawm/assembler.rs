@@ -143,4 +143,19 @@ mod tests {
         let stream = event(0x02, &[7, 7]);
         assert_eq!(assembler.push(&stream), Ok(vec![stream[4..].to_vec()]));
     }
+
+    /// Comportamento preservado do TypeScript apagado, não uma escolha desta
+    /// migração: um pedaço que corrompe depois de completar um evento válido
+    /// perde esse evento também, porque `push` devolve o erro antes de
+    /// devolver o que já tinha montado localmente. Se isso deve mudar é
+    /// decisão do passo que migra o dump onboard, onde vários eventos por
+    /// pedaço realmente acontecem.
+    #[test]
+    fn loses_an_already_collected_event_when_the_same_chunk_corrupts_after_it() {
+        let mut assembler = RawEventAssembler::new();
+        let mut chunk = event(0x02, &[1, 2, 3]);
+        chunk.extend_from_slice(&[0, 0, 0, 0]); // não é o preâmbulo
+
+        assert_eq!(assembler.push(&chunk), Err(RawmError::MissingPreamble));
+    }
 }
