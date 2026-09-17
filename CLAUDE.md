@@ -28,14 +28,35 @@ O teste é uma pergunta: **isso mudaria se a casca mudasse?** Se sim, é casca.
 **Regra:** comportamento novo de dispositivo entra no Rust. Uma tarefa de dispositivo que só
 produza `.ts` merece a pergunta — por que isto não está no núcleo?
 
-**Estado real:** a migração ainda não aconteceu. O protocolo RAWM vive hoje em
-`apps/web/src/hardware/`, e o núcleo tem só os encoders. Enquanto isso não fecha, existem
-exceções — mas elas devem ser declaradas, não o padrão. Ver
+**Estado real (2026-09-17):** o **codec** migrou — envelope, CRC16, enquadramento de 64 bytes,
+montador de eventos, consulta e decodificação de notificações vivem em
+`packages/core/src/protocols/rawm/`, e `apps/web/src/hardware/rawm/protocol.ts` não existe
+mais. Todo o caminho de leitura está confirmado em hardware.
+
+Ainda em TypeScript, com passo marcado no spec: `leviathanV4Keys.ts` (passo 2),
+`mouseParamSnapshot.ts` e a metade de `leviathanV4.ts` que descreve o dispositivo (passo 3),
+`onboardConfig.ts` (passo 4), a sessão de `LeviathanV4Driver.ts` e a decodificação de
+`session.ts` (passo 5).
+
+Duas duplicatas de protocolo sobrevivem **de propósito e declaradas**: `packedDpi`
+(`mouseParamSnapshot.ts`), inverso do `dpi_axes` do núcleo, fecha no passo 3; e
+`declaredLength` (`onboardConfig.ts`), fecha no passo 4. Exceções devem ser declaradas assim
+— nomeadas no spec, com data para sair —, nunca inferidas. Ver
 `docs/superpowers/specs/2026-09-07-nucleo-rust-ponte-design.md`.
 
 Três regras que o núcleo não quebra, porque o stack do desktop é desconhecido: **não faz
 I/O**, **é síncrono**, **não conhece `wasm-bindgen`** (a macro fica num crate de ponte, senão
 o núcleo é moldado pelo navegador e perde `Result` e enums com dados).
+
+Duas convenções que já existem — use, não reinvente:
+
+- **Erro novo que atravessa a ponte:** variante em `RawmError`, código estável em `code()`,
+  texto em `apps/web/src/core/rawmError.ts`. A ponte converte com `js_error`, a casca com
+  `asRawmError`, que preserva o código em `cause`. O núcleo nunca carrega string de interface.
+- **Encoder ou decoder novo:** o vetor de conformidade vai em
+  `packages/core/vectors/rawm-protocol.json`, lido pelo `cargo test` **e** pelo `vitest`. Os
+  dois lados têm guarda contra uma seção vazia passar à toa; um vetor que só um lado lê não é
+  fonte compartilhada.
 
 ## O núcleo é gerado, nunca versionado
 
@@ -51,11 +72,15 @@ qualquer `package.json` que encontre no diretório de saída.
 - **Nunca commitar** o que o wasm-pack gera.
 - Os testes exercitam o WASM real, então um encoder que divergir entre o Rust e o que o app
   espera falha aqui, não em produção.
-- Duas coisas no `turbo` existem para que uma mudança no Rust nunca seja verificada por cache
-  velho — **não remova nenhuma**: `cache: false` no build do `gearhub-core-wasm`, e o
-  devDependency `@gearhub/core` que dá ao grafo do turbo a aresta até `packages/core/src`.
-  Sem a segunda, editar o Rust deixa `@gearhub/web:test` em cache hit e a suíte verifica um
-  `.wasm` velho.
+- Três coisas no `turbo` existem para que uma mudança no Rust nunca seja verificada por cache
+  velho — **não remova nenhuma**: `cache: false` no build do `gearhub-core-wasm`; o
+  devDependency `@gearhub/core` que dá ao grafo do turbo a aresta até `packages/core/src`; e
+  os `inputs` de `lint` e `test` em `packages/core/turbo.json`, que apontam para
+  `packages/core-wasm/src`. Sem a segunda, editar o Rust deixa `@gearhub/web:test` em cache
+  hit e a suíte verifica um `.wasm` velho. Sem a terceira, editar **só a ponte** deixa
+  `@gearhub/core:lint` em cache hit e o clippy nunca vê o código novo — `@gearhub/core` roda
+  `cargo clippy --workspace`, que cobre os dois crates, mas o turbo chaveia o cache pelos
+  arquivos de `packages/core`, e a ponte está do lado errado da aresta.
 
 ## Verificação
 
