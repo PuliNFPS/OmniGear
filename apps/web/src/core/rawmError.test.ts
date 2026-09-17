@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { asRawmError } from './rawmError';
 import { parseQueryJson, withProtocolEnvelope } from './coreBridge';
 
 /**
@@ -6,9 +7,9 @@ import { parseQueryJson, withProtocolEnvelope } from './coreBridge';
  * atravessa a ponte como `JsError`, chega aqui como `Error` cuja mensagem é o
  * código estável, e `asRawmError` a reveste com o texto em português sem
  * perder o código em `cause`. Um erro de digitação em qualquer uma das nove
- * strings de `RawmError::code()` cairia no fallback genérico
- * `Falha de protocolo RAWM: <code>.` sem que nenhuma suíte notasse — este
- * teste é o que notaria.
+ * strings de `RawmError::code()` deixaria de bater com `MESSAGES` e o erro
+ * atravessaria sem tradução, com o código cru como mensagem — sem que nenhuma
+ * suíte notasse. Este teste é o que notaria.
  */
 describe('erro RAWM através da ponte', () => {
   it('chega como Error com a mensagem traduzida e o código em cause', () => {
@@ -78,5 +79,22 @@ describe('erro RAWM através da ponte', () => {
     const error = thrown as Error;
     expect(error.message).toBe('Resposta RAWM declarou comprimento inválido.');
     expect(error.cause).toBe('invalid-length');
+  });
+
+  /**
+   * Um `TypeError` de fora do núcleo — uma chamada antes do `init()`, uma
+   * falha de interop do Vite — não é um `RawmError`. Disfarçá-lo como falha
+   * de protocolo foi o bug real da Tarefa 2: o texto mostrado ao usuário era
+   * `Falha de protocolo RAWM: (0 , __vite_…`, com a mensagem original e o
+   * stack perdidos.
+   */
+  it('deixa um erro que não é do núcleo atravessar intacto', () => {
+    const original = new TypeError('(0 , __vite_ssr_import_0__.default) is not a function');
+
+    const wrapped = asRawmError(original);
+
+    expect(wrapped).toBe(original);
+    expect(wrapped.message).toBe(original.message);
+    expect(wrapped.stack).toBe(original.stack);
   });
 });

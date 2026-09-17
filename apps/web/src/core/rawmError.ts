@@ -17,13 +17,15 @@ const MESSAGES: Record<string, string> = {
   'invalid-utf8': 'Resposta RAWM não é texto válido.',
 };
 
-function rawmErrorMessage(code: string): string {
-  return MESSAGES[code] ?? `Falha de protocolo RAWM: ${code}.`;
-}
-
 /**
- * Reveste um erro vindo da ponte com o texto que a interface mostra, sem
- * perder o código.
+ * Reveste um erro do núcleo com o texto que a interface mostra, sem perder o
+ * código — e só o do núcleo. Uma mensagem que não está em `MESSAGES` não é um
+ * `RawmError`: é um `TypeError` de uma chamada antes do `init()`, uma falha de
+ * interop do Vite, um `RangeError` de `BigInt` sobre um epoch fracionário.
+ * Disfarçar esse erro como falha de protocolo destruiria a mensagem original
+ * e o stack — foi o que aconteceu na Tarefa 2, onde o texto mostrado ao
+ * usuário era `Falha de protocolo RAWM: (0 , __vite_…`. Esse erro atravessa
+ * intacto.
  *
  * O código fica em `cause` de propósito: a mensagem é para o usuário, mas
  * `subscribeToNotifications` precisa distinguir uma falha do montador de uma
@@ -33,5 +35,6 @@ function rawmErrorMessage(code: string): string {
  */
 export function asRawmError(error: unknown): Error {
   const code = error instanceof Error ? error.message : String(error);
-  return new Error(rawmErrorMessage(code), { cause: code });
+  if (!(code in MESSAGES)) return error instanceof Error ? error : new Error(code);
+  return new Error(MESSAGES[code], { cause: code });
 }
