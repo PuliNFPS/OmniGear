@@ -1699,18 +1699,27 @@ Os casos de `protocol.test.ts` já vivem em `envelope.rs`, `framing.rs`, `assemb
 
 - [ ] **Step 4: Provar que nada em TypeScript ainda implementa o codec**
 
-Run: `grep -rn "0x29b1\|0xf0) << 4\|PHYSICAL_PAYLOAD\|VIRTUAL_MOUSE_CHANNEL\|preâmbulo" apps/web/src/hardware/`
-Cada padrão é uma assinatura de uma parte do codec — a constante do CRC, o deslocamento do comprimento de 12 bits, os tamanhos de carga, o canal virtual e a mensagem do montador.
+Run: `grep -rn "0x29b1\|0xf0) << 4\|0x80 |\|>>> 16\|<< 16\|0xc0\|preâmbulo" apps/web/src/hardware/`
+Cada padrão é uma assinatura de uma parte do codec — a constante do CRC, o deslocamento do comprimento de 12 bits, o marcador de dado do enquadramento, o empacotamento e o desempacotamento de CPI2, o canal virtual e a mensagem do montador.
 
-**Corrigido em 2026-09-17:** este passo dizia "Expected: nenhum resultado", e isso era falso — o grep **não pode** dar vazio. Rodado ao final da migração, ele devolve cinco ocorrências, e nenhuma é implementação do codec que sobreviveu:
+**Corrigido em 2026-09-17:** este passo dizia "Expected: nenhum resultado", e isso era falso — o grep **não pode** dar vazio. A primeira correção trocou os nomes `VIRTUAL_MOUSE_CHANNEL`/`PHYSICAL_PAYLOAD` (que só existiam dentro do arquivo que esta tarefa apaga, e por isso nunca poderiam bater de novo) por valores, mas o valor escolhido para CPI2 foi `>>> 16` — o deslocamento à direita do split little-endian genérico — quando o empacotamento de CPI2 desloca à **esquerda** (`<< 16`). Com esse buraco a duplicata de `packedDpi` (ver `## Duplicata declarada no caminho de escrita` no spec) também não aparecia, do mesmo jeito que a duplicata de enquadramento em `LeviathanV4Driver.onboard.test.ts` não aparecia com os nomes antigos. Esta versão soma `0x80 |` (o marcador de dado que a duplicata de enquadramento reproduzia) e `<< 16` aos padrões.
 
-| ocorrência                      | o que é                                                                                                                                         |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `diagnostics.test.ts:237`       | assere que a mensagem de erro contém "preâmbulo" — é o contrato da casca, e deve existir                                                        |
-| `onboardConfig.ts:53`           | `declaredLength()`, uma segunda implementação do comprimento de 12 bits em código de produção — **exceção declarada**, migra no passo 4 do spec |
-| `writeProbe.test.ts:54,129,182` | o mesmo cálculo repetido em três auxiliares de teste — **não coberto por nenhuma declaração**                                                   |
+Rodado ao final da onda de correções finais — com a duplicata de enquadramento removida e a de `writeProbe.test.ts` reduzida a um helper — o grep devolve dez ocorrências:
 
-A expectativa correta não é "zero", é: **toda ocorrência tem de ser nomeada e justificada**. Rode o grep, mostre a saída, e reconcilie cada linha. Uma etapa de verificação que não pode passar é pior que nenhuma, porque convida a ser pulada — foi o que aconteceu.
+| ocorrência                      | o que é                                                                                                                                             |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `connectLeviathanV4.test.ts:66` | lê o primeiro byte de um relatório já produzido para escolher qual fixture responder — leitura, não reimplementação                                 |
+| `connectLeviathanV4.test.ts:92` | assere que o relatório enviado usa o canal virtual — asserção sobre a saída da produção                                                             |
+| `diagnostics.test.ts:68`        | a mesma leitura do byte de canal, para decidir como interpretar o cenário do teste                                                                  |
+| `diagnostics.test.ts:182`       | a mesma leitura do byte de canal, para decidir o deslocamento do payload numa asserção                                                              |
+| `diagnostics.test.ts:237`       | assere que a mensagem de erro contém "preâmbulo" — é o contrato da casca, e deve existir                                                            |
+| `LeviathanV4Driver.test.ts:71`  | assere que todo relatório enviado usa o canal virtual — asserção sobre a saída da produção                                                          |
+| `mouseParamSnapshot.ts:100`     | `pushU32`, split little-endian genérico usado por todo campo de 32 bits do snapshot — parte do mesmo arquivo que migra inteiro no passo 3           |
+| `mouseParamSnapshot.ts:142`     | `packedDpi`, o inverso exato de `dpi_axes` — **duplicata declarada no caminho de escrita**, ver `## Duplicata declarada…` no spec; fecha no passo 3 |
+| `onboardConfig.ts:53`           | `declaredLength()`, uma segunda implementação do comprimento de 12 bits em código de produção — **exceção declarada**, migra no passo 4 do spec     |
+| `writeProbe.test.ts:27`         | o mesmo cálculo, agora num único helper de teste em vez de três cópias                                                                              |
+
+A expectativa correta não é "zero", é: **toda ocorrência tem de ser nomeada e justificada**. Rode o grep, mostre a saída, e reconcilie cada linha. Uma etapa de verificação que não pode passar é pior que nenhuma, porque convida a ser pulada — foi o que aconteceu duas vezes seguidas aqui.
 
 Run: `test ! -f apps/web/src/hardware/rawm/protocol.ts && echo removido`
 Expected: `removido`.
