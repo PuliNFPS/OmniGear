@@ -43,16 +43,6 @@ mod tests {
     use crate::protocols::rawm::with_protocol_envelope;
 
     #[test]
-    fn builds_a_deterministic_pc_query_with_an_eight_byte_timestamp() {
-        assert_eq!(
-            build_query_event(0x12345678),
-            Ok(vec![
-                0x01, 0x0d, 0x03, 0x00, 0x00, 0x78, 0x56, 0x34, 0x12, 0, 0, 0, 0
-            ])
-        );
-    }
-
-    #[test]
     fn recognises_only_the_query_result_command() {
         assert!(is_query_result(&[0x02, 0x02]));
         assert!(!is_query_result(&[0x0b, 0x02]));

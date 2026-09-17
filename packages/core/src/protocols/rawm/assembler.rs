@@ -35,9 +35,10 @@ impl RawEventAssembler {
                 break;
             }
 
-            // `MINIMUM_FRAME` guarantees at least `HEADER_BYTES` (2) bytes
-            // past the preamble, which is `event_length`'s documented
-            // precondition.
+            // `event_length` is total and never panics on a short slice, so
+            // this call needs no precondition. `MINIMUM_FRAME` still matters
+            // here: it is what lets the two bytes past the preamble be a
+            // real header instead of a read past the end of a short frame.
             let declared = event_length(&self.bytes[PREAMBLE.len()..]);
             if declared < HEADER_BYTES {
                 self.reset();

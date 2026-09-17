@@ -12,20 +12,14 @@ import { resolve } from 'node:path';
  */
 const VECTORS = '../../packages/core/vectors/rawm-protocol.json';
 
-export interface Crc16Vector {
-  name: string;
-  input: string;
-  expected: string;
-}
-
-export interface EnvelopeVector {
+interface EnvelopeVector {
   name: string;
   input: string;
   crc: boolean;
   expected: string;
 }
 
-export interface QueryEventVector {
+interface QueryEventVector {
   name: string;
   epochSeconds: number;
   expected: string;
@@ -33,7 +27,6 @@ export interface QueryEventVector {
 
 export interface ProtocolVectors {
   version: number;
-  crc16: Crc16Vector[];
   envelope: EnvelopeVector[];
   queryEvent: QueryEventVector[];
 }

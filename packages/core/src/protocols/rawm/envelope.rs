@@ -7,11 +7,15 @@ const MAX_EVENT_BYTES: usize = 0x0fff;
 
 /// O comprimento declarado, lido dos dois bytes de cabeçalho.
 ///
-/// Total: um evento mais curto que 2 bytes lê `0` no lugar do byte ausente,
-/// em vez de estourar o índice. Isso não esconde um evento malformado — um
-/// comprimento zerado falha a checagem `declared < HEADER_BYTES` do
-/// montador, ou a checagem `event.len() != event_length(event)` de
-/// `query_json`, do mesmo jeito que o TypeScript substituído falhava.
+/// Total: nunca estoura índice, mesmo com um `event` mais curto que 2
+/// bytes — o byte ausente lê `0` em vez de entrar em pânico. Isso não
+/// garante um resultado zerado (um único byte com o nibble alto ligado
+/// ainda produz um comprimento diferente de zero); a garantia é só que a
+/// função sempre devolve. Um `event` curto o bastante para faltar
+/// cabeçalho de qualquer forma falha as checagens de comprimento a jusante
+/// — `declared < HEADER_BYTES` no montador, ou
+/// `event.len() != event_length(event)` em `query_json` — do mesmo jeito
+/// que o TypeScript substituído falhava.
 pub(crate) fn event_length(event: &[u8]) -> usize {
     let high = *event.first().unwrap_or(&0);
     let low = *event.get(1).unwrap_or(&0);
@@ -56,6 +60,12 @@ pub fn with_protocol_envelope(source: &[u8], use_crc: bool) -> Result<Vec<u8>, R
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn event_length_is_total_for_a_slice_too_short_for_a_header() {
+        assert_eq!(event_length(&[]), 0);
+        assert_eq!(event_length(&[0xff]), 0x0f00);
+    }
 
     #[test]
     fn writes_the_twelve_bit_length_into_the_header() {

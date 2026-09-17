@@ -2,7 +2,8 @@
 ///
 /// Privado ao crate de propósito: quem precisa dele é o envelope, e expor a
 /// rotina convidaria a uma segunda chamada fora dele. O valor de verificação
-/// CCITT vive nos vetores de conformidade.
+/// CCITT vive só no teste abaixo — não em `vectors/rawm-protocol.json`, que
+/// nenhum dos dois lados conseguiria ler daqui (ver o comentário do teste).
 pub(crate) fn crc16(data: &[u8]) -> u16 {
     let mut crc: u16 = 0xffff;
     for &value in data {
@@ -19,6 +20,13 @@ pub(crate) fn crc16(data: &[u8]) -> u16 {
 mod tests {
     use super::*;
 
+    /// O valor de verificação CCITT já viveu também em
+    /// `vectors/rawm-protocol.json`, mas nenhum dos dois lados conseguia
+    /// lê-lo de lá: `crc16` é `pub(crate)`, então `tests/vectors.rs` (um
+    /// teste de integração, fora do crate) não alcança a função, e o
+    /// TypeScript nunca teve acesso a ela. Um vetor que ninguém lê não é uma
+    /// fonte compartilhada — por isso ele foi removido do arquivo, e esta
+    /// asserção é a única casa do valor agora.
     #[test]
     fn matches_the_ccitt_check_value() {
         assert_eq!(crc16(b"123456789"), 0x29b1);
