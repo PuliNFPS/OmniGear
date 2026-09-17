@@ -19,6 +19,15 @@ pub fn is_query_result(event: &[u8]) -> bool {
 }
 
 /// O texto JSON que o evento carrega, sem o terminador nulo do firmware.
+///
+/// Estrito: uma carga que não é UTF-8 válido devolve `Err(RawmError::InvalidUtf8)`, ao
+/// contrário do `parseQueryJson` em TypeScript que este código substituiu, que decodificava
+/// com `new TextDecoder()` — não-fatal por padrão, substituindo o byte inválido por U+FFFD e
+/// deixando o `JSON.parse` seguir. A troca foi deliberada, não um acidente de porte: conectar a
+/// um dispositivo cuja identidade não pôde ser lida corretamente é pior do que recusar, porque
+/// um `dn` corrompido alimentaria o nome do dispositivo, o casamento no registro e o perfil que
+/// o usuário salva. Ver `# Mudanças de comportamento deliberadas` em
+/// `docs/superpowers/specs/2026-09-07-nucleo-rust-ponte-design.md`.
 pub fn query_json(event: &[u8]) -> Result<String, RawmError> {
     if event.len() < 2 || event.len() != event_length(event) {
         return Err(RawmError::InvalidLength);
@@ -72,5 +81,14 @@ mod tests {
     fn rejects_an_event_that_is_not_a_query_result() {
         let event = with_protocol_envelope(&[0x0b, 0, 0x00], false).expect("válido");
         assert_eq!(query_json(&event), Err(RawmError::NotAQueryResult));
+    }
+
+    /// Pina a troca deliberada por um comportamento estrito: o `TextDecoder` que este código
+    /// substituiu era não-fatal e substituía o byte inválido por U+FFFD. Mesmos bytes do teste
+    /// de ponta a ponta em `apps/web/src/core/rawmError.test.ts`.
+    #[test]
+    fn rejects_a_payload_that_is_not_valid_utf8() {
+        let event = with_protocol_envelope(&[0x02, 0, 0xff, 0xfe], false).expect("válido");
+        assert_eq!(query_json(&event), Err(RawmError::InvalidUtf8));
     }
 }

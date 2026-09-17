@@ -447,6 +447,51 @@ A distinção que sustenta a exceção: a sonda é independente **no que observa
 **no que envia**. Uma sonda que envia bytes diferentes do driver não é uma segunda opinião; é
 um segundo protocolo.
 
+## Duplicata declarada no caminho de escrita — `packedDpi`
+
+O núcleo tem `dpi_axes` (`packages/core/src/protocols/rawm/notify.rs`), que **desempacota**
+CPI2: X nos 16 bits baixos, Y nos altos. O inverso exato — empacotar X e Y de volta em 32 bits
+para escrever — continua em TypeScript, `packedDpi` em
+`apps/web/src/hardware/rawm/mouseParamSnapshot.ts:141-143`.
+
+Isso divide um formato de fio simétrico entre os dois lados da fronteira, no **caminho de
+escrita**. Cada decisão foi localmente certa: `dpi_axes` migrou porque `dpiValue.ts` está
+nomeado no passo 1; `packedDpi` mora num arquivo que pertence ao passo 3. Juntas, elas deixam
+a mesma conta — empacotar/desempacotar CPI2 — feita por duas implementações, sem que nenhum
+passo tenha declarado a divisão.
+
+**Não migra agora.** Puxar `mouseParamSnapshot.ts` para o passo 1 faria parte do passo 3 por
+antecipação, e o passo 1 está corretamente restrito a `protocol.ts`, `parseNotification` e
+`dpiValue.ts` (ver `## Ordem corrigida`). Esta seção é a declaração que faltava, não uma
+mudança de escopo: `packedDpi` fecha quando o passo 3 migrar `mouseParamSnapshot.ts` inteiro
+(ver `## Inventário corrigido`). Até lá, as duas metades concordam só porque a mesma pessoa
+escreveu as duas — nenhum teste ou vetor de conformidade cobre a direção de escrita de CPI2,
+então uma delas pode divergir da outra sem que nada em `pnpm verify` note.
+
+## Mudanças de comportamento deliberadas
+
+### UTF-8 estrito em `query_json`
+
+`packages/core/src/protocols/rawm/query.rs` usa `core::str::from_utf8`, que **rejeita** bytes
+inválidos. O `parseQueryJson` apagado usava `new TextDecoder()`, que por padrão é não-fatal e
+substitui o byte inválido por U+FFFD.
+
+**Antes:** um byte não-UTF-8 perdido na JSON de identidade virava um caractere de substituição,
+o `JSON.parse` seguia normalmente, e o dispositivo conectava com um `dn` levemente errado.
+**Agora:** falha dura, `Resposta RAWM não é texto válido.`, e o dispositivo não conecta.
+
+**Decisão:** manter o comportamento estrito. Conectar a um dispositivo cuja identidade não pôde
+ser lida corretamente é pior do que recusar — um `dn` corrompido alimentaria o nome do
+dispositivo, o casamento no registro e o perfil que o usuário salva. Mas ninguém escolheu isso
+deliberadamente na migração: a mudança veio de trocar `TextDecoder` por `core::str::from_utf8`
+sem que a diferença de comportamento fosse discutida, nenhum teste a fixava, e a carga da
+identidade é texto escrito pelo firmware que este projeto só viu vindo de um único dispositivo.
+Um teste em `query.rs` agora fixa o caso (`query_json` sobre uma carga com um byte inválido
+devolve `Err(RawmError::InvalidUtf8)`), e o comentário de documentação de `query_json` registra
+a escolha. É a única divergência de comportamento nesta etapa que firmware real pode expor e
+que nenhuma suíte de vetores cobre — os vetores comparam bytes, não a leniência de decodificação
+de texto.
+
 ## Decisão 2 — `leviathanV4.ts` é dividido agora
 
 O arquivo mistura os dois lados da fronteira, e a costura é limpa.
