@@ -1,3 +1,4 @@
+import { decodeReportChunk, frameEvent } from '../../core/coreBridge';
 import type { BrowserHidApi, BrowserHidDevice } from '../deviceDiscovery';
 import { matchDeviceDefinition } from '../deviceRegistry';
 import { WebHidTransport, type HardwareTransport } from '../WebHidTransport';
@@ -8,14 +9,7 @@ import {
   RAWM_VENDOR_ID,
 } from './leviathanV4';
 import { parseMouseParamState, type RawmMouseParamState } from './mouseParamSnapshot';
-import {
-  RawEventAssembler,
-  buildQueryEvent,
-  decodeReportChunk,
-  frameEvent,
-  isQueryResult,
-  parseQueryJson,
-} from './protocol';
+import { RawEventAssembler, buildQueryEvent, isQueryResult, parseQueryJson } from './protocol';
 
 /**
  * Read-only bring-up probe for the RAWM receiver.

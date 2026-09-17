@@ -1,10 +1,12 @@
 import init, {
   core_version,
+  decodeReportChunk as wasmDecodeReportChunk,
   encode_action as wasmEncodeAction,
   encode_config_reset as wasmEncodeConfigReset,
   encode_mouse_function as wasmEncodeMouseFunction,
   encode_mouse_key as wasmEncodeMouseKey,
   encode_mouse_param_snapshot as wasmEncodeMouseParamSnapshot,
+  frameEvent as wasmFrameEvent,
   is_wasm_available,
   withProtocolEnvelope as wasmWithProtocolEnvelope,
 } from 'gearhub-core-wasm';
@@ -161,6 +163,21 @@ export function encodeMouseFunction(
 export function withProtocolEnvelope(source: ArrayLike<number>, useCrc: boolean): Uint8Array {
   try {
     return wasmWithProtocolEnvelope(copyBytes(source), useCrc);
+  } catch (error) {
+    throw asRawmError(error);
+  }
+}
+
+export function frameEvent(event: ArrayLike<number>, virtualMouse: boolean): Uint8Array[] {
+  return wasmFrameEvent(copyBytes(event), virtualMouse) as Uint8Array[];
+}
+
+export function decodeReportChunk(
+  report: ArrayLike<number>,
+  virtualMouse: boolean,
+): Uint8Array | null {
+  try {
+    return wasmDecodeReportChunk(copyBytes(report), virtualMouse) ?? null;
   } catch (error) {
     throw asRawmError(error);
   }

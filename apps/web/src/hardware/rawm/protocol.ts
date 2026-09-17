@@ -1,13 +1,9 @@
 import { withProtocolEnvelope } from '../../core/coreBridge';
 
-export { withProtocolEnvelope };
+export { decodeReportChunk, frameEvent, withProtocolEnvelope } from '../../core/coreBridge';
 
 const CMD_QUERY = 0x01;
 const OS_PC = 0x03;
-const REPORT_BYTES = 64;
-const PHYSICAL_PAYLOAD_BYTES = 63;
-const VIRTUAL_PAYLOAD_BYTES = 62;
-const VIRTUAL_MOUSE_CHANNEL = 0xc0;
 
 function eventLength(event: Uint8Array): number {
   return ((event[0] & 0xf0) << 4) | event[1];
@@ -20,36 +16,6 @@ export function buildQueryEvent(epochSeconds = Math.floor(Date.now() / 1000)): U
     bytes.push(Number((timestamp >> shift) & 0xffn));
   }
   return withProtocolEnvelope(bytes, false);
-}
-
-export function frameEvent(event: Uint8Array, virtualMouse: boolean): Uint8Array[] {
-  const payloadBytes = virtualMouse ? VIRTUAL_PAYLOAD_BYTES : PHYSICAL_PAYLOAD_BYTES;
-  const reports: Uint8Array[] = [];
-  for (let offset = 0; offset < event.length; offset += payloadBytes) {
-    const chunk = event.slice(offset, offset + payloadBytes);
-    const report = new Uint8Array(REPORT_BYTES);
-    const headerIndex = virtualMouse ? 1 : 0;
-    if (virtualMouse) report[0] = VIRTUAL_MOUSE_CHANNEL;
-    report[headerIndex] = 0x80 | chunk.length;
-    report.set(chunk, headerIndex + 1);
-    reports.push(report);
-  }
-  return reports;
-}
-
-export function decodeReportChunk(report: Uint8Array, virtualMouse: boolean): Uint8Array | null {
-  const headerIndex = virtualMouse ? 1 : 0;
-  if (report.length !== REPORT_BYTES) throw new RangeError('Relatório RAWM deve ter 64 bytes.');
-  if (virtualMouse && report[0] !== VIRTUAL_MOUSE_CHANNEL) {
-    throw new Error('Relatório não pertence ao canal virtual do mouse.');
-  }
-  const header = report[headerIndex];
-  // The receiver interleaves frames of its own without the data marker. They
-  // are not corruption, so they are skipped rather than failing the exchange.
-  if ((header & 0x80) === 0) return null;
-  const length = header & 0x3f;
-  if (length > report.length - headerIndex - 1) throw new Error('Relatório RAWM truncado.');
-  return report.slice(headerIndex + 1, headerIndex + 1 + length);
 }
 
 export class RawEventAssembler {

@@ -3,6 +3,7 @@ import {
   encodeAction,
   encodeConfigReset,
   encodeMouseParamSnapshot,
+  frameEvent,
   withProtocolEnvelope,
 } from '../../core/coreBridge';
 import type { BrowserHidDevice } from '../deviceDiscovery';
@@ -14,7 +15,6 @@ import {
   parseMouseParamState,
   type RawmMouseParamState,
 } from './mouseParamSnapshot';
-import { frameEvent } from './protocol';
 
 /**
  * Smallest possible write, for confirming the binary parameter body against

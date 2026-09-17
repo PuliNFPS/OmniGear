@@ -15,6 +15,19 @@ pub fn with_protocol_envelope(source: &[u8], use_crc: bool) -> Result<Vec<u8>, J
     rawm::with_protocol_envelope(source, use_crc).map_err(js_error)
 }
 
+#[wasm_bindgen(js_name = frameEvent)]
+pub fn frame_event(event: &[u8], virtual_mouse: bool) -> js_sys::Array {
+    rawm::frame_event(event, virtual_mouse)
+        .into_iter()
+        .map(|report| js_sys::Uint8Array::from(&report[..]))
+        .collect()
+}
+
+#[wasm_bindgen(js_name = decodeReportChunk)]
+pub fn decode_report_chunk(report: &[u8], virtual_mouse: bool) -> Result<Option<Vec<u8>>, JsError> {
+    rawm::decode_report_chunk(report, virtual_mouse).map_err(js_error)
+}
+
 #[wasm_bindgen]
 pub fn encode_mouse_param_snapshot(snapshot: &[u8]) -> Vec<u8> {
     gearhub_core::encode_mouse_param_snapshot(snapshot)
