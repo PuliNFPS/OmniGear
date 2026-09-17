@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { BrowserHidDevice } from '../deviceDiscovery';
 import type { HardwareTransport, HidInputReportEvent } from '../WebHidTransport';
 import { captureQuery, requestDiagnosticDevice, runReadOnlyDiagnostic } from './diagnostics';
-import { frameEvent, withProtocolEnvelope } from './protocol';
+import { frameEvent, withProtocolEnvelope } from '../../core/coreBridge';
 
 const receiver = { dn: 'RAWM HS Receiver', pi: 0x2346, vi: 0x1915, crc: 1 };
 const mouse = {

@@ -68,9 +68,10 @@ MOUSE_KEY:      mod1, key_type, key_code, [mod2]
 MOUSE_FUNCTION: touch_type, function, function_data, [data_hi]
 ```
 
-O comprimento de 12 bits é o mesmo que `eventLength()` em `protocol.ts` já decodifica, e o
-corpo é o inverso exato de `encodeMouseKey`/`encodeMouseFunction`. Não há formato novo a
-implementar: só a direção de leitura.
+O comprimento de 12 bits é o mesmo que `event_length` já decodifica no núcleo
+(`packages/core/src/protocols/rawm/envelope.rs`), e o corpo é o inverso exato de
+`encodeMouseKey`/`encodeMouseFunction`. Não há formato novo a implementar: só a direção de
+leitura.
 
 Na roda, o fabricante lê `key_code` e calcula `abs(code - 0x40)`; acima de `0x40` é para
 cima, abaixo é para baixo.

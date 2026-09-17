@@ -101,6 +101,20 @@ mod tests {
         assert_eq!(events[1][0] & 0x0f, 0x0b);
     }
 
+    /// Um único evento também pode chegar cortado em qualquer ponto, não só na
+    /// fronteira entre dois — a sobra de um pedaço tem que esperar o próximo.
+    #[test]
+    fn carries_a_partial_event_across_chunks() {
+        let stream = event(0x02, &[9, 9, 9, 9, 9, 9]);
+        let mut assembler = RawEventAssembler::new();
+
+        assert_eq!(assembler.push(&stream[0..5]), Ok(vec![]));
+        let events = assembler.push(&stream[5..]).expect("fluxo válido");
+
+        assert_eq!(events.len(), 1);
+        assert_eq!(&events[0][2..], &[9, 9, 9, 9, 9, 9]);
+    }
+
     #[test]
     fn rejects_a_response_without_the_four_byte_preamble() {
         let mut assembler = RawEventAssembler::new();

@@ -517,6 +517,9 @@ O passo 0 é novo, e os demais absorvem os arquivos que faltavam.
    preocupação paralela: sem ele, cada passo seguinte é uma promessa.
 1. **Codec:** `protocol.ts` + `parseNotification` + `dpiValue.ts`. Vão juntos porque
    `notifications.ts` e `protocol.ts` compartilham o `RawEventAssembler`. Sondas reapontadas.
+   **Fechado em 2026-09-16** pelo plano `docs/superpowers/plans/2026-09-16-migracao-codec-rawm.md`:
+   `protocol.ts` foi apagado, todo consumidor aponta direto para `coreBridge`, e os vetores
+   compartilhados provam a paridade byte a byte.
 2. **Tabelas:** `leviathanV4Keys.ts`. **A geração de tipos (`ts-rs`) entra aqui**, não ao
    final: no instante em que o vocabulário de ações vive no Rust, `MouseActionId` passa a ter
    dois donos, e espelhar à mão é a divergência que este spec existe para eliminar.

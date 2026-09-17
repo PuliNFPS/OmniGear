@@ -13,7 +13,7 @@ import { actions, buttonIdsByKeyId, type EncodedAction } from './leviathanV4Keys
  * The stream is delimited. A one-byte payload that is not 0xff opens a slot and
  * clears whatever was held for it; longer payloads are its entries; 0xff ends
  * the dump. Each entry has the same layout the writer uses, so the length here
- * is the same 12-bit field `protocol.ts` decodes.
+ * is the same 12-bit field `event_length` decodes, in the núcleo's `envelope.rs`.
  */
 
 const CMD_CONFIG = 0x03;

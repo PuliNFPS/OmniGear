@@ -3,7 +3,7 @@ import type { DeviceReport } from '../deviceDriver';
 import { LeviathanV4Driver } from './LeviathanV4Driver';
 import { leviathanV4QueryFixture as fixture } from './leviathanV4Fixture';
 import { createLeviathanV4Peripheral } from './leviathanV4';
-import { frameEvent, withProtocolEnvelope } from './protocol';
+import { frameEvent, withProtocolEnvelope } from '../../core/coreBridge';
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());

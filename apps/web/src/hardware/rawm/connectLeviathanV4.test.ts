@@ -3,7 +3,7 @@ import { driverFor, unregisterDeviceDriver } from '../deviceDriver';
 import { deviceDefinitions } from '../deviceRegistry';
 import type { BrowserHidDevice } from '../deviceDiscovery';
 import type { HidInputReportEvent } from '../WebHidTransport';
-import { frameEvent, withProtocolEnvelope } from './protocol';
+import { frameEvent, withProtocolEnvelope } from '../../core/coreBridge';
 import { connectLeviathanV4 } from './connectLeviathanV4';
 import { leviathanV4QueryFixture, rawmReceiverQueryFixture } from './leviathanV4Fixture';
 

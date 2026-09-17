@@ -3,7 +3,7 @@ import type { MouseSettings } from '@gearhub/shared';
 import { leviathanV4QueryFixture } from './leviathanV4Fixture';
 import { createLeviathanV4Peripheral } from './leviathanV4';
 import { LeviathanV4Driver, mappingEvents } from './LeviathanV4Driver';
-import { frameEvent, withProtocolEnvelope } from './protocol';
+import { frameEvent, withProtocolEnvelope } from '../../core/coreBridge';
 
 const CMD_NOTIFY = 0x0b;
 const NOTIFY_TYPE_MOUSE_CONFIG = 0x14;

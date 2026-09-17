@@ -1,10 +1,13 @@
 import type { MouseActionId, MouseSettings, PeripheralSettings } from '@gearhub/shared';
 import {
+  dpiAxes,
   encodeAction,
   encodeConfigReset,
   encodeMouseFunction,
   encodeMouseKey,
   encodeMouseParamSnapshot,
+  frameEvent,
+  withProtocolEnvelope,
 } from '../../core/coreBridge';
 import { isMouseSettings } from '../../domain/settings';
 import type { DeviceDriver, DeviceReport, DeviceState } from '../deviceDriver';
@@ -24,9 +27,7 @@ import {
 } from './mouseParamSnapshot';
 import { subscribeToNotifications } from './notifications';
 import { OnboardConfigCollector, type OnboardSlotConfig } from './onboardConfig';
-import { frameEvent, withProtocolEnvelope } from './protocol';
 import { queryRawmDevice } from './session';
-import { dpiAxes } from '../../core/coreBridge';
 
 const ACTION_SAVE_CONFIG_TO_FDS = 0x34;
 

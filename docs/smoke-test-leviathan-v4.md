@@ -78,8 +78,8 @@ HID recebidos em hexadecimal ficam na página, com botão de copiar e **Baixar r
   os ids de relatório de saída que a página lista para a coleção vendor: o probe envia
   com `reportId: 0` e o Chrome recusa se esse id não estiver no descritor.
 - **"Chegaram bytes que não puderam ser decodificados"** — o dispositivo respondeu, mas o
-  framing não confere. Os relatórios em hexadecimal são o material para ajustar
-  `protocol.ts`.
+  framing não confere. Os relatórios em hexadecimal são o material para ajustar o
+  enquadramento no núcleo (`packages/core/src/protocols/rawm/framing.rs`).
 
 Se a coleção vendor não existir, o probe para antes de transmitir qualquer coisa: sem ela
 a consulta não teria como funcionar, e o seletor sem filtro pode entregar outro
