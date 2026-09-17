@@ -65,6 +65,39 @@ pub fn encode_mouse_function(
     gearhub_core::encode_mouse_function(key_ids, touch_type, function_id, value, text)
 }
 
+#[wasm_bindgen(js_name = RawEventAssembler)]
+pub struct WasmRawEventAssembler {
+    inner: rawm::RawEventAssembler,
+}
+
+#[wasm_bindgen(js_class = RawEventAssembler)]
+impl WasmRawEventAssembler {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        Self {
+            inner: rawm::RawEventAssembler::new(),
+        }
+    }
+
+    pub fn push(&mut self, chunk: &[u8]) -> Result<js_sys::Array, JsError> {
+        let events = self.inner.push(chunk).map_err(js_error)?;
+        Ok(events
+            .into_iter()
+            .map(|event| js_sys::Uint8Array::from(&event[..]))
+            .collect())
+    }
+
+    pub fn reset(&mut self) {
+        self.inner.reset();
+    }
+}
+
+impl Default for WasmRawEventAssembler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[wasm_bindgen]
 pub fn core_version() -> String {
     gearhub_core::core_version()

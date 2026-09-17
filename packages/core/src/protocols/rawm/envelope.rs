@@ -7,12 +7,17 @@ const MAX_EVENT_BYTES: usize = 0x0fff;
 
 /// O comprimento declarado, lido dos dois bytes de cabeçalho.
 ///
-/// Consumida a partir das Tarefas 4 e 5 (`super::envelope::event_length`); até
-/// lá não tem chamador no crate. `expect` em vez de `allow` de propósito:
-/// quando o primeiro chamador chegar, a expectativa não cumprida falha o
-/// clippy e força a remoção deste atributo.
-#[expect(dead_code)]
+/// Invariante do chamador: `event` deve ter ao menos 2 bytes. Quem chama
+/// precisa garantir isso antes — `RawEventAssembler::push` só chega aqui
+/// depois de conferir `MINIMUM_FRAME`, e a Tarefa 5 (`query_json`) faz sua
+/// própria checagem `event.len() < 2` antes de chamar. O `debug_assert!`
+/// torna a invariante executável em depuração sem pagar o custo em release
+/// nem espalhar `Result` para os dois chamadores.
 pub(crate) fn event_length(event: &[u8]) -> usize {
+    debug_assert!(
+        event.len() >= 2,
+        "event_length exige ao menos 2 bytes de cabeçalho"
+    );
     ((usize::from(event[0] & 0xf0)) << 4) | usize::from(event[1])
 }
 

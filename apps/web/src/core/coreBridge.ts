@@ -8,6 +8,7 @@ import init, {
   encode_mouse_param_snapshot as wasmEncodeMouseParamSnapshot,
   frameEvent as wasmFrameEvent,
   is_wasm_available,
+  RawEventAssembler as WasmRawEventAssembler,
   withProtocolEnvelope as wasmWithProtocolEnvelope,
 } from 'gearhub-core-wasm';
 import { asRawmError } from './rawmError';
@@ -180,6 +181,29 @@ export function decodeReportChunk(
     return wasmDecodeReportChunk(copyBytes(report), virtualMouse) ?? null;
   } catch (error) {
     throw asRawmError(error);
+  }
+}
+
+/**
+ * Junta os pedaços que chegam num fluxo de eventos.
+ *
+ * A classe da ponte já tem a forma certa; este invólucro existe só para
+ * traduzir o erro tipado do núcleo na mensagem em português que a casca
+ * espera.
+ */
+export class RawEventAssembler {
+  private readonly inner = new WasmRawEventAssembler();
+
+  push(chunk: Uint8Array): Uint8Array[] {
+    try {
+      return this.inner.push(chunk) as Uint8Array[];
+    } catch (error) {
+      throw asRawmError(error);
+    }
+  }
+
+  reset(): void {
+    this.inner.reset();
   }
 }
 

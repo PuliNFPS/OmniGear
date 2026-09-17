@@ -1,6 +1,6 @@
+import { RawEventAssembler } from '../../core/coreBridge';
 import type { HardwareTransport } from '../WebHidTransport';
 import {
-  RawEventAssembler,
   buildQueryEvent,
   decodeReportChunk,
   frameEvent,

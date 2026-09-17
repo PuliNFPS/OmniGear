@@ -1,5 +1,6 @@
+import { RawEventAssembler } from '../../core/coreBridge';
 import type { HardwareTransport } from '../WebHidTransport';
-import { RawEventAssembler, decodeReportChunk } from './protocol';
+import { decodeReportChunk } from './protocol';
 
 /**
  * The mouse reports its own changes.
