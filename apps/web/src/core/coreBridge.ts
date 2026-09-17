@@ -6,7 +6,9 @@ import init, {
   encode_mouse_key as wasmEncodeMouseKey,
   encode_mouse_param_snapshot as wasmEncodeMouseParamSnapshot,
   is_wasm_available,
+  withProtocolEnvelope as wasmWithProtocolEnvelope,
 } from 'gearhub-core-wasm';
+import { asRawmError } from './rawmError';
 
 export interface CoreStatus {
   version: string;
@@ -154,6 +156,14 @@ export function encodeMouseFunction(
     input.value ?? 0,
     textBytes(input.text),
   );
+}
+
+export function withProtocolEnvelope(source: ArrayLike<number>, useCrc: boolean): Uint8Array {
+  try {
+    return wasmWithProtocolEnvelope(copyBytes(source), useCrc);
+  } catch (error) {
+    throw asRawmError(error);
+  }
 }
 
 let ready: Promise<void> | null = null;

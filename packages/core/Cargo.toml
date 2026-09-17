@@ -6,3 +6,7 @@ description = "Protocol and device abstractions for Gearhub"
 
 [lib]
 crate-type = ["rlib"]
+
+[dev-dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

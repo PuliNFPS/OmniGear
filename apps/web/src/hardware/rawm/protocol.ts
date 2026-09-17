@@ -1,6 +1,8 @@
-const CMD_CONFIG = 0x03;
+import { withProtocolEnvelope } from '../../core/coreBridge';
+
+export { withProtocolEnvelope };
+
 const CMD_QUERY = 0x01;
-const CONFIG_TYPE_CRC = 0x24;
 const OS_PC = 0x03;
 const REPORT_BYTES = 64;
 const PHYSICAL_PAYLOAD_BYTES = 63;
@@ -9,45 +11,6 @@ const VIRTUAL_MOUSE_CHANNEL = 0xc0;
 
 function eventLength(event: Uint8Array): number {
   return ((event[0] & 0xf0) << 4) | event[1];
-}
-
-function encodeLength(event: Uint8Array): Uint8Array {
-  if (event.length > 0x0fff) throw new RangeError('Evento RAWM excede 4.095 bytes.');
-  if (event.length < 2) throw new RangeError('Evento RAWM precisa de cabeçalho.');
-  const encoded = event.slice();
-  encoded[0] = (encoded[0] & 0x0f) | ((encoded.length >> 4) & 0xf0);
-  encoded[1] = encoded.length & 0xff;
-  return encoded;
-}
-
-/** CRC16 routine used by RAWM configuration events. */
-export function crc16(data: Uint8Array): number {
-  let crc = 0xffff;
-  for (const value of data) {
-    crc = ((crc >> 8) & 0xff) | ((crc << 8) & 0xffff);
-    crc ^= value;
-    crc ^= (crc & 0xff) >> 4;
-    crc ^= (crc << 12) & 0xffff;
-    crc ^= ((crc & 0xff) << 5) & 0xffff;
-  }
-  return crc & 0xffff;
-}
-
-export function withProtocolEnvelope(source: ArrayLike<number>, useCrc: boolean): Uint8Array {
-  const inner = encodeLength(Uint8Array.from(source));
-  if (!useCrc) return inner;
-
-  const checksum = crc16(inner);
-  return encodeLength(
-    Uint8Array.from([
-      CMD_CONFIG,
-      0,
-      CONFIG_TYPE_CRC,
-      checksum & 0xff,
-      (checksum >> 8) & 0xff,
-      ...inner,
-    ]),
-  );
 }
 
 export function buildQueryEvent(epochSeconds = Math.floor(Date.now() / 1000)): Uint8Array {

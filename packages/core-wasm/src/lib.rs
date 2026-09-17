@@ -1,7 +1,19 @@
 //! Ponte wasm-bindgen. Nenhuma decisão vive aqui: a macro fica deste lado
 //! para que o núcleo não seja moldado pelas restrições do navegador.
 
+use gearhub_core::protocols::rawm;
 use wasm_bindgen::prelude::*;
+
+/// Converte o erro tipado do núcleo num erro de JavaScript que carrega o
+/// código. A casca escolhe o texto; aqui não há tradução.
+fn js_error(error: rawm::RawmError) -> JsError {
+    JsError::new(error.code())
+}
+
+#[wasm_bindgen(js_name = withProtocolEnvelope)]
+pub fn with_protocol_envelope(source: &[u8], use_crc: bool) -> Result<Vec<u8>, JsError> {
+    rawm::with_protocol_envelope(source, use_crc).map_err(js_error)
+}
 
 #[wasm_bindgen]
 pub fn encode_mouse_param_snapshot(snapshot: &[u8]) -> Vec<u8> {

@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   RawEventAssembler,
   buildQueryEvent,
-  crc16,
   decodeReportChunk,
   frameEvent,
   parseQueryJson,
@@ -16,10 +15,6 @@ describe('RAWM protocol envelope', () => {
     const long = new Array(0x123).fill(0);
     long[0] = 0x03;
     expect([...withProtocolEnvelope(long, false).slice(0, 2)]).toEqual([0x13, 0x23]);
-  });
-
-  it('matches the vendor CRC16 routine', () => {
-    expect(crc16(new TextEncoder().encode('123456789'))).toBe(0x29b1);
   });
 
   it('wraps CRC little-endian around an already length-coded inner event', () => {
