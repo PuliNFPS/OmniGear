@@ -15,11 +15,7 @@ const NOTIFY_TYPE_MOUSE_CONFIG = 0x14;
 function notifyReport(payload: number[]): Uint8Array {
   const event = withProtocolEnvelope([CMD_NOTIFY, 0, NOTIFY_TYPE_MOUSE_CONFIG, ...payload], false);
   const chunk = Uint8Array.from([0xff, 0xff, 0xff, 0xff, ...event]);
-  const report = new Uint8Array(64);
-  report[0] = 0xc0;
-  report[1] = 0x80 | chunk.length;
-  report.set(chunk, 2);
-  return report;
+  return frameEvent(chunk, true)[0];
 }
 
 function harness({ failAfter }: { failAfter?: number } = {}) {

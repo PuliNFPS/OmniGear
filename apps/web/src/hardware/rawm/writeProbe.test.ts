@@ -18,6 +18,15 @@ function queryReports(value: Record<string, unknown>): Uint8Array[] {
   return frameEvent(Uint8Array.from([0xff, 0xff, 0xff, 0xff, ...event]), true);
 }
 
+/**
+ * The declared length from a stream's two header bytes, the same 12-bit
+ * field `event_length` decodes in the core's `envelope.rs`. One helper here
+ * rather than three copies of the same expression.
+ */
+function declaredLength(stream: Uint8Array): number {
+  return ((stream[0] & 0xf0) << 4) | stream[1];
+}
+
 /** Answers queries from `state`, and records everything that is not a query. */
 function fakeMouse(options: { ignoreWrites?: boolean } = {}) {
   const listeners = new Set<(event: HidInputReportEvent) => void>();
@@ -51,7 +60,7 @@ function fakeMouse(options: { ignoreWrites?: boolean } = {}) {
       }
       writes.push(payload);
       stream = Uint8Array.from([...stream, ...payload]);
-      const declared = ((stream[0] & 0xf0) << 4) | stream[1];
+      const declared = declaredLength(stream);
       if (!options.ignoreWrites && stream.length >= declared) {
         // Outer CRC envelope (5 bytes) + inner config header (3), then the body:
         // u16 resolution, u16 polling. Decoding it here is what proves the
@@ -126,7 +135,7 @@ describe('probePollingWrite', () => {
     // The parameter event exceeds the 62-byte virtual payload, so it arrives as
     // more than one report. What matters is that it is a single event.
     const stream = Uint8Array.from(mouse.writes.flatMap((write) => [...write]));
-    const declared = ((stream[0] & 0xf0) << 4) | stream[1];
+    const declared = declaredLength(stream);
     expect(declared).toBe(stream.length);
 
     // Outer config event carrying the CRC wrapper, inner one the parameter type.
@@ -179,7 +188,7 @@ describe('probeButtonMapping', () => {
     expect(report.comConfigReset).toBe(false);
 
     const stream = Uint8Array.from(mouse.writes.flatMap((write) => [...write]));
-    expect(((stream[0] & 0xf0) << 4) | stream[1]).toBe(stream.length);
+    expect(declaredLength(stream)).toBe(stream.length);
     // Outer CRC envelope, inner config event of the mouse-key type.
     expect(stream[2]).toBe(0x24);
     expect(stream[7]).toBe(0x16);
