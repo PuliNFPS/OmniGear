@@ -113,62 +113,33 @@ impl Default for WasmRawEventAssembler {
     }
 }
 
-/// O enum com dados não atravessa `wasm-bindgen`; esta é a forma achatada.
-/// `kind` vazio significa nenhuma notificação de interesse.
-#[wasm_bindgen]
-pub struct Notification {
-    kind: String,
-    value: u32,
-    payload: Option<Vec<u8>>,
-}
-
-#[wasm_bindgen]
-impl Notification {
-    #[wasm_bindgen(getter)]
-    pub fn kind(&self) -> String {
-        self.kind.clone()
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn value(&self) -> u32 {
-        self.value
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn payload(&self) -> Option<Vec<u8>> {
-        self.payload.clone()
-    }
-}
-
+/// O enum com dados não atravessa `wasm-bindgen`; esta é a forma achatada:
+/// um array de três posições fixas — `[kind, value, payload]` — em vez de um
+/// `struct` com getters. Nenhuma notificação decodificada precisa de
+/// identidade nem de estado mutável, então uma classe aqui só custaria uma
+/// alocação por evento (com `free()`/`FinalizationRegistry` de brinde) sem
+/// comprar nada; `frameEvent` e `RawEventAssembler.push`, ao lado, já
+/// devolvem arrays pela mesma razão.
 #[wasm_bindgen(js_name = parseNotification)]
-pub fn parse_notification(event: &[u8]) -> Option<Notification> {
+pub fn parse_notification(event: &[u8]) -> Option<js_sys::Array> {
     use rawm::RawmNotification as N;
-    rawm::parse_notification(event).map(|notification| match notification {
-        N::Dpi(value) => Notification {
-            kind: "dpi".into(),
-            value: u32::from(value),
-            payload: None,
-        },
-        N::DpiXy(value) => Notification {
-            kind: "dpi-xy".into(),
-            value,
-            payload: None,
-        },
-        N::Polling(value) => Notification {
-            kind: "polling".into(),
-            value: u32::from(value),
-            payload: None,
-        },
-        N::OnboardIndex(index) => Notification {
-            kind: "onboard-index".into(),
-            value: u32::from(index),
-            payload: None,
-        },
-        N::OnboardConfig(payload) => Notification {
-            kind: "onboard-config".into(),
-            value: 0,
-            payload: Some(payload),
-        },
+    rawm::parse_notification(event).map(|notification| {
+        let (kind, value, payload): (&str, u32, Option<Vec<u8>>) = match notification {
+            N::Dpi(value) => ("dpi", u32::from(value), None),
+            N::DpiXy(value) => ("dpi-xy", value, None),
+            N::Polling(value) => ("polling", u32::from(value), None),
+            N::OnboardIndex(index) => ("onboard-index", u32::from(index), None),
+            N::OnboardConfig(payload) => ("onboard-config", 0, Some(payload)),
+        };
+
+        let entry = js_sys::Array::new();
+        entry.push(&JsValue::from_str(kind));
+        entry.push(&JsValue::from_f64(f64::from(value)));
+        entry.push(&match payload {
+            Some(bytes) => JsValue::from(js_sys::Uint8Array::from(&bytes[..])),
+            None => JsValue::UNDEFINED,
+        });
+        entry
     })
 }
 

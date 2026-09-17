@@ -224,24 +224,29 @@ export type RawmNotification =
   | { kind: 'onboard-config'; payload: Uint8Array };
 
 /**
- * O núcleo carrega o enum com dados; a ponte wasm-bindgen o achata num
- * `struct` de `kind`/`value`/`payload`. Esta função o remonta na união acima,
- * para que nenhum consumidor perceba a travessia.
+ * O núcleo carrega o enum com dados; a ponte wasm-bindgen o achata num array
+ * de três posições fixas, `[kind, value, payload]`, em vez de um `struct` com
+ * getters — nenhuma notificação decodificada precisa de identidade ou estado
+ * mutável, então uma classe ali só custaria uma alocação por evento sem
+ * comprar nada. Esta função remonta o array na união acima, para que nenhum
+ * consumidor perceba a travessia.
  */
 export function parseNotification(event: Uint8Array): RawmNotification | null {
-  const decoded = wasmParseNotification(event);
+  const decoded = wasmParseNotification(event) as
+    [string, number, Uint8Array | undefined] | undefined;
   if (!decoded) return null;
-  switch (decoded.kind) {
+  const [kind, value, payload] = decoded;
+  switch (kind) {
     case 'dpi':
-      return { kind: 'dpi', value: decoded.value };
+      return { kind: 'dpi', value };
     case 'dpi-xy':
-      return { kind: 'dpi-xy', value: decoded.value };
+      return { kind: 'dpi-xy', value };
     case 'polling':
-      return { kind: 'polling', value: decoded.value };
+      return { kind: 'polling', value };
     case 'onboard-index':
-      return { kind: 'onboard-index', index: decoded.value };
+      return { kind: 'onboard-index', index: value };
     case 'onboard-config':
-      return { kind: 'onboard-config', payload: decoded.payload ?? new Uint8Array() };
+      return { kind: 'onboard-config', payload: payload ?? new Uint8Array() };
     default:
       return null;
   }
