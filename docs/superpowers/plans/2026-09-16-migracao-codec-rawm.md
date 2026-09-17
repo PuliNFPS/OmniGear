@@ -1700,7 +1700,17 @@ Os casos de `protocol.test.ts` já vivem em `envelope.rs`, `framing.rs`, `assemb
 - [ ] **Step 4: Provar que nada em TypeScript ainda implementa o codec**
 
 Run: `grep -rn "0x29b1\|0xf0) << 4\|PHYSICAL_PAYLOAD\|VIRTUAL_MOUSE_CHANNEL\|preâmbulo" apps/web/src/hardware/`
-Expected: nenhum resultado. Cada padrão é uma assinatura de uma parte do codec — a constante do CRC, o deslocamento do comprimento de 12 bits, os tamanhos de carga, o canal virtual e a mensagem do montador. Qualquer ocorrência é implementação que sobreviveu à migração.
+Cada padrão é uma assinatura de uma parte do codec — a constante do CRC, o deslocamento do comprimento de 12 bits, os tamanhos de carga, o canal virtual e a mensagem do montador.
+
+**Corrigido em 2026-09-17:** este passo dizia "Expected: nenhum resultado", e isso era falso — o grep **não pode** dar vazio. Rodado ao final da migração, ele devolve cinco ocorrências, e nenhuma é implementação do codec que sobreviveu:
+
+| ocorrência                      | o que é                                                                                                                                         |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `diagnostics.test.ts:237`       | assere que a mensagem de erro contém "preâmbulo" — é o contrato da casca, e deve existir                                                        |
+| `onboardConfig.ts:53`           | `declaredLength()`, uma segunda implementação do comprimento de 12 bits em código de produção — **exceção declarada**, migra no passo 4 do spec |
+| `writeProbe.test.ts:54,129,182` | o mesmo cálculo repetido em três auxiliares de teste — **não coberto por nenhuma declaração**                                                   |
+
+A expectativa correta não é "zero", é: **toda ocorrência tem de ser nomeada e justificada**. Rode o grep, mostre a saída, e reconcilie cada linha. Uma etapa de verificação que não pode passar é pior que nenhuma, porque convida a ser pulada — foi o que aconteceu.
 
 Run: `test ! -f apps/web/src/hardware/rawm/protocol.ts && echo removido`
 Expected: `removido`.
