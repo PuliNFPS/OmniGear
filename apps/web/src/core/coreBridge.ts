@@ -1,12 +1,22 @@
 import init, {
+  buildQueryEvent as wasmBuildQueryEvent,
   core_version,
+  decodeReportChunk as wasmDecodeReportChunk,
+  dpiAxes as wasmDpiAxes,
   encode_action as wasmEncodeAction,
   encode_config_reset as wasmEncodeConfigReset,
   encode_mouse_function as wasmEncodeMouseFunction,
   encode_mouse_key as wasmEncodeMouseKey,
   encode_mouse_param_snapshot as wasmEncodeMouseParamSnapshot,
+  frameEvent as wasmFrameEvent,
   is_wasm_available,
+  isQueryResult as wasmIsQueryResult,
+  parseNotification as wasmParseNotification,
+  queryJson as wasmQueryJson,
+  RawEventAssembler as WasmRawEventAssembler,
+  withProtocolEnvelope as wasmWithProtocolEnvelope,
 } from 'gearhub-core-wasm';
+import { asRawmError } from './rawmError';
 
 export interface CoreStatus {
   version: string;
@@ -154,6 +164,126 @@ export function encodeMouseFunction(
     input.value ?? 0,
     textBytes(input.text),
   );
+}
+
+export function withProtocolEnvelope(source: ArrayLike<number>, useCrc: boolean): Uint8Array {
+  try {
+    return wasmWithProtocolEnvelope(copyBytes(source), useCrc);
+  } catch (error) {
+    throw asRawmError(error);
+  }
+}
+
+export function buildQueryEvent(epochSeconds = Math.floor(Date.now() / 1000)): Uint8Array {
+  try {
+    return wasmBuildQueryEvent(BigInt(epochSeconds));
+  } catch (error) {
+    throw asRawmError(error);
+  }
+}
+
+export function isQueryResult(event: Uint8Array): boolean {
+  return wasmIsQueryResult(event);
+}
+
+export function parseQueryJson(event: Uint8Array): Record<string, unknown> {
+  let text: string;
+  try {
+    text = wasmQueryJson(event);
+  } catch (error) {
+    throw asRawmError(error);
+  }
+  const parsed: unknown = JSON.parse(text);
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    throw new Error('Identificação RAWM inválida.');
+  }
+  return parsed as Record<string, unknown>;
+}
+
+export function frameEvent(event: ArrayLike<number>, virtualMouse: boolean): Uint8Array[] {
+  return wasmFrameEvent(copyBytes(event), virtualMouse) as Uint8Array[];
+}
+
+export function decodeReportChunk(
+  report: ArrayLike<number>,
+  virtualMouse: boolean,
+): Uint8Array | null {
+  try {
+    return wasmDecodeReportChunk(copyBytes(report), virtualMouse) ?? null;
+  } catch (error) {
+    throw asRawmError(error);
+  }
+}
+
+/** O que o mouse anuncia por conta própria, sem que o app pergunte. */
+export type RawmNotification =
+  | { kind: 'dpi'; value: number }
+  | { kind: 'dpi-xy'; value: number }
+  | { kind: 'polling'; value: number }
+  | { kind: 'onboard-index'; index: number }
+  | { kind: 'onboard-config'; payload: Uint8Array };
+
+/**
+ * O núcleo carrega o enum com dados; a ponte wasm-bindgen o achata num array
+ * de três posições fixas, `[kind, value, payload]`, em vez de um `struct` com
+ * getters — nenhuma notificação decodificada precisa de identidade ou estado
+ * mutável, então uma classe ali só custaria uma alocação por evento sem
+ * comprar nada. Esta função remonta o array na união acima, para que nenhum
+ * consumidor perceba a travessia.
+ */
+export function parseNotification(event: Uint8Array): RawmNotification | null {
+  const decoded = wasmParseNotification(event) as
+    [string, number, Uint8Array | undefined] | undefined;
+  if (!decoded) return null;
+  const [kind, value, payload] = decoded;
+  switch (kind) {
+    case 'dpi':
+      return { kind: 'dpi', value };
+    case 'dpi-xy':
+      return { kind: 'dpi-xy', value };
+    case 'polling':
+      return { kind: 'polling', value };
+    case 'onboard-index':
+      return { kind: 'onboard-index', index: value };
+    case 'onboard-config':
+      // The core's wasm-bindgen return type is `Uint8Array | undefined` because the flattened
+      // array slot is optional in general, but for `onboard-config` the core only ever produces
+      // this variant from a non-empty 0x14 payload (`notify.rs`'s `NOTIFY_MOUSE_CONFIG` arm
+      // requires `!payload.is_empty()`), so `payload` is never actually `undefined` here. The
+      // fallback is not a live path; it exists to satisfy the wider type.
+      return { kind: 'onboard-config', payload: payload ?? new Uint8Array() };
+    default:
+      return null;
+  }
+}
+
+/** CPI2 empacota X nos 16 bits baixos e Y nos altos. */
+export function dpiAxes(value: number): { x: number; y: number } {
+  const [x, y] = wasmDpiAxes(value);
+  return { x, y };
+}
+
+/**
+ * Junta os pedaços que chegam num fluxo de eventos.
+ *
+ * A classe da ponte já tem a forma certa; este invólucro existe só para
+ * traduzir o erro tipado do núcleo na mensagem em português que a casca
+ * espera.
+ */
+export class RawEventAssembler {
+  private readonly inner = new WasmRawEventAssembler();
+
+  push(chunk: Uint8Array): Uint8Array[] {
+    try {
+      return this.inner.push(chunk) as Uint8Array[];
+    } catch (error) {
+      throw asRawmError(error);
+    }
+  }
+
+  reset(): void {
+    this.inner.reset();
+  }
 }
 
 let ready: Promise<void> | null = null;

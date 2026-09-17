@@ -1,0 +1,19 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "lint": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/core-wasm/src/**",
+        "$TURBO_ROOT$/packages/core-wasm/Cargo.toml"
+      ]
+    },
+    "test": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/core-wasm/src/**",
+        "$TURBO_ROOT$/packages/core-wasm/Cargo.toml"
+      ]
+    }
+  }
+}

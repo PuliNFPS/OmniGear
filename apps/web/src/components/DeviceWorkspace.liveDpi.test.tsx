@@ -6,7 +6,7 @@ import { registerDeviceDriver, unregisterDeviceDriver } from '../hardware/device
 import { LeviathanV4Driver } from '../hardware/rawm/LeviathanV4Driver';
 import { createLeviathanV4Peripheral } from '../hardware/rawm/leviathanV4';
 import { leviathanV4QueryFixture as fixture } from '../hardware/rawm/leviathanV4Fixture';
-import { frameEvent, withProtocolEnvelope } from '../hardware/rawm/protocol';
+import { frameEvent, withProtocolEnvelope } from '../core/coreBridge';
 import { useDeviceStore } from '../store/deviceStore';
 import { useEditorStore } from '../store/editorStore';
 import { DeviceWorkspace } from './DeviceWorkspace';

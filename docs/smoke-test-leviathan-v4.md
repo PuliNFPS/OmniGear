@@ -78,8 +78,8 @@ HID recebidos em hexadecimal ficam na página, com botão de copiar e **Baixar r
   os ids de relatório de saída que a página lista para a coleção vendor: o probe envia
   com `reportId: 0` e o Chrome recusa se esse id não estiver no descritor.
 - **"Chegaram bytes que não puderam ser decodificados"** — o dispositivo respondeu, mas o
-  framing não confere. Os relatórios em hexadecimal são o material para ajustar
-  `protocol.ts`.
+  framing não confere. Os relatórios em hexadecimal são o material para ajustar o
+  enquadramento no núcleo (`packages/core/src/protocols/rawm/framing.rs`).
 
 Se a coleção vendor não existir, o probe para antes de transmitir qualquer coisa: sem ela
 a consulta não teria como funcionar, e o seletor sem filtro pode entregar outro
@@ -320,3 +320,68 @@ Com isso o driver voltou a escrever mapeamentos:
   persiste.
 - A setima tecla (`0x0d`, `FUNCTION_SHOW_POWER`) e reenviada sempre. O editor nao a expoe,
   entao nada em `settings` a reconstruiria, e o reset a apagaria em silencio.
+
+## O codec em Rust, confirmado na conexão (2026-09-17)
+
+Depois da migração do codec para `packages/core` (PR #10), o Leviathan V4 conectou
+normalmente no app. Uma conexão bem-sucedida não é um teste pequeno: ela atravessa
+quase toda a leitura do protocolo, e agora essa leitura inteira é Rust.
+
+**O que essa conexão confirma, peça por peça:**
+
+| peça em Rust                                  | o que a conexão prova                             |
+| --------------------------------------------- | ------------------------------------------------- |
+| `build_query_event`                           | os bytes de consulta foram aceitos pelo firmware  |
+| `frame_event`                                 | o enquadramento no canal virtual está certo       |
+| `decode_report_chunk`                         | os relatórios de 64 bytes foram lidos de volta    |
+| `RawEventAssembler`                           | o fluxo com preâmbulo `ff ff ff ff` foi remontado |
+| `is_query_result` + `query_json`              | o JSON foi localizado dentro do evento            |
+| `core::str::from_utf8` dentro de `query_json` | **a identidade deste firmware é UTF-8 válido**    |
+
+A última linha era a incógnita. O `parseQueryJson` em TypeScript usava `TextDecoder`,
+que por padrão não falha: byte inválido virava U+FFFD e a conexão seguia com o `dn`
+levemente errado. O `query_json` em Rust rejeita. A troca foi deliberada — `dn` alimenta
+o nome do dispositivo, o casamento no registro e o perfil salvo, então conectar com uma
+identidade ilegível é pior que recusar —, mas era a única mudança de comportamento da
+branch que nenhum teste alcançava. Neste firmware, ela não dispara.
+
+**O que essa conexão NÃO confirma:**
+
+- O caminho de escrita. Ele não mudou nesta migração e continua coberto pelas seções
+  anteriores deste documento.
+- A decodificação de notificações (`parse_notification`), a menos que o DPI tenha sido
+  ciclado pelo botão ou que o dump onboard `0x14` tenha chegado durante a sessão. As duas
+  coisas acontecem sozinhas quando o mouse resolve anunciá-las, então a ausência de
+  confirmação aqui é falta de observação, não sinal de problema.
+
+## As notificações em Rust, confirmadas no mouse (2026-09-17)
+
+Com a mesma branch do PR #10, as três notificações que o app usa foram exercitadas contra
+o firmware. Todas passam por `parse_notification`, em `packages/core/src/protocols/rawm/notify.rs`.
+
+| notificação            | como foi confirmada                                                | o que prova                           |
+| ---------------------- | ------------------------------------------------------------------ | ------------------------------------- |
+| `0x00` / `0x06` — DPI  | botão de DPI apertado no mouse; o valor na tela acompanhou sozinho | `parse_notification` **e** `dpi_axes` |
+| `0x14` — dump onboard  | as quatro memórias mostram mapeamentos diferentes entre si         | o dump chegou e foi decodificado      |
+| `0x22` — memória ativa | o mouse trocou de memória e a marcação de ativa seguiu             | o índice é lido do dispositivo        |
+
+O caso do DPI é o que valida mais por linha: um erro no `dpi_axes` apareceria como eixo Y
+zerado num mouse sem eixos independentes, porque a metade alta do valor empacotado é zero
+e o código precisa tratar isso como DPI simétrico, não como zero. A tela acompanhando com
+os dois eixos corretos descarta essa tradução errada.
+
+O caso do dump é o que valida mais em profundidade: para as quatro memórias mostrarem
+mapeamentos **diferentes**, o `OnboardConfigCollector` precisou montar o fluxo delimitado
+inteiro — marcador de slot, entradas, terminador `0xff` — sobre eventos que atravessaram o
+`RawEventAssembler` e o `decode_report_chunk` em Rust. Se qualquer peça tivesse falhado, as
+quatro mostrariam o padrão do app, idênticas.
+
+### O que isso fecha
+
+Com a conexão (seção anterior) mais estas três, **todo o caminho de leitura do protocolo
+está confirmado em hardware**: consulta, enquadramento, remontagem, extração do JSON,
+decodificação de notificações e desempacotamento de DPI. Nenhuma peça do codec migrado
+depende só de teste unitário.
+
+O caminho de **escrita** continua sem confirmação nova — mas ele não mudou nesta migração,
+e segue coberto pelas seções anteriores deste documento.

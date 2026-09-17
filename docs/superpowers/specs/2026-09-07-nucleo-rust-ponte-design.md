@@ -98,6 +98,11 @@ desktop às limitações da web.
 
 ## Fronteira: o que é núcleo e o que é casca
 
+**Atualizado em 2026-09-16:** as duas tabelas desta seção estão desatualizadas — faltam três
+arquivos e uma medida ficou por baixo. O inventário válido está em
+`# Escopo corrigido em 2026-09-16`, ao final. O princípio abaixo continua valendo; só a
+contabilidade mudou.
+
 **Decidido: o TypeScript é apenas front.** O Rust é o backend completo — protocolo, estado de
 dispositivo e as decisões sobre o que enviar. Tudo que não for renderizar, reagir a entrada do
 usuário ou executar a chamada HID que só o navegador expõe pertence ao núcleo.
@@ -215,6 +220,10 @@ dispositivo continuam onde estão.
 
 ## Ordem da migração
 
+**Substituída em 2026-09-16** por `## Ordem corrigida`, ao final: ganhou um passo 0 (vetores
+de conformidade) e os passos absorveram os arquivos que faltavam. A ordem abaixo fica como
+registro. O critério de ordenação e a barra de verificação não mudaram.
+
 Do mais portável e mais coberto por testes para o menos. Cada passo é independente, entrega
 redução de duplicação, e pode parar no meio sem deixar o repositório inconsistente.
 
@@ -327,3 +336,249 @@ escrever.
   dados, não por precaução.
 - **Enum de ações compartilhado ou por periférico.** Decidir com o segundo dispositivo real
   na mão, não agora.
+
+---
+
+# Escopo corrigido em 2026-09-16
+
+Este spec foi aprovado em 2026-09-07. Desde então o TypeScript andou, e duas decisões de
+fronteira que ele não previa foram tomadas. Esta seção substitui as tabelas de `## Fronteira`
+e a lista de `## Ordem da migração` acima — elas ficam como registro do que se pensava então.
+
+## O que já foi feito
+
+Duas coisas que este spec pedia estão prontas e saem do plano:
+
+- **Regra 3, os dois crates.** `258290b` separou `gearhub-core` (Rust puro) de
+  `gearhub-core-wasm` (a casca com `#[wasm_bindgen]`). O núcleo não conhece mais a macro.
+- **A ponte JS escrita à mão.** Removida no PR #9; o build gera o WASM e os testes o
+  exercitam. O CI instala `wasm-pack` (`verify.yml:39`) e o `turbo.json` constrói `pkg/**`.
+
+Dos cinco itens de `## O que o CI precisa passar a fazer`, os itens 1, 2 e 5 estão feitos. Os
+itens 3 e 4 — publicar o `.wasm` e servi-lo com `Content-Type` — **não têm onde acontecer**:
+só existe `verify.yml`, não há workflow de deploy. Saem do escopo até existir um.
+
+## O que mudou no TypeScript depois da aprovação
+
+Medido contra `1689f2c`, o commit que criou este spec:
+
+| arquivo                | então | hoje    | o que entrou                                                    |
+| ---------------------- | ----- | ------- | --------------------------------------------------------------- |
+| `LeviathanV4Driver.ts` | 303   | **378** | índice onboard, guardas de revisão, `readState()`, eixos de DPI |
+| `leviathanV4.ts`       | 208   | **216** | faixa do sensor, quatro memórias sempre semeadas, `liveDpi`     |
+| `notifications.ts`     | 82    | **86**  | notificação `0x22`, o índice onboard que o mouse anuncia        |
+| `dpiValue.ts`          | —     | **5**   | arquivo novo: CPI2 empacota X nos 16 bits baixos e Y nos altos  |
+
+Mais a porta `deviceDriver.ts` (+10: `DeviceState`, `readState?()`, relatório
+`active-profile`) e `@gearhub/shared` (+9: `initial`, `liveDpi`).
+
+**A consequência importante é no passo mais arriscado.** O crescimento do driver é quase todo
+estado de sessão de dispositivo — justamente o que este spec manda descer para o núcleo:
+
+- `activeOnboardIndex` e `slotCount` — qual memória o mouse está rodando.
+- `slotRevision` / `applyingSlotRevision` — aborta uma aplicação se a memória ativa mudar no
+  meio dela. É decisão sobre o dispositivo, não sobre a tela.
+- `dpiRevision` — impede que uma escrita sobrescreva um DPI que o mouse acabou de anunciar.
+- `appliedMappings` — o que o mouse de fato tem, que este spec já nomeava.
+
+A estimativa antiga do passo 5 era "~150 de 303". Hoje é da ordem de **250 de 378**. O passo
+não mudou de natureza; ficou maior e mais claramente núcleo.
+
+## Inventário corrigido
+
+Três arquivos que este spec nunca mencionou, e um que ele mediu por baixo:
+
+| arquivo                 | linhas | destino                                                      |
+| ----------------------- | ------ | ------------------------------------------------------------ |
+| `protocol.ts`           | 147    | núcleo                                                       |
+| `notifications.ts`      | 86     | núcleo o `parseNotification`; casca o `subscribeTo…`         |
+| `dpiValue.ts`           | 5      | núcleo                                                       |
+| `leviathanV4Keys.ts`    | 64     | núcleo                                                       |
+| `mouseParamSnapshot.ts` | 188    | núcleo                                                       |
+| `leviathanV4.ts`        | 216    | **dividido** — ver decisão 2                                 |
+| `leviathanV4Lod.ts`     | 29     | núcleo a tabela `raw`→mm; casca o `formatLiftOffDistance`    |
+| `onboardConfig.ts`      | 168    | núcleo                                                       |
+| `deviceRegistry.ts`     | 84     | núcleo a identidade USB e o casamento; casca o filtro WebHID |
+| `LeviathanV4Driver.ts`  | 378    | núcleo a sessão; casca o transporte                          |
+| `session.ts`            | 99     | núcleo a decodificação; casca o `await` e o timeout          |
+| `connectLeviathanV4.ts` | 29     | casca; o regex do nome é fato do dispositivo e sobe          |
+| `leviathanV4Fixture.ts` | 75     | fixture de teste; segue o lado que os testes dele migrarem   |
+| `diagnostics.ts`        | 417    | **casca, exceção declarada** — ver decisão 1                 |
+| `writeProbe.ts`         | 394    | **casca, exceção declarada** — ver decisão 1                 |
+| `WebHidTransport.ts`    | 90     | casca                                                        |
+| `deviceDiscovery.ts`    | 128    | casca                                                        |
+| `hardwareFailure.ts`    | 16     | casca                                                        |
+
+## Decisão 1 — as sondas ficam na casca, e ficam só na web
+
+`diagnostics.ts` e `writeProbe.ts` não duplicam o protocolo: eles o **importam**. O
+`writeProbe` já consome o núcleo Rust em três encoders, via `coreBridge`. Uma correção a uma
+leitura anterior — eles são consumidores, não uma segunda implementação.
+
+Isso significa que eles **não são escopo opcional**: quando `protocol.ts` e
+`mouseParamSnapshot.ts` forem apagados, seus imports deixam de existir. Eles são tocados
+pelos passos 1, 3 e 5, querendo ou não.
+
+**Decidido:** os imports são reapontados para o núcleo a cada passo, e nada mais desce. A
+comparação de campos, os estágios do relatório, o hexadecimal, os rótulos e a descoberta de
+dispositivo permanecem em TypeScript.
+
+O motivo não é economia. As sondas são **web-only por intenção declarada**: o diagnóstico
+pode virar uma ferramenta do app principal para extrair os bytes do mouse do usuário, e essa
+ferramenta é feita do navegador — WebHID, permissão por gesto, download do JSON. Não há
+diagnóstico de desktop previsto, e descer o modelo de relatório levaria rótulos em português
+para dentro do núcleo, que é exatamente o que este spec chama de casca.
+
+Duas condições tornam essa exceção segura, e o plano precisa garantir as duas:
+
+1. **A sonda monta a própria sequência.** Ela não chama o driver nem a orquestração do
+   núcleo. É isso que a torna uma segunda opinião: o comentário do `probePollingWrite` diz
+   que o apply do driver "não é um teste mínimo", e é verdade — o apply envia CONFIG_RESET, o
+   corpo inteiro e todos os mapeamentos, enquanto a sonda envia um evento só.
+2. **Mas envia os mesmos bytes.** Hoje `ACTION_SAVE_CONFIG_TO_FDS = 0x34` está declarado
+   duas vezes — `LeviathanV4Driver.ts:31` e `writeProbe.ts:308` — e `probeProfileWrite`
+   repete a sequência de save do driver. Isso não causa bug em produção, porque
+   `diagnostico.html` é uma entrada de build separada que o app principal nunca alcança. Mas
+   causa **conclusão errada**, que é pior aqui: confirma-se no mouse a sequência da sonda e
+   publica-se a do driver, e o smoke test atesta algo que o app não faz. A constante e os
+   encoders de save passam a vir do núcleo.
+
+A distinção que sustenta a exceção: a sonda é independente **no que observa e decide**, não
+**no que envia**. Uma sonda que envia bytes diferentes do driver não é uma segunda opinião; é
+um segundo protocolo.
+
+## Duplicata declarada no caminho de escrita — `packedDpi`
+
+O núcleo tem `dpi_axes` (`packages/core/src/protocols/rawm/notify.rs`), que **desempacota**
+CPI2: X nos 16 bits baixos, Y nos altos. O inverso exato — empacotar X e Y de volta em 32 bits
+para escrever — continua em TypeScript, `packedDpi` em
+`apps/web/src/hardware/rawm/mouseParamSnapshot.ts:141-143`.
+
+Isso divide um formato de fio simétrico entre os dois lados da fronteira, no **caminho de
+escrita**. Cada decisão foi localmente certa: `dpi_axes` migrou porque `dpiValue.ts` está
+nomeado no passo 1; `packedDpi` mora num arquivo que pertence ao passo 3. Juntas, elas deixam
+a mesma conta — empacotar/desempacotar CPI2 — feita por duas implementações, sem que nenhum
+passo tenha declarado a divisão.
+
+**Não migra agora.** Puxar `mouseParamSnapshot.ts` para o passo 1 faria parte do passo 3 por
+antecipação, e o passo 1 está corretamente restrito a `protocol.ts`, `parseNotification` e
+`dpiValue.ts` (ver `## Ordem corrigida`). Esta seção é a declaração que faltava, não uma
+mudança de escopo: `packedDpi` fecha quando o passo 3 migrar `mouseParamSnapshot.ts` inteiro
+(ver `## Inventário corrigido`). Até lá, as duas metades concordam só porque a mesma pessoa
+escreveu as duas — nenhum teste ou vetor de conformidade cobre a direção de escrita de CPI2,
+então uma delas pode divergir da outra sem que nada em `pnpm verify` note.
+
+## Mudanças de comportamento deliberadas
+
+### UTF-8 estrito em `query_json`
+
+`packages/core/src/protocols/rawm/query.rs` usa `core::str::from_utf8`, que **rejeita** bytes
+inválidos. O `parseQueryJson` apagado usava `new TextDecoder()`, que por padrão é não-fatal e
+substitui o byte inválido por U+FFFD.
+
+**Antes:** um byte não-UTF-8 perdido na JSON de identidade virava um caractere de substituição,
+o `JSON.parse` seguia normalmente, e o dispositivo conectava com um `dn` levemente errado.
+**Agora:** falha dura, `Resposta RAWM não é texto válido.`, e o dispositivo não conecta.
+
+**Decisão:** manter o comportamento estrito. Conectar a um dispositivo cuja identidade não pôde
+ser lida corretamente é pior do que recusar — um `dn` corrompido alimentaria o nome do
+dispositivo, o casamento no registro e o perfil que o usuário salva. Mas ninguém escolheu isso
+deliberadamente na migração: a mudança veio de trocar `TextDecoder` por `core::str::from_utf8`
+sem que a diferença de comportamento fosse discutida, nenhum teste a fixava, e a carga da
+identidade é texto escrito pelo firmware que este projeto só viu vindo de um único dispositivo.
+Um teste em `query.rs` agora fixa o caso (`query_json` sobre uma carga com um byte inválido
+devolve `Err(RawmError::InvalidUtf8)`), e o comentário de documentação de `query_json` registra
+a escolha. É a única divergência de comportamento nesta etapa que firmware real pode expor e
+que nenhuma suíte de vetores cobre — os vetores comparam bytes, não a leniência de decodificação
+de texto.
+
+## Decisão 2 — `leviathanV4.ts` é dividido agora
+
+O arquivo mistura os dois lados da fronteira, e a costura é limpa.
+
+**Sobe** (~120 linhas): o parse da resposta de query (`cpi`, `cpi_l`, `polling`, `oci`, `pm`,
+`lod`, `at`, `ms`, `as`, `rctrl`, `top`), `onboardSlotCount` com a regra `ocs` contra `ocn`, a
+tabela de modos de desempenho, os limites do sensor (100–45000, passo 50, até 8 estágios) e as
+taxas de polling. São fatos do dispositivo: não mudam se a casca mudar.
+
+**Fica** (~96 linhas): a foto e sua proporção 213/420, as coordenadas fracionárias de cada
+botão, o lado do callout e os rótulos em português. São descrições do desenho na tela.
+
+Isso não antecipa a questão que este spec deixou aberta — enum de ações compartilhado ou por
+periférico segue esperando o segundo dispositivo. Dividir aqui separa dispositivo de desenho,
+não fecha o vocabulário.
+
+## A forma do passo 5: passos puxados, não uma lista pronta
+
+Este spec disse que a fila de aplicação desce para o núcleo, e também que o núcleo é síncrono
+e não faz I/O. Isso parece contraditório e não é — mas exige nomear a interface, porque é
+contra ela que os passos 3 a 5 são escritos.
+
+O driver de hoje é uma cadeia de promessas com `pause(8)` entre relatórios e um timeout no
+`session.ts`. Um núcleo síncrono não pode possuir isso. A saída é o núcleo **decidir os
+passos** e a casca **executá-los**:
+
+```rust
+pub enum Step {
+    Send(HidCommand),
+    Wait(Duration),
+}
+
+impl RawmSession {
+    /// Bytes que chegaram. Devolve o que eles significam.
+    pub fn feed_report(&mut self, report: &[u8]) -> Vec<CoreEvent>;
+    pub fn begin_apply(&mut self, settings: &MouseSettings) -> Result<(), CoreError>;
+    /// O próximo passo, decidido no instante em que é pedido.
+    pub fn next_step(&mut self) -> Result<Option<Step>, CoreError>;
+}
+```
+
+A casca vira uma bomba:
+
+```ts
+session.beginApply(settings);
+for (;;) {
+  const step = session.nextStep(); // pode lançar: a memória ativa mudou
+  if (!step) break;
+  if (step.kind === 'send') await transport.send(step.command);
+  else await wait(step.ms);
+}
+```
+
+**Puxado, não uma lista pronta.** Uma `Vec<Step>` calculada de uma vez não reproduziria o
+`checkSlot()` de hoje, que roda _entre_ os relatórios e aborta a aplicação se a memória ativa
+mudou no meio. Pedindo um passo por vez, o núcleo vê o estado no instante da decisão — e uma
+notificação `0x22` entregue por `feed_report` durante a aplicação faz o `next_step` seguinte
+falhar, que é exatamente o comportamento atual.
+
+Todo `await` continua em TypeScript. Nenhuma decisão continua.
+
+## Ordem corrigida
+
+O passo 0 é novo, e os demais absorvem os arquivos que faltavam.
+
+0. **Vetores de conformidade.** Um arquivo versionado de entrada e saída em bytes, lido pelo
+   `cargo test` e pelo `vitest`. É o que torna "migrei e apaguei" demonstrável. Não é
+   preocupação paralela: sem ele, cada passo seguinte é uma promessa.
+1. **Codec:** `protocol.ts` + `parseNotification` + `dpiValue.ts`. Vão juntos porque
+   `notifications.ts` e `protocol.ts` compartilham o `RawEventAssembler`. Sondas reapontadas.
+   **Fechado em 2026-09-16** pelo plano `docs/superpowers/plans/2026-09-16-migracao-codec-rawm.md`:
+   `protocol.ts` foi apagado, todo consumidor aponta direto para `coreBridge`, e os vetores
+   compartilhados provam a paridade byte a byte.
+2. **Tabelas:** `leviathanV4Keys.ts`. **A geração de tipos (`ts-rs`) entra aqui**, não ao
+   final: no instante em que o vocabulário de ações vive no Rust, `MouseActionId` passa a ter
+   dois donos, e espelhar à mão é a divergência que este spec existe para eliminar.
+3. **Leitura do dispositivo:** `mouseParamSnapshot.ts` + a metade de `leviathanV4.ts` que
+   descreve o dispositivo + a tabela de LOD + a identidade do dispositivo (o casamento USB de
+   `deviceRegistry.ts` e o regex de nome de `connectLeviathanV4.ts`). Juntos porque leem o
+   mesmo JSON de query e descrevem o mesmo aparelho; separá-los deixaria dois leitores do
+   mesmo payload. Sondas reapontadas. **Confirmação em hardware.**
+4. **Dump onboard:** `onboardConfig.ts`, a decodificação do `0x14`. **Confirmação em
+   hardware.**
+5. **Sessão:** `LeviathanV4Driver.ts` sob a interface de passos puxados acima, mais a
+   decodificação de `session.ts`. O maior e o mais arriscado. Sondas reapontadas.
+   **Confirmação em hardware.**
+
+A barra de conclusão de cada passo continua a de `## Como verificar cada passo`: a lógica
+existe em Rust com os testes portados, o TypeScript **apagou** a sua, as duas suítes passam,
+há paridade byte a byte contra os vetores, e os passos 3 a 5 foram confirmados no mouse.

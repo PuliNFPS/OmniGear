@@ -1,1 +1,1 @@
-//! Manufacturer protocol implementations will live in submodules here.
+pub mod rawm;

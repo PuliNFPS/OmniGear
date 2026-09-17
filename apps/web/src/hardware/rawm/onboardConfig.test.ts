@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { encodeLeviathanAction } from './LeviathanV4Driver';
 import { OnboardConfigCollector, decodeOnboardEntry } from './onboardConfig';
-import { withProtocolEnvelope } from './protocol';
+import { withProtocolEnvelope } from '../../core/coreBridge';
 
 /** The mouse reports entries with the length encoded, as the writer sends them. */
 function entry(keyIds: number[], actionId: Parameters<typeof encodeLeviathanAction>[1]) {

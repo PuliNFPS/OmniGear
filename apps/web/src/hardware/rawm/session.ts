@@ -1,12 +1,12 @@
-import type { HardwareTransport } from '../WebHidTransport';
 import {
-  RawEventAssembler,
   buildQueryEvent,
   decodeReportChunk,
   frameEvent,
   isQueryResult,
   parseQueryJson,
-} from './protocol';
+  RawEventAssembler,
+} from '../../core/coreBridge';
+import type { HardwareTransport } from '../WebHidTransport';
 
 export interface RawmIdentity {
   deviceName: string;

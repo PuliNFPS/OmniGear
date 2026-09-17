@@ -1,64 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { HardwareTransport } from '../WebHidTransport';
-import {
-  parseNotification,
-  subscribeToNotifications,
-  type RawmNotification,
-} from './notifications';
-import { frameEvent, withProtocolEnvelope } from './protocol';
+import { frameEvent, withProtocolEnvelope } from '../../core/coreBridge';
+import { subscribeToNotifications } from './notifications';
+import type { RawmNotification } from '../../core/coreBridge';
 
 /** Builds a notify event the way the mouse sends one. */
 function notifyEvent(type: number, payload: number[]): Uint8Array {
   return withProtocolEnvelope([0x0b, 0, type, ...payload], false);
 }
-
-describe('parseNotification', () => {
-  it('reads the onboard index notification as a zero-based byte', () => {
-    expect(parseNotification(notifyEvent(0x22, [2]))).toEqual({ kind: 'onboard-index', index: 2 });
-    expect(parseNotification(notifyEvent(0x22, []))).toBeNull();
-  });
-  // Cycling DPI with the button is the case this exists for.
-  it('reads a DPI change as a little-endian 16-bit value', () => {
-    expect(parseNotification(notifyEvent(0x00, [0x20, 0x03]))).toEqual({
-      kind: 'dpi',
-      value: 800,
-    });
-  });
-
-  it('reads the packed 32-bit value used for independent axes', () => {
-    expect(parseNotification(notifyEvent(0x06, [0x20, 0x03, 0x90, 0x01]))).toEqual({
-      kind: 'dpi-xy',
-      value: 0x01900320,
-    });
-  });
-
-  it('reads a polling rate change', () => {
-    expect(parseNotification(notifyEvent(0x01, [0xa0, 0x0f]))).toEqual({
-      kind: 'polling',
-      value: 4000,
-    });
-  });
-
-  // Streamed unprompted after a query; the delimiters are one byte each.
-  it('passes an onboard config payload through for the collector', () => {
-    expect(parseNotification(notifyEvent(0x14, [0x00]))).toEqual({
-      kind: 'onboard-config',
-      payload: Uint8Array.from([0x00]),
-    });
-  });
-
-  it('ignores notifications this app has no use for', () => {
-    expect(parseNotification(notifyEvent(0x17, [50]))).toBeNull();
-  });
-
-  it('ignores an event that is not a notification', () => {
-    expect(parseNotification(withProtocolEnvelope([0x02, 0, 0x7b, 0x7d], false))).toBeNull();
-  });
-
-  it('ignores a truncated payload rather than reporting a wrong value', () => {
-    expect(parseNotification(notifyEvent(0x00, [0x20]))).toBeNull();
-  });
-});
 
 describe('subscribeToNotifications', () => {
   function fakeTransport() {

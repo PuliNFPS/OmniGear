@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { HardwareTransport } from '../WebHidTransport';
-import { frameEvent, withProtocolEnvelope } from './protocol';
+import { frameEvent, withProtocolEnvelope } from '../../core/coreBridge';
 import { queryRawmDevice } from './session';
 
 afterEach(() => vi.useRealTimers());

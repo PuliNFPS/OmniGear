@@ -4,7 +4,7 @@ import { createLeviathanV4Peripheral } from './leviathanV4';
 import { leviathanV4QueryFixture } from './leviathanV4Fixture';
 import { encodeLeviathanAction } from './LeviathanV4Driver';
 import { decodeOnboardEntry, settingsFromSlot, type OnboardBinding } from './onboardConfig';
-import { withProtocolEnvelope } from './protocol';
+import { withProtocolEnvelope } from '../../core/coreBridge';
 
 const base = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real').defaults as MouseSettings;
 
