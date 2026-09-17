@@ -353,3 +353,35 @@ branch que nenhum teste alcançava. Neste firmware, ela não dispara.
   ciclado pelo botão ou que o dump onboard `0x14` tenha chegado durante a sessão. As duas
   coisas acontecem sozinhas quando o mouse resolve anunciá-las, então a ausência de
   confirmação aqui é falta de observação, não sinal de problema.
+
+## As notificações em Rust, confirmadas no mouse (2026-09-17)
+
+Com a mesma branch do PR #10, as três notificações que o app usa foram exercitadas contra
+o firmware. Todas passam por `parse_notification`, em `packages/core/src/protocols/rawm/notify.rs`.
+
+| notificação            | como foi confirmada                                                | o que prova                           |
+| ---------------------- | ------------------------------------------------------------------ | ------------------------------------- |
+| `0x00` / `0x06` — DPI  | botão de DPI apertado no mouse; o valor na tela acompanhou sozinho | `parse_notification` **e** `dpi_axes` |
+| `0x14` — dump onboard  | as quatro memórias mostram mapeamentos diferentes entre si         | o dump chegou e foi decodificado      |
+| `0x22` — memória ativa | o mouse trocou de memória e a marcação de ativa seguiu             | o índice é lido do dispositivo        |
+
+O caso do DPI é o que valida mais por linha: um erro no `dpi_axes` apareceria como eixo Y
+zerado num mouse sem eixos independentes, porque a metade alta do valor empacotado é zero
+e o código precisa tratar isso como DPI simétrico, não como zero. A tela acompanhando com
+os dois eixos corretos descarta essa tradução errada.
+
+O caso do dump é o que valida mais em profundidade: para as quatro memórias mostrarem
+mapeamentos **diferentes**, o `OnboardConfigCollector` precisou montar o fluxo delimitado
+inteiro — marcador de slot, entradas, terminador `0xff` — sobre eventos que atravessaram o
+`RawEventAssembler` e o `decode_report_chunk` em Rust. Se qualquer peça tivesse falhado, as
+quatro mostrariam o padrão do app, idênticas.
+
+### O que isso fecha
+
+Com a conexão (seção anterior) mais estas três, **todo o caminho de leitura do protocolo
+está confirmado em hardware**: consulta, enquadramento, remontagem, extração do JSON,
+decodificação de notificações e desempacotamento de DPI. Nenhuma peça do codec migrado
+depende só de teste unitário.
+
+O caminho de **escrita** continua sem confirmação nova — mas ele não mudou nesta migração,
+e segue coberto pelas seções anteriores deste documento.
