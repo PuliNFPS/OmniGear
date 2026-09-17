@@ -65,6 +65,21 @@ pub fn encode_mouse_function(
     gearhub_core::encode_mouse_function(key_ids, touch_type, function_id, value, text)
 }
 
+#[wasm_bindgen(js_name = buildQueryEvent)]
+pub fn build_query_event(epoch_seconds: u64) -> Result<Vec<u8>, JsError> {
+    rawm::build_query_event(epoch_seconds).map_err(js_error)
+}
+
+#[wasm_bindgen(js_name = isQueryResult)]
+pub fn is_query_result(event: &[u8]) -> bool {
+    rawm::is_query_result(event)
+}
+
+#[wasm_bindgen(js_name = queryJson)]
+pub fn query_json(event: &[u8]) -> Result<String, JsError> {
+    rawm::query_json(event).map_err(js_error)
+}
+
 #[wasm_bindgen(js_name = RawEventAssembler)]
 pub struct WasmRawEventAssembler {
     inner: rawm::RawEventAssembler,

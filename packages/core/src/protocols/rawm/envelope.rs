@@ -7,18 +7,15 @@ const MAX_EVENT_BYTES: usize = 0x0fff;
 
 /// O comprimento declarado, lido dos dois bytes de cabeçalho.
 ///
-/// Invariante do chamador: `event` deve ter ao menos 2 bytes. Quem chama
-/// precisa garantir isso antes — `RawEventAssembler::push` só chega aqui
-/// depois de conferir `MINIMUM_FRAME`, e a Tarefa 5 (`query_json`) faz sua
-/// própria checagem `event.len() < 2` antes de chamar. O `debug_assert!`
-/// torna a invariante executável em depuração sem pagar o custo em release
-/// nem espalhar `Result` para os dois chamadores.
+/// Total: um evento mais curto que 2 bytes lê `0` no lugar do byte ausente,
+/// em vez de estourar o índice. Isso não esconde um evento malformado — um
+/// comprimento zerado falha a checagem `declared < HEADER_BYTES` do
+/// montador, ou a checagem `event.len() != event_length(event)` de
+/// `query_json`, do mesmo jeito que o TypeScript substituído falhava.
 pub(crate) fn event_length(event: &[u8]) -> usize {
-    debug_assert!(
-        event.len() >= 2,
-        "event_length exige ao menos 2 bytes de cabeçalho"
-    );
-    ((usize::from(event[0] & 0xf0)) << 4) | usize::from(event[1])
+    let high = *event.first().unwrap_or(&0);
+    let low = *event.get(1).unwrap_or(&0);
+    (usize::from(high & 0xf0) << 4) | usize::from(low)
 }
 
 /// Escreve o próprio comprimento no cabeçalho, em 12 bits repartidos.

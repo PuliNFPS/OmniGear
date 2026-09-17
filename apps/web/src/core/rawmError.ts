@@ -13,6 +13,8 @@ const MESSAGES: Record<string, string> = {
   'report-not-64': 'Relatório RAWM deve ter 64 bytes.',
   'wrong-channel': 'Relatório não pertence ao canal virtual do mouse.',
   'truncated-report': 'Relatório RAWM truncado.',
+  'not-a-query-result': 'Resposta RAWM não é resultado de consulta.',
+  'invalid-utf8': 'Resposta RAWM não é texto válido.',
 };
 
 function rawmErrorMessage(code: string): string {

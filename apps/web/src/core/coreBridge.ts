@@ -1,4 +1,5 @@
 import init, {
+  buildQueryEvent as wasmBuildQueryEvent,
   core_version,
   decodeReportChunk as wasmDecodeReportChunk,
   encode_action as wasmEncodeAction,
@@ -8,6 +9,8 @@ import init, {
   encode_mouse_param_snapshot as wasmEncodeMouseParamSnapshot,
   frameEvent as wasmFrameEvent,
   is_wasm_available,
+  isQueryResult as wasmIsQueryResult,
+  queryJson as wasmQueryJson,
   RawEventAssembler as WasmRawEventAssembler,
   withProtocolEnvelope as wasmWithProtocolEnvelope,
 } from 'gearhub-core-wasm';
@@ -167,6 +170,32 @@ export function withProtocolEnvelope(source: ArrayLike<number>, useCrc: boolean)
   } catch (error) {
     throw asRawmError(error);
   }
+}
+
+export function buildQueryEvent(epochSeconds = Math.floor(Date.now() / 1000)): Uint8Array {
+  try {
+    return wasmBuildQueryEvent(BigInt(epochSeconds));
+  } catch (error) {
+    throw asRawmError(error);
+  }
+}
+
+export function isQueryResult(event: Uint8Array): boolean {
+  return wasmIsQueryResult(event);
+}
+
+export function parseQueryJson(event: Uint8Array): Record<string, unknown> {
+  let text: string;
+  try {
+    text = wasmQueryJson(event);
+  } catch (error) {
+    throw asRawmError(error);
+  }
+  const parsed: unknown = JSON.parse(text);
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    throw new Error('Identificação RAWM inválida.');
+  }
+  return parsed as Record<string, unknown>;
 }
 
 export function frameEvent(event: ArrayLike<number>, virtualMouse: boolean): Uint8Array[] {

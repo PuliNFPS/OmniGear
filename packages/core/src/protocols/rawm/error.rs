@@ -18,6 +18,10 @@ pub enum RawmError {
     WrongChannel,
     /// Relatório cujo comprimento declarado excede o que ele carrega.
     TruncatedReport,
+    /// Evento que não é resultado de consulta.
+    NotAQueryResult,
+    /// Carga que não é texto UTF-8.
+    InvalidUtf8,
 }
 
 impl RawmError {
@@ -31,6 +35,8 @@ impl RawmError {
             Self::ReportNotSixtyFour => "report-not-64",
             Self::WrongChannel => "wrong-channel",
             Self::TruncatedReport => "truncated-report",
+            Self::NotAQueryResult => "not-a-query-result",
+            Self::InvalidUtf8 => "invalid-utf8",
         }
     }
 }
@@ -52,5 +58,7 @@ mod tests {
         assert_eq!(RawmError::ReportNotSixtyFour.code(), "report-not-64");
         assert_eq!(RawmError::WrongChannel.code(), "wrong-channel");
         assert_eq!(RawmError::TruncatedReport.code(), "truncated-report");
+        assert_eq!(RawmError::NotAQueryResult.code(), "not-a-query-result");
+        assert_eq!(RawmError::InvalidUtf8.code(), "invalid-utf8");
     }
 }
