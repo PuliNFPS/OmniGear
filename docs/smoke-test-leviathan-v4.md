@@ -320,3 +320,36 @@ Com isso o driver voltou a escrever mapeamentos:
   persiste.
 - A setima tecla (`0x0d`, `FUNCTION_SHOW_POWER`) e reenviada sempre. O editor nao a expoe,
   entao nada em `settings` a reconstruiria, e o reset a apagaria em silencio.
+
+## O codec em Rust, confirmado na conexão (2026-09-17)
+
+Depois da migração do codec para `packages/core` (PR #10), o Leviathan V4 conectou
+normalmente no app. Uma conexão bem-sucedida não é um teste pequeno: ela atravessa
+quase toda a leitura do protocolo, e agora essa leitura inteira é Rust.
+
+**O que essa conexão confirma, peça por peça:**
+
+| peça em Rust                                  | o que a conexão prova                             |
+| --------------------------------------------- | ------------------------------------------------- |
+| `build_query_event`                           | os bytes de consulta foram aceitos pelo firmware  |
+| `frame_event`                                 | o enquadramento no canal virtual está certo       |
+| `decode_report_chunk`                         | os relatórios de 64 bytes foram lidos de volta    |
+| `RawEventAssembler`                           | o fluxo com preâmbulo `ff ff ff ff` foi remontado |
+| `is_query_result` + `query_json`              | o JSON foi localizado dentro do evento            |
+| `core::str::from_utf8` dentro de `query_json` | **a identidade deste firmware é UTF-8 válido**    |
+
+A última linha era a incógnita. O `parseQueryJson` em TypeScript usava `TextDecoder`,
+que por padrão não falha: byte inválido virava U+FFFD e a conexão seguia com o `dn`
+levemente errado. O `query_json` em Rust rejeita. A troca foi deliberada — `dn` alimenta
+o nome do dispositivo, o casamento no registro e o perfil salvo, então conectar com uma
+identidade ilegível é pior que recusar —, mas era a única mudança de comportamento da
+branch que nenhum teste alcançava. Neste firmware, ela não dispara.
+
+**O que essa conexão NÃO confirma:**
+
+- O caminho de escrita. Ele não mudou nesta migração e continua coberto pelas seções
+  anteriores deste documento.
+- A decodificação de notificações (`parse_notification`), a menos que o DPI tenha sido
+  ciclado pelo botão ou que o dump onboard `0x14` tenha chegado durante a sessão. As duas
+  coisas acontecem sozinhas quando o mouse resolve anunciá-las, então a ausência de
+  confirmação aqui é falta de observação, não sinal de problema.
