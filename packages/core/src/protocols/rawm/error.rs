@@ -34,3 +34,23 @@ impl RawmError {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Cada código atravessa o WASM e vira a chave que `rawmErrorMessage`
+    /// procura em `apps/web/src/core/rawmError.ts`. Os literais aqui são
+    /// escritos à mão, não recalculados a partir de uma tabela: o ponto do
+    /// teste é travar a string, não reconferir a própria implementação.
+    #[test]
+    fn pins_the_stable_code_for_each_variant() {
+        assert_eq!(RawmError::EventTooLong.code(), "event-too-long");
+        assert_eq!(RawmError::EventTooShort.code(), "event-too-short");
+        assert_eq!(RawmError::MissingPreamble.code(), "missing-preamble");
+        assert_eq!(RawmError::InvalidLength.code(), "invalid-length");
+        assert_eq!(RawmError::ReportNotSixtyFour.code(), "report-not-64");
+        assert_eq!(RawmError::WrongChannel.code(), "wrong-channel");
+        assert_eq!(RawmError::TruncatedReport.code(), "truncated-report");
+    }
+}

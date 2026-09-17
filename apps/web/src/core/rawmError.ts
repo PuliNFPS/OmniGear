@@ -15,7 +15,7 @@ const MESSAGES: Record<string, string> = {
   'truncated-report': 'Relatório RAWM truncado.',
 };
 
-export function rawmErrorMessage(code: string): string {
+function rawmErrorMessage(code: string): string {
   return MESSAGES[code] ?? `Falha de protocolo RAWM: ${code}.`;
 }
 

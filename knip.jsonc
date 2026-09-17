@@ -24,8 +24,5 @@
     "apps/web/src/store/deviceStore.ts": ["types"],
     // Test utility: interfaces exported for conformance vector tests.
     "apps/web/src/test/vectors.ts": ["types"],
-    // Part of the brief's public interface for Task 2; used inside this file
-    // today, and by UI surfaces that show RAWM failures in later tasks.
-    "apps/web/src/core/rawmError.ts": ["exports"],
   },
 }
