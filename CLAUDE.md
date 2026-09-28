@@ -28,14 +28,18 @@ O teste é uma pergunta: **isso mudaria se a casca mudasse?** Se sim, é casca.
 **Regra:** comportamento novo de dispositivo entra no Rust. Uma tarefa de dispositivo que só
 produza `.ts` merece a pergunta — por que isto não está no núcleo?
 
-**Estado real (2026-09-17):** o **codec** migrou — envelope, CRC16, enquadramento de 64 bytes,
+**Estado real (2026-09-28):** o **codec** migrou — envelope, CRC16, enquadramento de 64 bytes,
 montador de eventos, consulta e decodificação de notificações vivem em
 `packages/core/src/protocols/rawm/`, e `apps/web/src/hardware/rawm/protocol.ts` não existe
 mais. Todo o caminho de leitura está confirmado em hardware.
+O vocabulário de ações (`MouseActionId`, gerado para TypeScript por `ts-rs`), a tabela
+ação↔bytes (`packages/core/src/protocols/rawm/actions.rs`) e a tabela de teclas do Leviathan V4
+(`packages/core/src/drivers/leviathan_v4/`) também vivem no núcleo, e `leviathanV4Keys.ts` não
+existe mais.
 
-Ainda em TypeScript, com passo marcado no spec: `mouseParamSnapshot.ts` e a metade de `leviathanV4.ts` que descreve o dispositivo (passo 3),
-`onboardConfig.ts` (passo 4), a sessão de `LeviathanV4Driver.ts` e a decodificação de
-`session.ts` (passo 5).
+Ainda em TypeScript, com passo marcado no spec: `mouseParamSnapshot.ts` e a metade de
+`leviathanV4.ts` que descreve o dispositivo (passo 3), `onboardConfig.ts` (passo 4), a sessão
+de `LeviathanV4Driver.ts` e a decodificação de `session.ts` (passo 5).
 
 Duas duplicatas de protocolo sobrevivem **de propósito e declaradas**: `packedDpi`
 (`mouseParamSnapshot.ts`), inverso do `dpi_axes` do núcleo, fecha no passo 3; e

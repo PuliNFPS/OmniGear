@@ -81,6 +81,7 @@ function signatureOf(entries: [string, string][]): string {
 function intendedMappings(settings: MouseSettings): string {
   return signatureOf(
     editorKeySets(settings)
+      // O núcleo decide se a ação escreve algo; os bytes codificados são descartados.
       .filter(({ keyIds, action }) => encodeMapping(keyIds, action) !== null)
       .map(({ keyIds, action }): [string, string] => [keyOf(keyIds), action]),
   );

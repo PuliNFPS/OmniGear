@@ -186,18 +186,16 @@ export function encodeMapping(keyIds: ArrayLike<number>, action: MouseActionId):
   }
 }
 
-/*
- * O núcleo devolve o id como texto. A conversão para `MouseActionId` é segura
- * porque o tipo é gerado do mesmo enum, e `cargo test` reprova quando os
- * nomes divergem (`as_str_names_exactly_the_generated_union`).
+/**
+ * A ação que um par tipo/código de tecla significa, ou `null`. O núcleo devolve o id como
+ * texto; a conversão para `MouseActionId` é segura porque o tipo é gerado do mesmo enum, e
+ * `cargo test` reprova quando os nomes divergem (`as_str_names_exactly_the_generated_union`).
  */
-
-/** A ação que um par tipo/código de tecla significa, ou `null`. */
 export function actionForKey(keyType: number, keyCode: number): MouseActionId | null {
   return (wasmActionForKey(keyType, keyCode) ?? null) as MouseActionId | null;
 }
 
-/** A ação que um id de função significa, ou `null`. */
+/** A ação que um id de função significa, ou `null`. Mesma conversão de `actionForKey`. */
 export function actionForFunction(functionId: number): MouseActionId | null {
   return (wasmActionForFunction(functionId) ?? null) as MouseActionId | null;
 }

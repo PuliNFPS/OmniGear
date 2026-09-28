@@ -69,4 +69,15 @@ mod tests {
             vec![3, 0, 0x18, 1, 0x0d, 2, 0x0e, 0, 0, 0, 0, 0]
         );
     }
+
+    #[test]
+    fn every_physical_key_has_a_conformance_vector() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/vectors/rawm-protocol.json"
+        )))
+        .unwrap();
+        let entries = vectors["leviathanKeys"].as_array().unwrap();
+        assert_eq!(entries.len(), PHYSICAL_KEYS.len());
+    }
 }
