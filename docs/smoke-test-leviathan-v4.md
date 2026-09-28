@@ -385,3 +385,18 @@ depende só de teste unitário.
 
 O caminho de **escrita** continua sem confirmação nova — mas ele não mudou nesta migração,
 e segue coberto pelas seções anteriores deste documento.
+
+## As tabelas de tecla e ação em Rust, confirmadas na escrita (2026-09-28)
+
+O passo 2 da migração (PR #12) apagou `leviathanV4Keys.ts`: a tabela ação→bytes, a tabela
+botão↔id de tecla e a sétima tecla (show power) passaram para o núcleo, e o driver monta
+cada mapeamento com `encodeMapping` do `coreBridge`.
+
+Depois do merge, uma configuração foi aplicada no Leviathan V4 pelo app, e o mouse ficou
+exatamente como configurado. É a primeira confirmação do **caminho de escrita** com bytes
+montados pelo núcleo: CONFIG_RESET, o bloco de parâmetros, todos os mapeamentos e a
+sétima tecla atravessaram a ponte e foram aceitos.
+
+Os bytes não mudaram nesta migração — os vetores de `rawm-protocol.json` foram capturados do
+TypeScript antigo antes de qualquer mudança —, então esta confirmação atesta a ponte, não um
+encoder novo.
