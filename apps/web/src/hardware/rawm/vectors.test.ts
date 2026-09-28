@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { fromHex, readProtocolVectors, toHex } from '../../test/vectors';
-import { buildQueryEvent, withProtocolEnvelope } from '../../core/coreBridge';
+import { buildQueryEvent, encodeMouseFunction, withProtocolEnvelope } from '../../core/coreBridge';
+import {
+  FUNCTION_SHOW_POWER,
+  SHOW_POWER_KEY_ID,
+  TOUCH_TYPE_PRESS,
+  actions,
+  buttonIdsByKeyId,
+  physicalKeyIds,
+} from './leviathanV4Keys';
+import { encodeLeviathanAction } from './LeviathanV4Driver';
 
 const vectors = readProtocolVectors();
 
@@ -22,9 +31,12 @@ describe('vetores de conformidade do protocolo RAWM', () => {
     expect(vectors.version).toBe(1);
   });
 
-  it('tem vetores de envelope e de consulta', () => {
+  it('tem vetores de todas as seções', () => {
     requireNonEmpty(vectors.envelope, 'envelope');
     requireNonEmpty(vectors.queryEvent, 'queryEvent');
+    requireNonEmpty(vectors.mapping, 'mapping');
+    requireNonEmpty(vectors.showPower, 'showPower');
+    requireNonEmpty(vectors.leviathanKeys, 'leviathanKeys');
   });
 
   it.each(vectors.envelope)('envelope: $name', ({ input, crc, expected }) => {
@@ -33,6 +45,34 @@ describe('vetores de conformidade do protocolo RAWM', () => {
 
   it.each(vectors.queryEvent)('consulta: $name', ({ epochSeconds, expected }) => {
     expect(toHex(buildQueryEvent(epochSeconds))).toBe(expected);
+  });
+
+  it.each(vectors.mapping)('mapeamento: $name', ({ keyIds, action, expected }) => {
+    const encoded = encodeLeviathanAction([...fromHex(keyIds)], action);
+    expect(encoded === null ? null : toHex(encoded)).toBe(expected);
+  });
+
+  it.each(vectors.showPower)('show power: $name', ({ expected }) => {
+    const encoded = encodeMouseFunction({
+      keyIds: [SHOW_POWER_KEY_ID],
+      touchType: TOUCH_TYPE_PRESS,
+      functionId: FUNCTION_SHOW_POWER,
+    });
+    expect(toHex(encoded)).toBe(expected);
+  });
+
+  it.each(vectors.leviathanKeys)('tecla do Leviathan: $buttonId', ({ buttonId, keyId }) => {
+    expect(physicalKeyIds[buttonId]).toBe(keyId);
+    expect(buttonIdsByKeyId.get(keyId)).toBe(buttonId);
+  });
+
+  it('cobre toda tecla do Leviathan e toda ação', () => {
+    expect(vectors.leviathanKeys.map(({ buttonId }) => buttonId).sort()).toEqual(
+      Object.keys(physicalKeyIds).sort(),
+    );
+    expect(new Set(vectors.mapping.map(({ action }) => action))).toEqual(
+      new Set(Object.keys(actions)),
+    );
   });
 });
 

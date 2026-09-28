@@ -20,5 +20,83 @@
       "epochSeconds": 305419896,
       "expected": "010d0300007856341200000000"
     }
+  ],
+  "mapping": [
+    {
+      "name": "clique esquerdo",
+      "keyIds": "0a",
+      "action": "clique-esquerdo",
+      "expected": "030016010a0001010000"
+    },
+    {
+      "name": "clique direito",
+      "keyIds": "0a",
+      "action": "clique-direito",
+      "expected": "030016010a0001020000"
+    },
+    {
+      "name": "clique central",
+      "keyIds": "0a",
+      "action": "clique-central",
+      "expected": "030016010a0001030000"
+    },
+    { "name": "voltar", "keyIds": "0a", "action": "voltar", "expected": "030016010a0001040000" },
+    { "name": "avançar", "keyIds": "0a", "action": "avancar", "expected": "030016010a0001050000" },
+    {
+      "name": "rolagem para cima é 0x07, não 0x41",
+      "keyIds": "0c",
+      "action": "rolagem-cima",
+      "expected": "030016010c0003070000"
+    },
+    {
+      "name": "rolagem para baixo é 0x08, não 0x3f",
+      "keyIds": "0c",
+      "action": "rolagem-baixo",
+      "expected": "030016010c0003080000"
+    },
+    {
+      "name": "ciclo de DPI",
+      "keyIds": "10",
+      "action": "dpi-ciclo",
+      "expected": "030018011002010000000000"
+    },
+    {
+      "name": "aumentar DPI",
+      "keyIds": "10",
+      "action": "dpi-aumentar",
+      "expected": "030018011002020000000000"
+    },
+    {
+      "name": "diminuir DPI",
+      "keyIds": "10",
+      "action": "dpi-diminuir",
+      "expected": "030018011002030000000000"
+    },
+    {
+      "name": "desativado não escreve nada",
+      "keyIds": "0a",
+      "action": "desativado",
+      "expected": null
+    },
+    {
+      "name": "R-Plus: ativador primeiro, alvo depois",
+      "keyIds": "100c",
+      "action": "dpi-ciclo",
+      "expected": "03001802100c02010000000000"
+    }
+  ],
+  "showPower": [
+    {
+      "name": "sétima tecla, reconstruída depois de todo CONFIG_RESET",
+      "expected": "030018010d020e0000000000"
+    }
+  ],
+  "leviathanKeys": [
+    { "buttonId": "esquerdo", "keyId": 10 },
+    { "buttonId": "direito", "keyId": 11 },
+    { "buttonId": "central", "keyId": 12 },
+    { "buttonId": "lateral-traseiro", "keyId": 14 },
+    { "buttonId": "lateral-dianteiro", "keyId": 15 },
+    { "buttonId": "dpi", "keyId": 16 }
   ]
 }
