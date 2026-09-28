@@ -22,6 +22,9 @@ pub enum RawmError {
     NotAQueryResult,
     /// Carga que não é texto UTF-8.
     InvalidUtf8,
+    /// Id de ação que o núcleo não conhece — uma configuração salva por outra
+    /// versão do app, por exemplo.
+    UnknownAction,
 }
 
 impl RawmError {
@@ -37,6 +40,7 @@ impl RawmError {
             Self::TruncatedReport => "truncated-report",
             Self::NotAQueryResult => "not-a-query-result",
             Self::InvalidUtf8 => "invalid-utf8",
+            Self::UnknownAction => "unknown-action",
         }
     }
 }
@@ -60,5 +64,6 @@ mod tests {
         assert_eq!(RawmError::TruncatedReport.code(), "truncated-report");
         assert_eq!(RawmError::NotAQueryResult.code(), "not-a-query-result");
         assert_eq!(RawmError::InvalidUtf8.code(), "invalid-utf8");
+        assert_eq!(RawmError::UnknownAction.code(), "unknown-action");
     }
 }

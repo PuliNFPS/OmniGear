@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import type { MouseActionId } from '@gearhub/shared';
 
 /**
  * Os vetores defendem as duas implementações do protocolo enquanto elas
@@ -25,10 +26,31 @@ interface QueryEventVector {
   expected: string;
 }
 
+interface MappingVector {
+  name: string;
+  keyIds: string;
+  action: MouseActionId;
+  /** Null quando a ação não escreve nada. */
+  expected: string | null;
+}
+
+interface ShowPowerVector {
+  name: string;
+  expected: string;
+}
+
+interface LeviathanKeyVector {
+  buttonId: string;
+  keyId: number;
+}
+
 export interface ProtocolVectors {
   version: number;
   envelope: EnvelopeVector[];
   queryEvent: QueryEventVector[];
+  mapping: MappingVector[];
+  showPower: ShowPowerVector[];
+  leviathanKeys: LeviathanKeyVector[];
 }
 
 export function readProtocolVectors(): ProtocolVectors {

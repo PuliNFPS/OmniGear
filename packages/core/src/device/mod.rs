@@ -1,5 +1,8 @@
+pub mod actions;
 pub mod capabilities;
 pub mod registry;
+
+pub use actions::MouseActionId;
 
 use crate::command::HidCommand;
 

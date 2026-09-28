@@ -1,11 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
+  actionForFunction,
+  actionForKey,
   dpiAxes,
   encodeAction,
   encodeConfigReset,
+  encodeLeviathanShowPower,
+  encodeMapping,
   encodeMouseFunction,
   encodeMouseKey,
   encodeMouseParamSnapshot,
+  leviathanButtonId,
+  leviathanKeyId,
+  leviathanShowPowerKeyId,
   parseNotification,
   type RawMouseKey,
   withProtocolEnvelope,
@@ -144,5 +151,47 @@ describe('parseNotification e dpiAxes através da ponte', () => {
   it('unpacks DPI axes through the real wasm', () => {
     expect(dpiAxes(0x0190_0320)).toEqual({ x: 800, y: 400 });
     expect(dpiAxes(800)).toEqual({ x: 800, y: 800 });
+  });
+});
+
+describe('tabelas de ação e de tecla do núcleo', () => {
+  it('codifica uma ação e devolve null para desativado', () => {
+    expect(bytes(encodeMapping([0x0a], 'clique-esquerdo')!)).toEqual([
+      3, 0, 0x16, 1, 0x0a, 0, 1, 1, 0, 0,
+    ]);
+    expect(encodeMapping([0x0a], 'desativado')).toBeNull();
+  });
+
+  it('recusa um id de ação que o núcleo não conhece, com o código em cause', () => {
+    let thrown: unknown;
+    try {
+      encodeMapping([0x0a], 'clique-lateral' as never);
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(Error);
+    expect((thrown as Error).message).toBe('Ação de botão desconhecida.');
+    expect((thrown as Error).cause).toBe('unknown-action');
+  });
+
+  it('lê de volta a ação de um código de tecla ou de função', () => {
+    expect(actionForKey(0x03, 0x07)).toBe('rolagem-cima');
+    expect(actionForKey(0x01, 0x09)).toBeNull();
+    expect(actionForFunction(2)).toBe('dpi-aumentar');
+    expect(actionForFunction(0x0e)).toBeNull();
+  });
+
+  it('traduz entre botão e id de tecla do Leviathan V4', () => {
+    expect(leviathanKeyId('dpi')).toBe(0x10);
+    expect(leviathanKeyId('roda')).toBeNull();
+    expect(leviathanButtonId(0x0e)).toBe('lateral-traseiro');
+    expect(leviathanButtonId(leviathanShowPowerKeyId())).toBeNull();
+  });
+
+  it('monta a sétima tecla', () => {
+    expect(leviathanShowPowerKeyId()).toBe(0x0d);
+    expect(bytes(encodeLeviathanShowPower())).toEqual([
+      3, 0, 0x18, 1, 0x0d, 2, 0x0e, 0, 0, 0, 0, 0,
+    ]);
   });
 });

@@ -3,22 +3,17 @@ import {
   dpiAxes,
   encodeAction,
   encodeConfigReset,
-  encodeMouseFunction,
-  encodeMouseKey,
+  encodeLeviathanShowPower,
+  encodeMapping,
   encodeMouseParamSnapshot,
   frameEvent,
+  leviathanKeyId,
+  leviathanShowPowerKeyId,
   withProtocolEnvelope,
 } from '../../core/coreBridge';
 import { isMouseSettings } from '../../domain/settings';
 import type { DeviceDriver, DeviceReport, DeviceState } from '../deviceDriver';
 import type { HardwareTransport } from '../WebHidTransport';
-import {
-  FUNCTION_SHOW_POWER,
-  SHOW_POWER_KEY_ID,
-  TOUCH_TYPE_PRESS,
-  actions,
-  physicalKeyIds,
-} from './leviathanV4Keys';
 import {
   applySettingsToMouseParam,
   encodeMouseParamBody,
@@ -31,37 +26,21 @@ import { queryRawmDevice } from './session';
 
 const ACTION_SAVE_CONFIG_TO_FDS = 0x34;
 
-export function encodeLeviathanAction(
-  keyIds: number[],
-  actionId: MouseActionId,
-): Uint8Array | null {
-  const action = actions[actionId];
-  if (action.kind === 'disabled') return null;
-  if (action.kind === 'function') {
-    return encodeMouseFunction({
-      keyIds,
-      touchType: TOUCH_TYPE_PRESS,
-      functionId: action.functionId,
-    });
-  }
-  return encodeMouseKey({ keyIds, keyType: action.keyType, keyCode: action.keyCode });
-}
-
 /** Every key set the editor rebuilds, as the signature and the writer see it. */
 function editorKeySets(settings: MouseSettings): { keyIds: number[]; action: MouseActionId }[] {
   const sets: { keyIds: number[]; action: MouseActionId }[] = [];
   for (const [buttonId, action] of Object.entries(settings.buttons)) {
-    const keyId = physicalKeyIds[buttonId];
-    if (keyId === undefined) throw new Error(`Botao RAWM desconhecido: ${buttonId}.`);
+    const keyId = leviathanKeyId(buttonId);
+    if (keyId === null) throw new Error(`Botao RAWM desconhecido: ${buttonId}.`);
     sets.push({ keyIds: [keyId], action });
   }
   if (settings.rPlus) {
-    const activator = physicalKeyIds[settings.rPlus.activatorButtonId];
-    if (activator === undefined) throw new Error('Ativador R-Plus RAWM invalido.');
+    const activator = leviathanKeyId(settings.rPlus.activatorButtonId);
+    if (activator === null) throw new Error('Ativador R-Plus RAWM invalido.');
     for (const [buttonId, action] of Object.entries(settings.rPlus.buttons)) {
       if (buttonId === settings.rPlus.activatorButtonId) continue;
-      const target = physicalKeyIds[buttonId];
-      if (target === undefined) throw new Error(`Botao R-Plus RAWM desconhecido: ${buttonId}.`);
+      const target = leviathanKeyId(buttonId);
+      if (target === null) throw new Error(`Botao R-Plus RAWM desconhecido: ${buttonId}.`);
       sets.push({ keyIds: [activator, target], action });
     }
   }
@@ -78,23 +57,18 @@ function editorKeySets(settings: MouseSettings): { keyIds: number[]; action: Mou
 export function mappingEvents(settings: MouseSettings): Uint8Array[] {
   const events: Uint8Array[] = [];
   for (const { keyIds, action } of editorKeySets(settings)) {
-    const event = encodeLeviathanAction(keyIds, action);
+    const event = encodeMapping(keyIds, action);
     if (event) events.push(event);
   }
-  events.push(
-    encodeMouseFunction({
-      keyIds: [SHOW_POWER_KEY_ID],
-      touchType: TOUCH_TYPE_PRESS,
-      functionId: FUNCTION_SHOW_POWER,
-    }),
-  );
+  events.push(encodeLeviathanShowPower());
   return events;
 }
 
 const keyOf = (keyIds: number[]) => keyIds.join('-');
 
 /** The seventh key is rebuilt identically on both sides, so it never differs. */
-const isShowPower = (keyIds: number[]) => keyIds.length === 1 && keyIds[0] === SHOW_POWER_KEY_ID;
+const isShowPower = (keyIds: number[]) =>
+  keyIds.length === 1 && keyIds[0] === leviathanShowPowerKeyId();
 
 function signatureOf(entries: [string, string][]): string {
   return entries
@@ -107,7 +81,8 @@ function signatureOf(entries: [string, string][]): string {
 function intendedMappings(settings: MouseSettings): string {
   return signatureOf(
     editorKeySets(settings)
-      .filter(({ action }) => actions[action].kind !== 'disabled')
+      // O núcleo decide se a ação escreve algo; os bytes codificados são descartados.
+      .filter(({ keyIds, action }) => encodeMapping(keyIds, action) !== null)
       .map(({ keyIds, action }): [string, string] => [keyOf(keyIds), action]),
   );
 }
@@ -353,7 +328,7 @@ export class LeviathanV4Driver implements DeviceDriver {
     const slot = this.slots?.find((item) => item.index === onboardIndex);
     if (!slot) return [];
     const rebuilt = new Set(editorKeySets(settings).map(({ keyIds }) => keyOf(keyIds)));
-    rebuilt.add(keyOf([SHOW_POWER_KEY_ID]));
+    rebuilt.add(keyOf([leviathanShowPowerKeyId()]));
     return slot.bindings
       .filter((binding) => binding.action === null && !rebuilt.has(keyOf(binding.keyIds)))
       .map((binding) => binding.raw);

@@ -2,6 +2,7 @@ import type { MouseActionId } from '@gearhub/shared';
 import {
   encodeAction,
   encodeConfigReset,
+  encodeMapping,
   encodeMouseParamSnapshot,
   frameEvent,
   withProtocolEnvelope,
@@ -9,7 +10,6 @@ import {
 import type { BrowserHidDevice } from '../deviceDiscovery';
 import { WebHidTransport, type HardwareTransport } from '../WebHidTransport';
 import { captureQuery, type RawReportLog } from './diagnostics';
-import { encodeLeviathanAction } from './LeviathanV4Driver';
 import {
   encodeMouseParamBody,
   parseMouseParamState,
@@ -211,7 +211,7 @@ export async function probeButtonMapping(
       return report;
     }
 
-    const inner = encodeLeviathanAction([keyId], acao);
+    const inner = encodeMapping([keyId], acao);
     if (!inner) {
       report.erro = 'A ação escolhida desativa o botão e não gera evento.';
       return report;
@@ -291,7 +291,7 @@ export async function probeMappingSet(
 
     const events: Uint8Array[] = [withProtocolEnvelope(encodeConfigReset(), useCrc)];
     for (const entry of entries) {
-      const inner = encodeLeviathanAction(entry.keyIds, entry.acao);
+      const inner = encodeMapping(entry.keyIds, entry.acao);
       if (inner) events.push(withProtocolEnvelope(inner, useCrc));
     }
 
@@ -377,7 +377,7 @@ export async function probeProfileWrite(
       withProtocolEnvelope(encodeMouseParamSnapshot(encodeMouseParamBody(snapshot)), useCrc),
     ];
     for (const entry of entries) {
-      const inner = encodeLeviathanAction(entry.keyIds, entry.acao);
+      const inner = encodeMapping(entry.keyIds, entry.acao);
       if (inner) events.push(withProtocolEnvelope(inner, useCrc));
     }
     // Commits.

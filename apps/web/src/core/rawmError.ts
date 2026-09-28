@@ -15,6 +15,7 @@ const MESSAGES: Record<string, string> = {
   'truncated-report': 'Relatório RAWM truncado.',
   'not-a-query-result': 'Resposta RAWM não é resultado de consulta.',
   'invalid-utf8': 'Resposta RAWM não é texto válido.',
+  'unknown-action': 'Ação de botão desconhecida.',
 };
 
 /**

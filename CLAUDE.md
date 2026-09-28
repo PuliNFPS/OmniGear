@@ -28,15 +28,18 @@ O teste é uma pergunta: **isso mudaria se a casca mudasse?** Se sim, é casca.
 **Regra:** comportamento novo de dispositivo entra no Rust. Uma tarefa de dispositivo que só
 produza `.ts` merece a pergunta — por que isto não está no núcleo?
 
-**Estado real (2026-09-17):** o **codec** migrou — envelope, CRC16, enquadramento de 64 bytes,
+**Estado real (2026-09-28):** o **codec** migrou — envelope, CRC16, enquadramento de 64 bytes,
 montador de eventos, consulta e decodificação de notificações vivem em
 `packages/core/src/protocols/rawm/`, e `apps/web/src/hardware/rawm/protocol.ts` não existe
 mais. Todo o caminho de leitura está confirmado em hardware.
+O vocabulário de ações (`MouseActionId`, gerado para TypeScript por `ts-rs`), a tabela
+ação↔bytes (`packages/core/src/protocols/rawm/actions.rs`) e a tabela de teclas do Leviathan V4
+(`packages/core/src/drivers/leviathan_v4/`) também vivem no núcleo, e `leviathanV4Keys.ts` não
+existe mais.
 
-Ainda em TypeScript, com passo marcado no spec: `leviathanV4Keys.ts` (passo 2),
-`mouseParamSnapshot.ts` e a metade de `leviathanV4.ts` que descreve o dispositivo (passo 3),
-`onboardConfig.ts` (passo 4), a sessão de `LeviathanV4Driver.ts` e a decodificação de
-`session.ts` (passo 5).
+Ainda em TypeScript, com passo marcado no spec: `mouseParamSnapshot.ts` e a metade de
+`leviathanV4.ts` que descreve o dispositivo (passo 3), `onboardConfig.ts` (passo 4), a sessão
+de `LeviathanV4Driver.ts` e a decodificação de `session.ts` (passo 5).
 
 Duas duplicatas de protocolo sobrevivem **de propósito e declaradas**: `packedDpi`
 (`mouseParamSnapshot.ts`), inverso do `dpi_axes` do núcleo, fecha no passo 3; e
@@ -81,6 +84,14 @@ qualquer `package.json` que encontre no diretório de saída.
   `@gearhub/core:lint` em cache hit e o clippy nunca vê o código novo — `@gearhub/core` roda
   `cargo clippy --workspace`, que cobre os dois crates, mas o turbo chaveia o cache pelos
   arquivos de `packages/core`, e a ponte está do lado errado da aresta.
+
+**A exceção é `packages/shared/src/generated/`.** O `ts-rs` gera ali tipos TypeScript a partir
+de enums do núcleo (hoje `MouseActionId`), e eles **são** versionados, para que
+`@gearhub/shared` compile sem Rust. Um teste em `packages/core/src/device/actions.rs` compara o
+arquivo com o que o `ts-rs` geraria e reprova se divergirem; para regenerar,
+`UPDATE_BINDINGS=1 cargo test -p gearhub-core generated`. Nunca edite à mão, e não remova o
+caminho dos `inputs` de `test` em `packages/core/turbo.json` — sem ele, uma edição à mão deixa
+`@gearhub/core:test` em cache hit e a guarda não roda.
 
 ## Verificação
 

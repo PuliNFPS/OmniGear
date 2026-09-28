@@ -1,4 +1,6 @@
 import init, {
+  actionForFunction as wasmActionForFunction,
+  actionForKey as wasmActionForKey,
   buildQueryEvent as wasmBuildQueryEvent,
   core_version,
   decodeReportChunk as wasmDecodeReportChunk,
@@ -8,14 +10,20 @@ import init, {
   encode_mouse_function as wasmEncodeMouseFunction,
   encode_mouse_key as wasmEncodeMouseKey,
   encode_mouse_param_snapshot as wasmEncodeMouseParamSnapshot,
+  encodeLeviathanShowPower as wasmEncodeLeviathanShowPower,
+  encodeMapping as wasmEncodeMapping,
   frameEvent as wasmFrameEvent,
   is_wasm_available,
   isQueryResult as wasmIsQueryResult,
+  leviathanButtonId as wasmLeviathanButtonId,
+  leviathanKeyId as wasmLeviathanKeyId,
+  leviathanShowPowerKeyId as wasmLeviathanShowPowerKeyId,
   parseNotification as wasmParseNotification,
   queryJson as wasmQueryJson,
   RawEventAssembler as WasmRawEventAssembler,
   withProtocolEnvelope as wasmWithProtocolEnvelope,
 } from 'gearhub-core-wasm';
+import type { MouseActionId } from '@gearhub/shared';
 import { asRawmError } from './rawmError';
 
 export interface CoreStatus {
@@ -164,6 +172,52 @@ export function encodeMouseFunction(
     input.value ?? 0,
     textBytes(input.text),
   );
+}
+
+/**
+ * O evento que atribui `action` às teclas — uma, ou duas para R-Plus com o
+ * ativador primeiro. `null` quando a ação não escreve nada.
+ */
+export function encodeMapping(keyIds: ArrayLike<number>, action: MouseActionId): Uint8Array | null {
+  try {
+    return wasmEncodeMapping(copyBytes(keyIds), action) ?? null;
+  } catch (error) {
+    throw asRawmError(error);
+  }
+}
+
+/**
+ * A ação que um par tipo/código de tecla significa, ou `null`. O núcleo devolve o id como
+ * texto; a conversão para `MouseActionId` é segura porque o tipo é gerado do mesmo enum, e
+ * `cargo test` reprova quando os nomes divergem (`as_str_names_exactly_the_generated_union`).
+ */
+export function actionForKey(keyType: number, keyCode: number): MouseActionId | null {
+  return (wasmActionForKey(keyType, keyCode) ?? null) as MouseActionId | null;
+}
+
+/** A ação que um id de função significa, ou `null`. Mesma conversão de `actionForKey`. */
+export function actionForFunction(functionId: number): MouseActionId | null {
+  return (wasmActionForFunction(functionId) ?? null) as MouseActionId | null;
+}
+
+/** O id de tecla que o Leviathan V4 relata para um botão, ou `null`. */
+export function leviathanKeyId(buttonId: string): number | null {
+  return wasmLeviathanKeyId(buttonId) ?? null;
+}
+
+/** O botão a que um id de tecla do Leviathan V4 pertence, ou `null`. */
+export function leviathanButtonId(keyId: number): string | null {
+  return wasmLeviathanButtonId(keyId) ?? null;
+}
+
+/** A sétima tecla, que nenhum controle do editor alcança. */
+export function leviathanShowPowerKeyId(): number {
+  return wasmLeviathanShowPowerKeyId();
+}
+
+/** O evento que devolve à sétima tecla o indicador de bateria. */
+export function encodeLeviathanShowPower(): Uint8Array {
+  return wasmEncodeLeviathanShowPower();
 }
 
 export function withProtocolEnvelope(source: ArrayLike<number>, useCrc: boolean): Uint8Array {

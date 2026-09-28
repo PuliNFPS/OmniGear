@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { fromHex, readProtocolVectors, toHex } from '../../test/vectors';
-import { buildQueryEvent, withProtocolEnvelope } from '../../core/coreBridge';
+import {
+  buildQueryEvent,
+  encodeLeviathanShowPower,
+  encodeMapping,
+  leviathanButtonId,
+  leviathanKeyId,
+  withProtocolEnvelope,
+} from '../../core/coreBridge';
 
 const vectors = readProtocolVectors();
 
@@ -22,9 +29,12 @@ describe('vetores de conformidade do protocolo RAWM', () => {
     expect(vectors.version).toBe(1);
   });
 
-  it('tem vetores de envelope e de consulta', () => {
+  it('tem vetores de todas as seções', () => {
     requireNonEmpty(vectors.envelope, 'envelope');
     requireNonEmpty(vectors.queryEvent, 'queryEvent');
+    requireNonEmpty(vectors.mapping, 'mapping');
+    requireNonEmpty(vectors.showPower, 'showPower');
+    requireNonEmpty(vectors.leviathanKeys, 'leviathanKeys');
   });
 
   it.each(vectors.envelope)('envelope: $name', ({ input, crc, expected }) => {
@@ -33,6 +43,20 @@ describe('vetores de conformidade do protocolo RAWM', () => {
 
   it.each(vectors.queryEvent)('consulta: $name', ({ epochSeconds, expected }) => {
     expect(toHex(buildQueryEvent(epochSeconds))).toBe(expected);
+  });
+
+  it.each(vectors.mapping)('mapeamento: $name', ({ keyIds, action, expected }) => {
+    const hex = (bytes: Uint8Array | null) => (bytes === null ? null : toHex(bytes));
+    expect(hex(encodeMapping(fromHex(keyIds), action))).toBe(expected);
+  });
+
+  it.each(vectors.showPower)('show power: $name', ({ expected }) => {
+    expect(toHex(encodeLeviathanShowPower())).toBe(expected);
+  });
+
+  it.each(vectors.leviathanKeys)('tecla do Leviathan: $buttonId', ({ buttonId, keyId }) => {
+    expect(leviathanKeyId(buttonId)).toBe(keyId);
+    expect(leviathanButtonId(keyId)).toBe(buttonId);
   });
 });
 

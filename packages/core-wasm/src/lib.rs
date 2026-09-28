@@ -1,6 +1,8 @@
 //! Ponte wasm-bindgen. Nenhuma decisão vive aqui: a macro fica deste lado
 //! para que o núcleo não seja moldado pelas restrições do navegador.
 
+use gearhub_core::device::MouseActionId;
+use gearhub_core::drivers::leviathan_v4;
 use gearhub_core::protocols::rawm;
 use wasm_bindgen::prelude::*;
 
@@ -147,6 +149,43 @@ pub fn parse_notification(event: &[u8]) -> Option<js_sys::Array> {
 pub fn dpi_axes(value: u32) -> Vec<u32> {
     let (x, y) = rawm::dpi_axes(value);
     vec![u32::from(x), u32::from(y)]
+}
+
+#[wasm_bindgen(js_name = encodeMapping)]
+pub fn encode_mapping(key_ids: &[u8], action: &str) -> Result<Option<Vec<u8>>, JsError> {
+    let action =
+        MouseActionId::parse(action).ok_or_else(|| js_error(rawm::RawmError::UnknownAction))?;
+    Ok(rawm::encode_mapping(key_ids, action))
+}
+
+#[wasm_bindgen(js_name = actionForKey)]
+pub fn action_for_key(key_type: u8, key_code: u8) -> Option<String> {
+    rawm::action_for_key(key_type, key_code).map(|action| action.as_str().to_owned())
+}
+
+#[wasm_bindgen(js_name = actionForFunction)]
+pub fn action_for_function(function_id: u8) -> Option<String> {
+    rawm::action_for_function(function_id).map(|action| action.as_str().to_owned())
+}
+
+#[wasm_bindgen(js_name = leviathanKeyId)]
+pub fn leviathan_key_id(button_id: &str) -> Option<u8> {
+    leviathan_v4::key_id(button_id)
+}
+
+#[wasm_bindgen(js_name = leviathanButtonId)]
+pub fn leviathan_button_id(key_id: u8) -> Option<String> {
+    leviathan_v4::button_id(key_id).map(str::to_owned)
+}
+
+#[wasm_bindgen(js_name = leviathanShowPowerKeyId)]
+pub fn leviathan_show_power_key_id() -> u8 {
+    leviathan_v4::SHOW_POWER_KEY_ID
+}
+
+#[wasm_bindgen(js_name = encodeLeviathanShowPower)]
+pub fn encode_leviathan_show_power() -> Vec<u8> {
+    leviathan_v4::encode_show_power()
 }
 
 #[wasm_bindgen]
