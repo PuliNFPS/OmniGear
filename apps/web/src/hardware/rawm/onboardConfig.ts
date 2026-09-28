@@ -1,5 +1,5 @@
 import type { MouseActionId, MouseSettings } from '@gearhub/shared';
-import { actions, buttonIdsByKeyId, type EncodedAction } from './leviathanV4Keys';
+import { actionForFunction, actionForKey, leviathanButtonId } from '../../core/coreBridge';
 
 /**
  * Reads the mappings the mouse reports for itself.
@@ -41,13 +41,6 @@ export interface OnboardSlotConfig {
   bindings: OnboardBinding[];
 }
 
-const keyActions = new Map<string, MouseActionId>();
-const functionActions = new Map<number, MouseActionId>();
-for (const [id, action] of Object.entries(actions) as [MouseActionId, EncodedAction][]) {
-  if (action.kind === 'key') keyActions.set(`${action.keyType}:${action.keyCode}`, id);
-  else if (action.kind === 'function') functionActions.set(action.functionId, id);
-}
-
 /** The declared length, encoded across the two header bytes as the writer does. */
 function declaredLength(entry: Uint8Array): number {
   return ((entry[0] & 0xf0) << 4) | entry[1];
@@ -56,11 +49,11 @@ function declaredLength(entry: Uint8Array): number {
 function namedAction(type: number, payload: Uint8Array): MouseActionId | null {
   if (type === CONFIG_TYPE_MOUSE_KEY && payload.length >= 3) {
     // [mod1, key_type, key_code, mod2]; a modifier has no action of its own.
-    return payload[0] === 0 ? (keyActions.get(`${payload[1]}:${payload[2]}`) ?? null) : null;
+    return payload[0] === 0 ? actionForKey(payload[1], payload[2]) : null;
   }
   if (type === CONFIG_TYPE_MOUSE_FUNCTION && payload.length >= 2) {
     // [touch_type, function, value_lo, value_hi]
-    return functionActions.get(payload[1]) ?? null;
+    return actionForFunction(payload[1]);
   }
   return null;
 }
@@ -144,13 +137,13 @@ export function settingsFromSlot(base: MouseSettings, slot: OnboardSlotConfig): 
   for (const binding of slot.bindings) {
     if (binding.action === null) continue;
     if (binding.keyIds.length === 1) {
-      const buttonId = buttonIdsByKeyId.get(binding.keyIds[0]);
+      const buttonId = leviathanButtonId(binding.keyIds[0]);
       if (buttonId && buttonId in buttons) buttons[buttonId] = binding.action;
       continue;
     }
     if (binding.keyIds.length !== 2 || !rPlus) continue;
-    const activator = buttonIdsByKeyId.get(binding.keyIds[0]);
-    const target = buttonIdsByKeyId.get(binding.keyIds[1]);
+    const activator = leviathanButtonId(binding.keyIds[0]);
+    const target = leviathanButtonId(binding.keyIds[1]);
     if (!activator || !target || !(target in rPlus.buttons)) continue;
     rPlus.activatorButtonId = activator;
     rPlus.buttons[target] = binding.action;
@@ -160,7 +153,7 @@ export function settingsFromSlot(base: MouseSettings, slot: OnboardSlotConfig): 
   // claim the button is free when it is not.
   for (const binding of slot.bindings) {
     if (binding.action !== null || binding.keyIds.length !== 1) continue;
-    const buttonId = buttonIdsByKeyId.get(binding.keyIds[0]);
+    const buttonId = leviathanButtonId(binding.keyIds[0]);
     if (buttonId && buttonId in buttons) buttons[buttonId] = base.buttons[buttonId];
   }
 

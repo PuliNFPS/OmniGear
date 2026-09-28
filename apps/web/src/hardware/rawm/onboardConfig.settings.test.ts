@@ -1,18 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import type { MouseSettings } from '@gearhub/shared';
+import type { MouseActionId, MouseSettings } from '@gearhub/shared';
 import { createLeviathanV4Peripheral } from './leviathanV4';
 import { leviathanV4QueryFixture } from './leviathanV4Fixture';
-import { encodeLeviathanAction } from './LeviathanV4Driver';
 import { decodeOnboardEntry, settingsFromSlot, type OnboardBinding } from './onboardConfig';
-import { withProtocolEnvelope } from '../../core/coreBridge';
+import { encodeMapping, withProtocolEnvelope } from '../../core/coreBridge';
 
 const base = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real').defaults as MouseSettings;
 
-function binding(
-  keyIds: number[],
-  actionId: Parameters<typeof encodeLeviathanAction>[1],
-): OnboardBinding {
-  return decodeOnboardEntry(withProtocolEnvelope(encodeLeviathanAction(keyIds, actionId)!, false))!;
+function binding(keyIds: number[], actionId: MouseActionId): OnboardBinding {
+  return decodeOnboardEntry(withProtocolEnvelope(encodeMapping(keyIds, actionId)!, false))!;
 }
 
 const slotOf = (bindings: OnboardBinding[]) => ({ index: 0, bindings });

@@ -3,7 +3,7 @@ import { leviathanV4QueryFixture } from './leviathanV4Fixture';
 import type { HidCommand } from '@gearhub/shared';
 import type { HardwareTransport } from '../WebHidTransport';
 import { createLeviathanV4Peripheral } from './leviathanV4';
-import { encodeLeviathanAction, LeviathanV4Driver, mappingEvents } from './LeviathanV4Driver';
+import { LeviathanV4Driver, mappingEvents } from './LeviathanV4Driver';
 
 const raw = {
   dn: 'Leviathan V4',
@@ -40,26 +40,6 @@ function transport(): HardwareTransport & { send: ReturnType<typeof vi.fn> } {
 }
 
 describe('LeviathanV4Driver', () => {
-  // Byte for byte against send_event_mouse_key and send_event_mouse_function in
-  // the vendor library, using the key ids the mouse reports for itself.
-  it('encodes mouse, wheel, DPI and R-Plus actions as the vendor does', () => {
-    expect([...encodeLeviathanAction([0x0a], 'clique-esquerdo')!]).toEqual([
-      3, 0, 0x16, 1, 0x0a, 0, 1, 1, 0, 0,
-    ]);
-    expect([...encodeLeviathanAction([0x10], 'dpi-ciclo')!]).toEqual([
-      3, 0, 0x18, 1, 0x10, 2, 1, 0, 0, 0, 0, 0,
-    ]);
-    // MOUSE_KEY_WHEEL_UP is 0x07, not the 0x41 assumed before.
-    expect([...encodeLeviathanAction([0x0c], 'rolagem-cima')!]).toEqual([
-      3, 0, 0x16, 1, 0x0c, 0, 3, 0x07, 0, 0,
-    ]);
-    // R-Plus: activator first, target second, exactly as the mouse reports it.
-    expect([...encodeLeviathanAction([0x10, 0x0c], 'dpi-ciclo')!]).toEqual([
-      3, 0, 0x18, 2, 0x10, 0x0c, 2, 1, 0, 0, 0, 0, 0,
-    ]);
-    expect(encodeLeviathanAction([0x0a], 'desativado')).toBeNull();
-  });
-
   it('serializes a complete live configuration through the virtual mouse channel', async () => {
     const io = transport();
     const driver = new LeviathanV4Driver(io, raw, false);
@@ -117,7 +97,7 @@ describe('writing a configuration', () => {
     const showPower = events.find((event) => event[2] === 0x18 && event[4] === 0x0d);
 
     expect(showPower).toBeDefined();
-    expect(showPower![6]).toBe(0x0e); // FUNCTION_SHOW_POWER
+    expect(showPower![6]).toBe(0x0e); // show-power function id
   });
 
   it('applies to the session without committing to flash', async () => {

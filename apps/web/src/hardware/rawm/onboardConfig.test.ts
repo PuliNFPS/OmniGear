@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { encodeLeviathanAction } from './LeviathanV4Driver';
+import type { MouseActionId } from '@gearhub/shared';
 import { OnboardConfigCollector, decodeOnboardEntry } from './onboardConfig';
-import { withProtocolEnvelope } from '../../core/coreBridge';
+import { encodeMapping, withProtocolEnvelope } from '../../core/coreBridge';
 
 /** The mouse reports entries with the length encoded, as the writer sends them. */
-function entry(keyIds: number[], actionId: Parameters<typeof encodeLeviathanAction>[1]) {
-  return withProtocolEnvelope(encodeLeviathanAction(keyIds, actionId)!, false);
+function entry(keyIds: number[], actionId: MouseActionId) {
+  return withProtocolEnvelope(encodeMapping(keyIds, actionId)!, false);
 }
 
 describe('decodeOnboardEntry', () => {
