@@ -12,7 +12,8 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/packages/core-wasm/src/**",
-        "$TURBO_ROOT$/packages/core-wasm/Cargo.toml"
+        "$TURBO_ROOT$/packages/core-wasm/Cargo.toml",
+        "$TURBO_ROOT$/packages/shared/src/generated/**"
       ]
     }
   }

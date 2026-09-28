@@ -1,16 +1,10 @@
-/** Actions a physical mouse button can be assigned to. */
-export type MouseActionId =
-  | 'clique-esquerdo'
-  | 'clique-direito'
-  | 'clique-central'
-  | 'voltar'
-  | 'avancar'
-  | 'dpi-ciclo'
-  | 'dpi-aumentar'
-  | 'dpi-diminuir'
-  | 'rolagem-cima'
-  | 'rolagem-baixo'
-  | 'desativado';
+import type { MouseActionId } from './generated/MouseActionId';
+
+/**
+ * Actions a physical mouse button can be assigned to. Generated from the core's
+ * `MouseActionId` enum; `cargo test` fails when the two diverge.
+ */
+export type { MouseActionId };
 
 /**
  * A physical button of the model, with the position used to place its hotspot

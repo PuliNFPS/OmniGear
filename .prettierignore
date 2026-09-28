@@ -16,3 +16,7 @@ pnpm-lock.yaml
 # portao refem da versao da ferramenta: o pkg antigo em packages/core reprova,
 # o atual em packages/core-wasm passa, e nenhum dos dois e escrito por alguem.
 packages/*/pkg/
+
+# Gerado pelo ts-rs a partir de packages/core/src/device/actions.rs e conferido
+# byte a byte pelo cargo test. Formatar o arquivo faria a guarda reprovar.
+packages/shared/src/generated/

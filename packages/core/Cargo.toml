@@ -10,3 +10,10 @@ crate-type = ["rlib"]
 [dev-dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# Só em teste: gera o tipo TypeScript de `MouseActionId` e o confere contra o
+# arquivo versionado. Fica fora do build do WASM.
+#
+# `winapi-util` está fixado em 0.1.9 no Cargo.lock: a 0.1.11 puxa
+# `windows-sys` 0.61, que no toolchain GNU do Windows exige `dlltool.exe`. Um
+# `cargo update` sem `--precise` desfaz o pin e o build local volta a falhar.
+ts-rs = "12"
