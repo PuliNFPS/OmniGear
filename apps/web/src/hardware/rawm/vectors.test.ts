@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { fromHex, readProtocolVectors, toHex } from '../../test/vectors';
-import { buildQueryEvent, encodeMouseFunction, withProtocolEnvelope } from '../../core/coreBridge';
+import {
+  buildQueryEvent,
+  encodeLeviathanShowPower,
+  encodeMapping,
+  encodeMouseFunction,
+  leviathanButtonId,
+  leviathanKeyId,
+  withProtocolEnvelope,
+} from '../../core/coreBridge';
 import {
   FUNCTION_SHOW_POWER,
   SHOW_POWER_KEY_ID,
@@ -48,8 +56,9 @@ describe('vetores de conformidade do protocolo RAWM', () => {
   });
 
   it.each(vectors.mapping)('mapeamento: $name', ({ keyIds, action, expected }) => {
-    const encoded = encodeLeviathanAction([...fromHex(keyIds)], action);
-    expect(encoded === null ? null : toHex(encoded)).toBe(expected);
+    const hex = (bytes: Uint8Array | null) => (bytes === null ? null : toHex(bytes));
+    expect(hex(encodeLeviathanAction([...fromHex(keyIds)], action))).toBe(expected);
+    expect(hex(encodeMapping(fromHex(keyIds), action))).toBe(expected);
   });
 
   it.each(vectors.showPower)('show power: $name', ({ expected }) => {
@@ -59,11 +68,14 @@ describe('vetores de conformidade do protocolo RAWM', () => {
       functionId: FUNCTION_SHOW_POWER,
     });
     expect(toHex(encoded)).toBe(expected);
+    expect(toHex(encodeLeviathanShowPower())).toBe(expected);
   });
 
   it.each(vectors.leviathanKeys)('tecla do Leviathan: $buttonId', ({ buttonId, keyId }) => {
     expect(physicalKeyIds[buttonId]).toBe(keyId);
     expect(buttonIdsByKeyId.get(keyId)).toBe(buttonId);
+    expect(leviathanKeyId(buttonId)).toBe(keyId);
+    expect(leviathanButtonId(keyId)).toBe(buttonId);
   });
 
   it('cobre toda tecla do Leviathan e toda ação', () => {
