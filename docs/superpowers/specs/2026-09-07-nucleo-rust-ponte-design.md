@@ -568,6 +568,9 @@ O passo 0 é novo, e os demais absorvem os arquivos que faltavam.
 2. **Tabelas:** `leviathanV4Keys.ts`. **A geração de tipos (`ts-rs`) entra aqui**, não ao
    final: no instante em que o vocabulário de ações vive no Rust, `MouseActionId` passa a ter
    dois donos, e espelhar à mão é a divergência que este spec existe para eliminar.
+   **Fechado em 2026-09-28** pelo plano `docs/superpowers/plans/2026-09-28-migracao-tabelas-rawm.md`:
+   `leviathanV4Keys.ts` foi apagado; `MouseActionId` é um enum do núcleo e o tipo TypeScript é
+   gerado dele por `ts-rs`, versionado e conferido pelo `cargo test`.
 3. **Leitura do dispositivo:** `mouseParamSnapshot.ts` + a metade de `leviathanV4.ts` que
    descreve o dispositivo + a tabela de LOD + a identidade do dispositivo (o casamento USB de
    `deviceRegistry.ts` e o regex de nome de `connectLeviathanV4.ts`). Juntos porque leem o
