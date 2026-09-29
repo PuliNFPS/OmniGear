@@ -10,6 +10,7 @@ use std::collections::BTreeSet;
 use ts_rs::TS;
 
 use crate::device::{DpiStage, MouseActionId, MouseParameters, MouseRPlusSettings, MouseSettings};
+use crate::protocols::rawm::MouseParamSnapshot;
 
 const DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../shared/src/generated");
 
@@ -25,6 +26,7 @@ fn generated() -> Vec<(&'static str, String)> {
         ("MouseParameters", render::<MouseParameters>()),
         ("MouseRPlusSettings", render::<MouseRPlusSettings>()),
         ("MouseSettings", render::<MouseSettings>()),
+        ("RawmMouseParamState", render::<MouseParamSnapshot>()),
     ]
 }
 

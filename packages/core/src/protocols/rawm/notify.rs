@@ -52,6 +52,16 @@ pub fn dpi_axes(value: u32) -> (u16, u16) {
     (x, if y == 0 { x } else { y })
 }
 
+/// O inverso de `dpi_axes`, para escrever: X nos 16 bits baixos, Y nos altos.
+/// Sem eixos independentes o valor é só X — o firmware lê Y zerado como igual a X.
+pub fn pack_dpi(x: u32, y: u32, independent_axes: bool) -> u32 {
+    if independent_axes {
+        (x & 0xffff) | ((y & 0xffff) << 16)
+    } else {
+        x
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -118,5 +128,16 @@ mod tests {
     fn unpacks_dpi_axes() {
         assert_eq!(dpi_axes(0x0190_0320), (800, 400));
         assert_eq!(dpi_axes(800), (800, 800));
+    }
+
+    /// A duplicata declarada de `packedDpi` fecha aqui: as duas direções moram
+    /// no mesmo arquivo e se provam uma pela outra.
+    #[test]
+    fn pack_dpi_is_the_inverse_of_dpi_axes() {
+        for (x, y) in [(400, 800), (1600, 1200), (45000, 100), (800, 800)] {
+            let (read_x, read_y) = dpi_axes(pack_dpi(x, y, true));
+            assert_eq!((u32::from(read_x), u32::from(read_y)), (x, y));
+        }
+        assert_eq!(pack_dpi(800, 1600, false), 800);
     }
 }

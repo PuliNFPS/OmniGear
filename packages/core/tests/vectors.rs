@@ -1,6 +1,9 @@
 use gearhub_core::device::MouseActionId;
 use gearhub_core::drivers::leviathan_v4;
-use gearhub_core::protocols::rawm::{build_query_event, encode_mapping, with_protocol_envelope};
+use gearhub_core::protocols::rawm::{
+    RawmError, build_query_event, encode_mapping, encode_mouse_param_body,
+    parse_mouse_param_snapshot, with_protocol_envelope,
+};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -42,6 +45,21 @@ struct LeviathanKeyVector {
 }
 
 #[derive(Deserialize)]
+struct ParamSnapshotVector {
+    name: String,
+    query: String,
+    expected: String,
+}
+
+#[derive(Deserialize)]
+struct InvalidSnapshotVector {
+    name: String,
+    query: String,
+    patch: serde_json::Map<String, serde_json::Value>,
+    field: String,
+}
+
+#[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Vectors {
     version: u32,
@@ -50,6 +68,9 @@ struct Vectors {
     mapping: Vec<MappingVector>,
     show_power: Vec<ShowPowerVector>,
     leviathan_keys: Vec<LeviathanKeyVector>,
+    queries: std::collections::HashMap<String, serde_json::Value>,
+    param_snapshot: Vec<ParamSnapshotVector>,
+    invalid_snapshot: Vec<InvalidSnapshotVector>,
 }
 
 fn from_hex(value: &str) -> Vec<u8> {
@@ -61,6 +82,30 @@ fn from_hex(value: &str) -> Vec<u8> {
 
 fn to_hex(bytes: &[u8]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+fn query(vectors: &Vectors, name: &str) -> serde_json::Value {
+    vectors
+        .queries
+        .get(name)
+        .cloned()
+        .unwrap_or_else(|| panic!("consulta desconhecida: {name}"))
+}
+
+/// `null` remove o campo; qualquer outro valor o substitui.
+fn patched(
+    mut base: serde_json::Value,
+    patch: &serde_json::Map<String, serde_json::Value>,
+) -> serde_json::Value {
+    let object = base.as_object_mut().expect("consulta é objeto");
+    for (key, value) in patch {
+        if value.is_null() {
+            object.remove(key);
+        } else {
+            object.insert(key.clone(), value.clone());
+        }
+    }
+    base
 }
 
 fn vectors() -> Vectors {
@@ -162,5 +207,36 @@ fn leviathan_keys_match_the_shared_vectors() {
             leviathan_v4::button_id(vector.key_id),
             Some(vector.button_id.as_str())
         );
+    }
+}
+
+#[test]
+fn param_snapshot_matches_the_shared_vectors() {
+    let vectors = vectors();
+    require_non_empty(&vectors.param_snapshot, "paramSnapshot");
+    for vector in &vectors.param_snapshot {
+        let state = parse_mouse_param_snapshot(&query(&vectors, &vector.query))
+            .unwrap_or_else(|error| panic!("{}: {error:?}", vector.name));
+        assert_eq!(
+            to_hex(&encode_mouse_param_body(&state)),
+            vector.expected,
+            "{}",
+            vector.name
+        );
+    }
+}
+
+#[test]
+fn invalid_snapshots_name_the_field_that_fails() {
+    let vectors = vectors();
+    require_non_empty(&vectors.invalid_snapshot, "invalidSnapshot");
+    for vector in &vectors.invalid_snapshot {
+        let raw = patched(query(&vectors, &vector.query), &vector.patch);
+        match parse_mouse_param_snapshot(&raw) {
+            Err(RawmError::InvalidSnapshotField { field }) => {
+                assert_eq!(field, vector.field, "{}", vector.name)
+            }
+            other => panic!("{}: esperava campo inválido, veio {other:?}", vector.name),
+        }
     }
 }
