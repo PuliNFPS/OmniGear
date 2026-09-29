@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
+import { leviathanV4QueryFixture } from '../hardware/rawm/leviathanV4Fixture';
 import {
   actionForFunction,
+  applySettingsToMouseParam,
+  describeLeviathanV4,
+  encodeMouseParamBody,
+  isLeviathanV4Name,
+  leviathanLodMillimetres,
+  leviathanOnboardSlotCount,
+  leviathanV4Usb,
+  matchesLeviathanV4,
+  parseMouseParamState,
   actionForKey,
   dpiAxes,
   encodeAction,
@@ -193,5 +203,84 @@ describe('tabelas de ação e de tecla do núcleo', () => {
     expect(bytes(encodeLeviathanShowPower())).toEqual([
       3, 0, 0x18, 1, 0x0d, 2, 0x0e, 0, 0, 0, 0, 0,
     ]);
+  });
+});
+
+describe('estruturas através da ponte', () => {
+  it('lê o snapshot como objeto comum, com os nomes que as sondas comparam', () => {
+    const state = parseMouseParamState(leviathanV4QueryFixture);
+    expect(state).toMatchObject({ resolution: 800, pollingRate: 4000, liftOffDistance: 2 });
+    expect({ ...state, resolution: 1600 }.resolution).toBe(1600);
+  });
+
+  it('nomeia o campo inválido na mensagem e guarda só o código em cause', () => {
+    let thrown: unknown;
+    try {
+      parseMouseParamState({ ...leviathanV4QueryFixture, lod: undefined });
+    } catch (error) {
+      thrown = error;
+    }
+    expect((thrown as Error).message).toBe('Snapshot RAWM incompleto ou invalido: lod.');
+    expect((thrown as Error).cause).toBe('invalid-snapshot-field');
+  });
+
+  it('aplica a configuração e devolve null, não undefined, nos opcionais', () => {
+    const description = describeLeviathanV4(leviathanV4QueryFixture);
+    expect(description.defaults.rPlus).not.toBeUndefined();
+    expect(describeLeviathanV4({ ...leviathanV4QueryFixture, r: undefined }).firmware).toBeNull();
+    const next = applySettingsToMouseParam(parseMouseParamState(leviathanV4QueryFixture), {
+      ...description.defaults,
+      pollingRate: 1000,
+    });
+    expect(encodeMouseParamBody(next)[2]).toBe(0xe8);
+  });
+
+  it('recusa um modo de desempenho desconhecido com o texto de sempre', () => {
+    const description = describeLeviathanV4(leviathanV4QueryFixture);
+    expect(() =>
+      applySettingsToMouseParam(parseMouseParamState(leviathanV4QueryFixture), {
+        ...description.defaults,
+        performanceMode: 'turbo',
+      }),
+    ).toThrow('Modo de desempenho RAWM invalido.');
+  });
+
+  it('mantém a ordem dos botões na travessia', () => {
+    const { defaults } = describeLeviathanV4(leviathanV4QueryFixture);
+    expect(Object.keys(defaults.buttons)).toEqual([
+      'esquerdo',
+      'direito',
+      'central',
+      'lateral-traseiro',
+      'lateral-dianteiro',
+      'dpi',
+    ]);
+  });
+
+  it('expõe LOD, contagem de memórias, USB e nome', () => {
+    expect(leviathanLodMillimetres(2)).toBe(1);
+    expect(leviathanLodMillimetres(9)).toBeNull();
+    expect(leviathanOnboardSlotCount({ ocs: [1, 2, 3, 4], ocn: 4 })).toBe(4);
+    expect(leviathanV4Usb()).toEqual({
+      vendorId: 0x1915,
+      receiverProductId: 0x2346,
+      configUsagePage: 0xff00,
+      configUsage: 1,
+    });
+    expect(isLeviathanV4Name('魔鲸 V4')).toBe(true);
+    expect(
+      matchesLeviathanV4({
+        vendorId: 0x1915,
+        productId: 0x2346,
+        collections: [
+          {
+            usagePage: 0xff00,
+            usage: 1,
+            inputReports: [{ reportId: 0 }],
+            outputReports: [{ reportId: 0 }],
+          },
+        ],
+      }),
+    ).toBe(true);
   });
 });

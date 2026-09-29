@@ -1,15 +1,37 @@
 //! Ponte wasm-bindgen. Nenhuma decisão vive aqui: a macro fica deste lado
 //! para que o núcleo não seja moldado pelas restrições do navegador.
 
-use gearhub_core::device::MouseActionId;
+use gearhub_core::device::{MouseActionId, MouseSettings};
 use gearhub_core::drivers::leviathan_v4;
 use gearhub_core::protocols::rawm;
 use wasm_bindgen::prelude::*;
 
 /// Converte o erro tipado do núcleo num erro de JavaScript que carrega o
-/// código. A casca escolhe o texto; aqui não há tradução.
+/// código — e, para as variantes com dado, `código:dado`. A casca escolhe o
+/// texto; aqui não há tradução.
 fn js_error(error: rawm::RawmError) -> JsError {
-    JsError::new(error.code())
+    match error.detail() {
+        Some(detail) => JsError::new(&format!("{}:{detail}", error.code())),
+        None => JsError::new(error.code()),
+    }
+}
+
+/// Uma falha de conversão não é erro de protocolo: atravessa com o texto do
+/// serde, e a casca a deixa passar intacta.
+fn conversion_error(error: serde_wasm_bindgen::Error) -> JsError {
+    JsError::new(&error.to_string())
+}
+
+/// Objetos comuns e `null` — o que os tipos gerados declaram. O serializador
+/// padrão produziria `Map` para os botões e `undefined` para os opcionais.
+fn to_js<T: serde::Serialize>(value: &T) -> Result<JsValue, JsError> {
+    value
+        .serialize(&serde_wasm_bindgen::Serializer::json_compatible())
+        .map_err(conversion_error)
+}
+
+fn from_js<T: serde::de::DeserializeOwned>(value: JsValue) -> Result<T, JsError> {
+    serde_wasm_bindgen::from_value(value).map_err(conversion_error)
 }
 
 #[wasm_bindgen(js_name = withProtocolEnvelope)]
@@ -186,6 +208,61 @@ pub fn leviathan_show_power_key_id() -> u8 {
 #[wasm_bindgen(js_name = encodeLeviathanShowPower)]
 pub fn encode_leviathan_show_power() -> Vec<u8> {
     leviathan_v4::encode_show_power()
+}
+
+#[wasm_bindgen(js_name = parseMouseParamState)]
+pub fn parse_mouse_param_state(raw: JsValue) -> Result<JsValue, JsError> {
+    let raw: serde_json::Value = from_js(raw)?;
+    to_js(&rawm::parse_mouse_param_snapshot(&raw).map_err(js_error)?)
+}
+
+#[wasm_bindgen(js_name = encodeMouseParamBody)]
+pub fn encode_mouse_param_body(state: JsValue) -> Result<Vec<u8>, JsError> {
+    let state: rawm::MouseParamSnapshot = from_js(state)?;
+    Ok(rawm::encode_mouse_param_body(&state))
+}
+
+#[wasm_bindgen(js_name = applySettingsToMouseParam)]
+pub fn apply_settings_to_mouse_param(
+    snapshot: JsValue,
+    settings: JsValue,
+) -> Result<JsValue, JsError> {
+    let snapshot: rawm::MouseParamSnapshot = from_js(snapshot)?;
+    let settings: MouseSettings = from_js(settings)?;
+    to_js(&leviathan_v4::apply_settings(&snapshot, &settings).map_err(js_error)?)
+}
+
+#[wasm_bindgen(js_name = describeLeviathanV4)]
+pub fn describe_leviathan_v4(raw: JsValue) -> Result<JsValue, JsError> {
+    let raw: serde_json::Value = from_js(raw)?;
+    to_js(&leviathan_v4::describe(&raw).map_err(js_error)?)
+}
+
+#[wasm_bindgen(js_name = leviathanOnboardSlotCount)]
+pub fn leviathan_onboard_slot_count(raw: JsValue) -> Result<u32, JsError> {
+    let raw: serde_json::Value = from_js(raw)?;
+    Ok(leviathan_v4::onboard_slot_count(&raw))
+}
+
+#[wasm_bindgen(js_name = leviathanLodMillimetres)]
+pub fn leviathan_lod_millimetres(raw: u32) -> Option<f64> {
+    leviathan_v4::lod_millimetres(raw)
+}
+
+#[wasm_bindgen(js_name = leviathanV4Usb)]
+pub fn leviathan_v4_usb() -> Result<JsValue, JsError> {
+    to_js(&leviathan_v4::usb())
+}
+
+#[wasm_bindgen(js_name = matchesLeviathanV4)]
+pub fn matches_leviathan_v4(device: JsValue) -> Result<bool, JsError> {
+    let device: leviathan_v4::HidDevice = from_js(device)?;
+    Ok(leviathan_v4::matches(&device))
+}
+
+#[wasm_bindgen(js_name = isLeviathanV4Name)]
+pub fn is_leviathan_v4_name(name: &str) -> bool {
+    leviathan_v4::is_device_name(name)
 }
 
 #[wasm_bindgen]

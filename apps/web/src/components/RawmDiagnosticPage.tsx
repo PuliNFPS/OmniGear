@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@gearhub/ui/components/button';
 import { downloadJson } from '../app/download';
+import { leviathanKeyId } from '../core/coreBridge';
 import type { BrowserHidApi } from '../hardware/deviceDiscovery';
 import {
   CHANNEL_LABELS,
@@ -85,14 +86,14 @@ function JsonBlock({ title, value }: { title: string; value: unknown }) {
 // writing it back reads clean whether or not the event was accepted.
 const WRITE_TARGETS = [500, 1000, 2000, 4000];
 
-/** Ids read from the official software, never confirmed against hardware. */
-const KEY_IDS: { id: number; rotulo: string }[] = [
-  { id: 7, rotulo: 'Botão de DPI (mais seguro)' },
-  { id: 5, rotulo: 'Lateral traseiro' },
-  { id: 6, rotulo: 'Lateral dianteiro' },
-  { id: 2, rotulo: 'Clique central' },
-  { id: 3, rotulo: 'Clique direito' },
-  { id: 1, rotulo: 'Clique esquerdo (arriscado)' },
+/** The buttons the probe can target; the key id comes from the core. */
+const KEY_TARGETS: { buttonId: string; rotulo: string }[] = [
+  { buttonId: 'dpi', rotulo: 'Botão de DPI (mais seguro)' },
+  { buttonId: 'lateral-traseiro', rotulo: 'Lateral traseiro' },
+  { buttonId: 'lateral-dianteiro', rotulo: 'Lateral dianteiro' },
+  { buttonId: 'central', rotulo: 'Clique central' },
+  { buttonId: 'direito', rotulo: 'Clique direito' },
+  { buttonId: 'esquerdo', rotulo: 'Clique esquerdo (arriscado)' },
 ];
 
 /**
@@ -177,7 +178,7 @@ export function RawmDiagnosticPage() {
   const [write, setWrite] = useState<WriteProbeReport | null>(null);
   const [armed, setArmed] = useState(false);
   const [mapping, setMapping] = useState<MappingProbeReport | null>(null);
-  const [keyId, setKeyId] = useState(KEY_IDS[0].id);
+  const [buttonId, setButtonId] = useState(KEY_TARGETS[0].buttonId);
   const [withReset, setWithReset] = useState(true);
   const [setId, setSetId] = useState(MAPPING_SETS[0].id);
   const [conjunto, setConjunto] = useState<MappingSetReport | null>(null);
@@ -388,12 +389,12 @@ export function RawmDiagnosticPage() {
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <select
                   className="rounded-md border border-border bg-card px-2 py-1 text-sm"
-                  value={keyId}
-                  onChange={(event) => setKeyId(Number(event.target.value))}
+                  value={buttonId}
+                  onChange={(event) => setButtonId(event.target.value)}
                 >
-                  {KEY_IDS.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.id} — {item.rotulo}
+                  {KEY_TARGETS.map((item) => (
+                    <option key={item.buttonId} value={item.buttonId}>
+                      {item.rotulo}
                     </option>
                   ))}
                 </select>
@@ -421,6 +422,8 @@ export function RawmDiagnosticPage() {
                   size="sm"
                   disabled={!armed || busy}
                   onClick={() => {
+                    const keyId = leviathanKeyId(buttonId);
+                    if (keyId === null) return; // unreachable: every target is a physical key
                     setBusy(true);
                     setError(null);
                     probeButtonMapping(device, keyId, action, { comConfigReset: withReset })

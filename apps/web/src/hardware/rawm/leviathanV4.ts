@@ -1,38 +1,12 @@
-import type {
-  MouseActionId,
-  MouseButtonSpot,
-  MouseParameterCapabilities,
-  MousePerformanceMode,
-  MousePeripheral,
-  MouseSettings,
-} from '@gearhub/shared';
-import { LEVIATHAN_V4_LOD_LEVELS } from './leviathanV4Lod';
-import { createRPlusSettings } from '../../domain/mouseCapabilities';
-import { dpiAxes } from '../../core/coreBridge';
+import type { MouseButtonSpot, MousePeripheral } from '@gearhub/shared';
+import { describeLeviathanV4 } from '../../core/coreBridge';
 
-export const RAWM_VENDOR_ID = 0x1915;
-export const LEVIATHAN_V4_RECEIVER_PRODUCT_ID = 0x2346;
-export const RAWM_CONFIG_USAGE_PAGE = 0xff00;
-export const RAWM_CONFIG_USAGE = 0x0001;
-
-const leviathanV4PerformanceModes: MousePerformanceMode[] = [
-  { id: 'office', label: 'Office' },
-  { id: 'lp', label: 'LP' },
-  { id: 'hp', label: 'HP' },
-  { id: 'gaming-plus', label: 'Gaming+' },
-];
-
-const leviathanV4ParameterCapabilities: MouseParameterCapabilities = {
-  motionSync: true,
-  angleSnapping: true,
-  rippleControl: true,
-  wirelessTurbo: true,
-  liftOffDistance: {
-    min: LEVIATHAN_V4_LOD_LEVELS[0].raw,
-    max: LEVIATHAN_V4_LOD_LEVELS[LEVIATHAN_V4_LOD_LEVELS.length - 1].raw,
-    step: 1,
-  },
-  sensorRotation: { min: -30, max: 30, step: 1 },
+/** Rótulos de tela dos modos; os ids e a ordem vêm do núcleo. */
+const performanceModeLabels: Record<string, string> = {
+  office: 'Office',
+  lp: 'LP',
+  hp: 'HP',
+  'gaming-plus': 'Gaming+',
 };
 
 /**
@@ -64,153 +38,60 @@ const buttons: MouseButtonSpot[] = [
   { id: 'dpi', label: 'Botão de DPI', position: { x: 0.5, y: 0.78 }, callout: 'direita' },
 ];
 
-const actions: MouseActionId[] = [
-  'clique-esquerdo',
-  'clique-direito',
-  'clique-central',
-  'voltar',
-  'avancar',
-  'dpi-ciclo',
-  'dpi-aumentar',
-  'dpi-diminuir',
-  'rolagem-cima',
-  'rolagem-baixo',
-  'desativado',
-];
-
-function finiteNumber(raw: Record<string, unknown>, key: string): number {
-  const value = raw[key];
-  if (typeof value !== 'number' || !Number.isFinite(value)) {
-    throw new Error(`Consulta RAWM incompleta: ${key}.`);
-  }
-  return value;
-}
-
-function numericArray(raw: Record<string, unknown>, key: string): number[] {
-  const value = raw[key];
-  if (
-    !Array.isArray(value) ||
-    value.length === 0 ||
-    value.some((item) => typeof item !== 'number')
-  ) {
-    throw new Error(`Consulta RAWM incompleta: ${key}.`);
-  }
-  return value;
-}
-
-function performanceMode(rawMode: number): string {
-  return leviathanV4PerformanceModes[rawMode]?.id ?? 'office';
-}
-
 /**
- * Onboard slots: `ocs` carries one status byte per slot and `ocn` states how
- * many. Both agreed on the captured firmware. If they ever disagree, fall back
- * to a single slot rather than sizing the profiles UI on a guess.
- *
- * `st` used to be read as this array; on real firmware it is the scalar 60.
+ * Compõe o periférico: o núcleo diz o que o aparelho é e em que estado está
+ * (`describeLeviathanV4`); este arquivo acrescenta só o desenho — a foto, as
+ * posições dos botões e os rótulos.
  */
-function onboardSlotCount(raw: Record<string, unknown>): number {
-  const statuses = raw.ocs;
-  if (!Array.isArray(statuses) || statuses.length === 0) return 1;
-  const declared = raw.ocn;
-  if (typeof declared === 'number' && declared !== statuses.length) return 1;
-  return Math.min(statuses.length, 16);
-}
-
 export function createLeviathanV4Peripheral(
   raw: Record<string, unknown>,
   id: string,
 ): MousePeripheral {
-  const name = typeof raw.dn === 'string' && raw.dn.trim() ? raw.dn.trim() : 'Leviathan V4';
-  // Unused DPI slots are reported as zeros in a fixed-width array. The snapshot
-  // parser keeps them for the round trip; the UI only shows populated stages.
-  const dpiLevels = numericArray(raw, 'cpi_l').filter((level) => level > 0);
-  const activeDpi = finiteNumber(raw, 'cpi');
-  const pollingRate = finiteNumber(raw, 'polling');
-  // `oci` is the onboard config index — the slot the mouse is running. `ob`
-  // rides along in the parameter block and is not that selector, though both
-  // read 0 on a mouse that never left the first slot, which hid the mix-up.
-  const onboardIndex = typeof raw.oci === 'number' ? raw.oci : finiteNumber(raw, 'ob');
-  const rawMode = finiteNumber(raw, 'pm');
-  const lod = finiteNumber(raw, 'lod');
-  const angleTuning = finiteNumber(raw, 'at');
-  for (const key of ['ms', 'as', 'rctrl', 'top']) finiteNumber(raw, key);
-  const activeIndex = Math.max(0, dpiLevels.indexOf(activeDpi));
-  const buttonIds = buttons.map((button) => button.id);
-  const rPlus = createRPlusSettings(buttonIds, 'lateral-dianteiro');
-  const settings: MouseSettings = {
-    buttons: {
-      esquerdo: 'clique-esquerdo',
-      direito: 'clique-direito',
-      central: 'clique-central',
-      'lateral-traseiro': 'voltar',
-      'lateral-dianteiro': 'avancar',
-      dpi: 'dpi-ciclo',
-    },
-    dpiStages: dpiLevels.map((dpi, index) => ({ id: `estagio-${index + 1}`, ...dpiAxes(dpi) })),
-    activeStageId: `estagio-${activeIndex + 1}`,
-    independentAxes: false,
-    pollingRate,
-    performanceMode: performanceMode(rawMode),
-    parameters: {
-      motionSync: raw.ms === 1,
-      angleSnapping: raw.as === 1,
-      rippleControl: raw.rctrl === 1,
-      wirelessTurbo: raw.top === 8,
-      liftOffDistance: lod,
-      sensorRotation: angleTuning,
-      debounce: 0,
-      sleepTimeout: 1,
-    },
-    rPlus,
-  };
-  const profileCount = onboardSlotCount(raw);
-  const activeProfileSlot = Math.min(profileCount, Math.max(1, onboardIndex + 1));
+  const description = describeLeviathanV4(raw);
+  const settings = description.defaults;
 
   return {
     id,
     type: 'mouse',
-    name,
+    name: description.name,
     manufacturer: 'RAWM',
     connection: 'sem-fio',
     status: 'conectado',
-    firmware: typeof raw.r === 'string' || typeof raw.r === 'number' ? String(raw.r) : null,
+    firmware: description.firmware,
     demo: false,
-    battery:
-      typeof raw.battery === 'number' && raw.battery >= 0 && raw.battery <= 100
-        ? raw.battery
-        : null,
+    battery: description.battery,
     photo: { src: '/dispositivos/leviathan-v4.png', aspect: 213 / 420 },
     capabilities: {
-      dpi: {
-        // Sensor range, not the smallest/largest saved stage. RAWM specifies
-        // 100–45000 for this model: rawmshop.com/products/leviathan-v4.
-        min: 100,
-        max: 45000,
-        step: 50,
-        minStages: 1,
-        maxStages: 8,
-        independentAxes: false,
-      },
-      pollingRates: [125, 250, 500, 1000, 2000, 4000, 8000],
-      performanceModes: leviathanV4PerformanceModes,
+      dpi: description.dpi,
+      pollingRates: description.pollingRates,
+      performanceModes: description.performanceModes.map((mode) => ({
+        id: mode,
+        label: performanceModeLabels[mode] ?? mode,
+      })),
       buttons,
-      actions,
-      parameters: leviathanV4ParameterCapabilities,
-      rPlus: { activatorButtonIds: ['lateral-traseiro', 'lateral-dianteiro', 'dpi'] },
-      profileSlots: profileCount,
+      actions: description.actions,
+      parameters: {
+        motionSync: true,
+        angleSnapping: true,
+        rippleControl: true,
+        wirelessTurbo: true,
+        liftOffDistance: description.liftOffDistance,
+        sensorRotation: description.sensorRotation,
+      },
+      rPlus: { activatorButtonIds: description.rPlusActivatorButtonIds },
+      profileSlots: description.profileSlots,
     },
     defaults: structuredClone(settings),
-    profiles: Array.from({ length: profileCount }, (_, index) => ({
+    profiles: Array.from({ length: description.profileSlots }, (_, index) => ({
       index: index + 1,
       // The mouse reports no slot names, so this is the app's own label. It
       // follows the vendor hub's "Onboard Memory 1-4" rather than inventing a
       // separate vocabulary for the same four slots.
       name: `Memória ${index + 1}`,
       settings: structuredClone(settings),
-      initial: index + 1 !== activeProfileSlot,
+      initial: index + 1 !== description.activeProfileSlot,
     })),
-    activeProfileSlot,
-    liveDpi: dpiAxes(activeDpi),
+    activeProfileSlot: description.activeProfileSlot,
+    liveDpi: description.liveDpi,
   };
 }

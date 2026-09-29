@@ -2,8 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 import type { BrowserHidDevice } from '../deviceDiscovery';
 import type { HidInputReportEvent } from '../WebHidTransport';
 import { leviathanV4QueryFixture } from './leviathanV4Fixture';
-import { parseMouseParamState } from './mouseParamSnapshot';
-import { frameEvent, withProtocolEnvelope } from '../../core/coreBridge';
+import {
+  encodeLeviathanShowPower,
+  frameEvent,
+  parseMouseParamState,
+  withProtocolEnvelope,
+} from '../../core/coreBridge';
 import {
   compareStates,
   probeButtonMapping,
@@ -262,13 +266,25 @@ describe('probeMappingSet', () => {
     const report = await probeMappingSet(mouse.device, conjunto);
 
     expect(report.enviado).toBe(true);
-    // One reset plus one event per entry.
-    expect(report.eventos).toBe(conjunto.length + 1);
-    expect(mouse.writes.length).toBeGreaterThanOrEqual(conjunto.length + 1);
+    // One reset, one event per entry, and the rebuilt seventh key.
+    expect(report.eventos).toBe(conjunto.length + 2);
+    expect(mouse.writes.length).toBeGreaterThanOrEqual(conjunto.length + 2);
     // First event is the reset: inner config type 0x03.
     expect(mouse.writes[0][7]).toBe(0x03);
     // Nothing is committed to flash.
     expect(mouse.writes.some((write) => (write[0] & 0x0f) === 0x06)).toBe(false);
+  });
+
+  it('rebuilds the seventh key after the entries, as the driver does', async () => {
+    const mouse = fakeMouse({ ignoreWrites: true });
+
+    await probeMappingSet(mouse.device, [{ keyIds: [1], acao: 'clique-esquerdo' }]);
+
+    // Reset, one mapping, show power. Each event fits one report, so writes
+    // line up with events; the fixture query reports crc on.
+    const showPower = withProtocolEnvelope(encodeLeviathanShowPower(), true);
+    expect(mouse.writes).toHaveLength(3);
+    expect(Array.from(mouse.writes[2])).toEqual(Array.from(showPower));
   });
 
   // The R-Plus layer is a mapping whose key id list is activator then target.
@@ -294,8 +310,8 @@ describe('probeProfileWrite', () => {
     const report = await probeProfileWrite(mouse.device, 4, entradas);
 
     expect(report.enviado).toBe(true);
-    // reset, opening save, parameters, one mapping, closing save.
-    expect(report.eventos).toBe(5);
+    // reset, opening save, parameters, one mapping, seventh key, closing save.
+    expect(report.eventos).toBe(6);
 
     const inner = (write: Uint8Array) => ({ cmd: write[5] & 0x0f, tipo: write[7] });
     const kinds = mouse.writes.filter((write) => write.length > 7).map(inner);
@@ -312,6 +328,18 @@ describe('probeProfileWrite', () => {
     const opening = mouse.writes[1];
     expect(opening[8]).toBe(0x01);
     expect(opening[9]).toBe(0x03);
+  });
+
+  it('rebuilds the seventh key before the closing save, as the driver does', async () => {
+    const mouse = fakeMouse({ ignoreWrites: true });
+
+    await probeProfileWrite(mouse.device, 4, entradas);
+
+    const showPower = withProtocolEnvelope(encodeLeviathanShowPower(), true);
+    // The parameter body spans several reports, so count from the end: the
+    // closing save is the last report and the seventh key sits right before it.
+    const last = mouse.writes.length - 1;
+    expect(Array.from(mouse.writes[last - 1])).toEqual(Array.from(showPower));
   });
 
   it('refuses a slot the mouse does not have', async () => {

@@ -1,9 +1,11 @@
 import init, {
   actionForFunction as wasmActionForFunction,
   actionForKey as wasmActionForKey,
+  applySettingsToMouseParam as wasmApplySettingsToMouseParam,
   buildQueryEvent as wasmBuildQueryEvent,
   core_version,
   decodeReportChunk as wasmDecodeReportChunk,
+  describeLeviathanV4 as wasmDescribeLeviathanV4,
   dpiAxes as wasmDpiAxes,
   encode_action as wasmEncodeAction,
   encode_config_reset as wasmEncodeConfigReset,
@@ -12,18 +14,31 @@ import init, {
   encode_mouse_param_snapshot as wasmEncodeMouseParamSnapshot,
   encodeLeviathanShowPower as wasmEncodeLeviathanShowPower,
   encodeMapping as wasmEncodeMapping,
+  encodeMouseParamBody as wasmEncodeMouseParamBody,
   frameEvent as wasmFrameEvent,
   is_wasm_available,
+  isLeviathanV4Name as wasmIsLeviathanV4Name,
   isQueryResult as wasmIsQueryResult,
   leviathanButtonId as wasmLeviathanButtonId,
   leviathanKeyId as wasmLeviathanKeyId,
+  leviathanLodMillimetres as wasmLeviathanLodMillimetres,
+  leviathanOnboardSlotCount as wasmLeviathanOnboardSlotCount,
   leviathanShowPowerKeyId as wasmLeviathanShowPowerKeyId,
+  leviathanV4Usb as wasmLeviathanV4Usb,
+  matchesLeviathanV4 as wasmMatchesLeviathanV4,
+  parseMouseParamState as wasmParseMouseParamState,
   parseNotification as wasmParseNotification,
   queryJson as wasmQueryJson,
   RawEventAssembler as WasmRawEventAssembler,
   withProtocolEnvelope as wasmWithProtocolEnvelope,
 } from 'gearhub-core-wasm';
-import type { MouseActionId } from '@gearhub/shared';
+import type {
+  LeviathanV4Description,
+  LeviathanV4Usb,
+  MouseActionId,
+  MouseSettings,
+  RawmMouseParamState,
+} from '@gearhub/shared';
 import { asRawmError } from './rawmError';
 
 export interface CoreStatus {
@@ -218,6 +233,95 @@ export function leviathanShowPowerKeyId(): number {
 /** O evento que devolve à sétima tecla o indicador de bateria. */
 export function encodeLeviathanShowPower(): Uint8Array {
   return wasmEncodeLeviathanShowPower();
+}
+
+/** Lê o bloco de parâmetros da resposta de consulta. */
+export function parseMouseParamState(raw: Record<string, unknown>): RawmMouseParamState {
+  try {
+    return wasmParseMouseParamState(raw) as RawmMouseParamState;
+  } catch (error) {
+    throw asRawmError(error);
+  }
+}
+
+/** O corpo binário do bloco, pronto para `encodeMouseParamSnapshot`. */
+export function encodeMouseParamBody(state: RawmMouseParamState): Uint8Array {
+  try {
+    return wasmEncodeMouseParamBody(state);
+  } catch (error) {
+    throw asRawmError(error);
+  }
+}
+
+/** A configuração do editor aplicada sobre o bloco que o mouse relatou. */
+export function applySettingsToMouseParam(
+  snapshot: RawmMouseParamState,
+  settings: MouseSettings,
+): RawmMouseParamState {
+  try {
+    return wasmApplySettingsToMouseParam(snapshot, settings) as RawmMouseParamState;
+  } catch (error) {
+    throw asRawmError(error);
+  }
+}
+
+/** O que a consulta diz sobre o Leviathan V4, e o que o modelo suporta. */
+export function describeLeviathanV4(raw: Record<string, unknown>): LeviathanV4Description {
+  try {
+    return wasmDescribeLeviathanV4(raw) as LeviathanV4Description;
+  } catch (error) {
+    throw asRawmError(error);
+  }
+}
+
+/** Quantas memórias onboard a consulta anuncia. */
+export function leviathanOnboardSlotCount(raw: Record<string, unknown>): number {
+  return wasmLeviathanOnboardSlotCount(raw);
+}
+
+/** A distância, em milímetros, de um nível de LOD; `null` para um nível desconhecido. */
+export function leviathanLodMillimetres(raw: number): number | null {
+  return wasmLeviathanLodMillimetres(raw) ?? null;
+}
+
+/** Os números USB do receptor, para o filtro do seletor WebHID. */
+export function leviathanV4Usb(): LeviathanV4Usb {
+  return wasmLeviathanV4Usb() as LeviathanV4Usb;
+}
+
+interface HidDeviceIdentityLike {
+  vendorId: number;
+  productId: number;
+  collections: {
+    usagePage: number;
+    usage: number;
+    inputReports?: { reportId: number }[];
+    outputReports?: { reportId: number }[];
+  }[];
+}
+
+/**
+ * Se o dispositivo é o receptor do Leviathan V4 com a coleção de configuração.
+ *
+ * O `HIDDevice` do navegador guarda tudo em getters do protótipo, que a
+ * conversão do serde não enxerga; por isso a cópia para um objeto simples.
+ */
+export function matchesLeviathanV4(device: HidDeviceIdentityLike): boolean {
+  return wasmMatchesLeviathanV4({
+    vendorId: device.vendorId,
+    productId: device.productId,
+    collections: device.collections.map((collection) => ({
+      usagePage: collection.usagePage,
+      usage: collection.usage,
+      inputReports: (collection.inputReports ?? []).map(({ reportId }) => ({ reportId })),
+      outputReports: (collection.outputReports ?? []).map(({ reportId }) => ({ reportId })),
+    })),
+  });
+}
+
+/** Se o nome que o mouse relata é o de um Leviathan V4. */
+export function isLeviathanV4Name(name: string): boolean {
+  return wasmIsLeviathanV4Name(name);
 }
 
 export function withProtocolEnvelope(source: ArrayLike<number>, useCrc: boolean): Uint8Array {

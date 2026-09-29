@@ -26,6 +26,10 @@ export type {
   NumericParameterRange,
 } from './mouse';
 
+export type { LeviathanV4Description } from './generated/LeviathanV4Description';
+export type { LeviathanV4Usb } from './generated/LeviathanV4Usb';
+export type { RawmMouseParamState } from './generated/RawmMouseParamState';
+
 export type {
   KeyboardAction,
   KeyboardCapabilities,

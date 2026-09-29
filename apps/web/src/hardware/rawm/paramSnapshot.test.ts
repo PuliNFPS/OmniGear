@@ -5,7 +5,7 @@ import {
   applySettingsToMouseParam,
   encodeMouseParamBody,
   parseMouseParamState,
-} from './mouseParamSnapshot';
+} from '../../core/coreBridge';
 
 const raw = {
   dn: 'Leviathan V4',

@@ -385,3 +385,46 @@ depende só de teste unitário.
 
 O caminho de **escrita** continua sem confirmação nova — mas ele não mudou nesta migração,
 e segue coberto pelas seções anteriores deste documento.
+
+## As tabelas de tecla e ação em Rust, confirmadas na escrita (2026-09-28)
+
+O passo 2 da migração (PR #12) apagou `leviathanV4Keys.ts`: a tabela ação→bytes, a tabela
+botão↔id de tecla e a sétima tecla (show power) passaram para o núcleo, e o driver monta
+cada mapeamento com `encodeMapping` do `coreBridge`.
+
+Depois do merge, uma configuração foi aplicada no Leviathan V4 pelo app, e o mouse ficou
+exatamente como configurado. É a primeira confirmação do **caminho de escrita** com bytes
+montados pelo núcleo: CONFIG_RESET, o bloco de parâmetros, todos os mapeamentos e a
+sétima tecla atravessaram a ponte e foram aceitos.
+
+Os bytes não mudaram nesta migração — os vetores de `rawm-protocol.json` foram capturados do
+TypeScript antigo antes de qualquer mudança —, então esta confirmação atesta a ponte, não um
+encoder novo.
+
+## Passo 3 — roteiro de confirmação (confirmado em 2026-09-28)
+
+O passo 3 moveu para o núcleo a leitura da consulta e o bloco de parâmetros, que é o caminho
+de escrita de DPI, polling, LOD, modo e parâmetros. Os bytes estão fixados pelos vetores
+`paramSnapshot` e `paramApply`, capturados do TypeScript antigo; o que falta é o mouse aceitar.
+
+1. **Conectar.** Nome, estágios de DPI, polling, modo de desempenho, LOD e as quatro memórias
+   aparecem como no mouse.
+2. **Escrever.** Mudar um estágio de DPI, o polling, o LOD, o modo, Motion Sync e a rotação;
+   aplicar; reconectar o app sem desligar o mouse; os valores persistiram. Não desligar o
+   mouse aqui: `applyToSession` não grava na flash, então um ciclo de energia pareceria falha.
+3. **Diagnóstico.** Abrir `diagnostico.html`, rodar a leitura: todos os estágios `ok`, o
+   snapshot interpretado com os valores do mouse.
+4. **Sonda de mapeamentos.** Rodar um conjunto completo; os botões respondem como o conjunto
+   diz e o indicador de bateria continua funcionando.
+5. **Gravar numa memória.** Salvar um perfil numa memória (`writeProfile`), desligar e ligar o
+   mouse, reconectar; os valores persistiram.
+
+Resultado (2026-09-28, app local na branch `feat/migracao-leitura-dispositivo`): **os cinco
+itens passaram.** A conexão mostrou o aparelho corretamente; as mudanças aplicadas chegaram ao
+mouse e persistiram na reconexão; todos os estágios do diagnóstico deram `ok`; a sonda de
+mapeamentos funcionou; e o perfil gravado numa memória sobreviveu a desligar e ligar o mouse.
+
+É a primeira confirmação do bloco de parâmetros montado pelo núcleo — `apply_settings`,
+`pack_dpi` e `encode_mouse_param_body` — e da descrição do aparelho lida em Rust. Com isso, o
+caminho de leitura volta a estar inteiro confirmado em hardware, e o de escrita cobre agora
+parâmetros e mapeamentos montados pelo núcleo.

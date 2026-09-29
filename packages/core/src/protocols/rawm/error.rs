@@ -25,6 +25,15 @@ pub enum RawmError {
     /// Id de ação que o núcleo não conhece — uma configuração salva por outra
     /// versão do app, por exemplo.
     UnknownAction,
+    /// Campo do snapshot de parâmetros ausente, do tipo errado ou fora da faixa.
+    /// `field` é o nome como o firmware o envia (`cpi`, `lod`).
+    InvalidSnapshotField { field: &'static str },
+    /// Modo de desempenho que este aparelho não tem, ou nenhum.
+    InvalidPerformanceMode,
+    /// Estágios de DPI vazios, demais, ou sem o estágio ativo entre eles.
+    InvalidDpiStages,
+    /// Campo que a descrição do aparelho exige ausente ou do tipo errado.
+    IncompleteQuery { field: &'static str },
 }
 
 impl RawmError {
@@ -41,6 +50,19 @@ impl RawmError {
             Self::NotAQueryResult => "not-a-query-result",
             Self::InvalidUtf8 => "invalid-utf8",
             Self::UnknownAction => "unknown-action",
+            Self::InvalidSnapshotField { .. } => "invalid-snapshot-field",
+            Self::InvalidPerformanceMode => "invalid-performance-mode",
+            Self::InvalidDpiStages => "invalid-dpi-stages",
+            Self::IncompleteQuery { .. } => "incomplete-query",
+        }
+    }
+
+    /// O dado que acompanha o código, quando há um. A ponte o envia junto
+    /// (`código:dado`), e a casca o usa para montar a mensagem.
+    pub fn detail(&self) -> Option<&'static str> {
+        match self {
+            Self::InvalidSnapshotField { field } | Self::IncompleteQuery { field } => Some(field),
+            _ => None,
         }
     }
 }
@@ -65,5 +87,27 @@ mod tests {
         assert_eq!(RawmError::NotAQueryResult.code(), "not-a-query-result");
         assert_eq!(RawmError::InvalidUtf8.code(), "invalid-utf8");
         assert_eq!(RawmError::UnknownAction.code(), "unknown-action");
+        assert_eq!(
+            RawmError::InvalidSnapshotField { field: "cpi" }.code(),
+            "invalid-snapshot-field"
+        );
+        assert_eq!(
+            RawmError::InvalidPerformanceMode.code(),
+            "invalid-performance-mode"
+        );
+        assert_eq!(RawmError::InvalidDpiStages.code(), "invalid-dpi-stages");
+        assert_eq!(
+            RawmError::IncompleteQuery { field: "top" }.code(),
+            "incomplete-query"
+        );
+    }
+
+    #[test]
+    fn only_variants_with_data_carry_a_detail() {
+        assert_eq!(
+            RawmError::InvalidSnapshotField { field: "lod" }.detail(),
+            Some("lod")
+        );
+        assert_eq!(RawmError::EventTooLong.detail(), None);
     }
 }

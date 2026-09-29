@@ -1,20 +1,18 @@
-import type { MouseActionId } from '@gearhub/shared';
+import type { MouseActionId, RawmMouseParamState } from '@gearhub/shared';
 import {
   encodeAction,
   encodeConfigReset,
+  encodeLeviathanShowPower,
   encodeMapping,
+  encodeMouseParamBody,
   encodeMouseParamSnapshot,
   frameEvent,
+  parseMouseParamState,
   withProtocolEnvelope,
 } from '../../core/coreBridge';
 import type { BrowserHidDevice } from '../deviceDiscovery';
 import { WebHidTransport, type HardwareTransport } from '../WebHidTransport';
 import { captureQuery, type RawReportLog } from './diagnostics';
-import {
-  encodeMouseParamBody,
-  parseMouseParamState,
-  type RawmMouseParamState,
-} from './mouseParamSnapshot';
 
 /**
  * Smallest possible write, for confirming the binary parameter body against
@@ -294,6 +292,9 @@ export async function probeMappingSet(
       const inner = encodeMapping(entry.keyIds, entry.acao);
       if (inner) events.push(withProtocolEnvelope(inner, useCrc));
     }
+    // CONFIG_RESET clears the seventh key too, and the driver always rebuilds
+    // it. A probe that did not would confirm a sequence the app never sends.
+    events.push(withProtocolEnvelope(encodeLeviathanShowPower(), useCrc));
 
     for (const event of events) {
       for (const chunk of frameEvent(event, true)) {
@@ -380,6 +381,9 @@ export async function probeProfileWrite(
       const inner = encodeMapping(entry.keyIds, entry.acao);
       if (inner) events.push(withProtocolEnvelope(inner, useCrc));
     }
+    // CONFIG_RESET clears the seventh key too, and the driver rebuilds it before
+    // committing; the probe writes flash, so it must not leave the key lost.
+    events.push(withProtocolEnvelope(encodeLeviathanShowPower(), useCrc));
     // Commits.
     events.push(withProtocolEnvelope(encodeAction(ACTION_SAVE_CONFIG_TO_FDS, 0), useCrc));
 

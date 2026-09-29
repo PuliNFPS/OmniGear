@@ -98,5 +98,313 @@
     { "buttonId": "lateral-traseiro", "keyId": 14 },
     { "buttonId": "lateral-dianteiro", "keyId": 15 },
     { "buttonId": "dpi", "keyId": 16 }
+  ],
+  "queries": {
+    "leviathan-v4-captura": {
+      "r": "G-1.2.3",
+      "rc": 9,
+      "dn": "LEVIATHAN V4",
+      "pi": 9034,
+      "vi": 6421,
+      "battery": 31,
+      "chr": 0,
+      "cpi": 800,
+      "polling": 4000,
+      "light": 48,
+      "cpi_l": [400, 800, 1600, 3200, 0, 0, 0, 0],
+      "cpi_l_c": [1, 2, 6, 4, 0, 0, 0, 0],
+      "ob": 0,
+      "esb_addr": "00000000000000000000000000000000",
+      "msg": "",
+      "cn": 8,
+      "pm": 3,
+      "esb_ch": 0,
+      "lod": 2,
+      "lod_c": 0,
+      "kd": [0, 0, 0, 0, 0, 0, 0],
+      "ms": 1,
+      "at": 0,
+      "at2": 0,
+      "as": 0,
+      "rctrl": 0,
+      "top": 8,
+      "atp": 1,
+      "co": "",
+      "lz": 0,
+      "st": 60,
+      "rf_ch": 2,
+      "crc": 1,
+      "lua": 255,
+      "noack": 0,
+      "gm": [0, 0],
+      "ocn": 4,
+      "oci": 0,
+      "ocs": [129, 130, 134, 132],
+      "ec": 1,
+      "dgom": 1,
+      "sst": "PAW3950",
+      "lbn": 128,
+      "hc": 1,
+      "rr": "G-1.0.0",
+      "rrc": 1
+    },
+    "sintetica-52-bytes": {
+      "dn": "Leviathan V4",
+      "cpi": 1600,
+      "polling": 1000,
+      "light": 48,
+      "cpi_l": [400, 800, 1600, 3200],
+      "cpi_l_c": [1, 2, 3, 4],
+      "ob": 2,
+      "pm": 1,
+      "lod": 2,
+      "kd": [8, 8, 8, 8, 8, 8, 8],
+      "ms": 1,
+      "at": 0,
+      "as": 1,
+      "rctrl": 1,
+      "top": 8,
+      "co": [100, 90],
+      "atp": 1,
+      "ocs": [128, 129, 130, 131],
+      "gm": [0, 0],
+      "st": [128, 129, 130, 131]
+    }
+  },
+  "paramSnapshot": [
+    {
+      "name": "corpo completo de 52 bytes confirmado",
+      "query": "sintetica-52-bytes",
+      "expected": "4006e8033004900120034006800c02010000000000020708080808080808010001010401020304080264005a0001048081828300"
+    },
+    {
+      "name": "captura real, com o preenchimento de zeros",
+      "query": "leviathan-v4-captura",
+      "expected": "2003a00f3008900120034006800c00000000000000000003000000000002070000000000000001000000080102060400000000080001048182868400"
+    }
+  ],
+  "paramApply": [
+    {
+      "name": "os padrões da captura reescrevem o mesmo corpo",
+      "query": "leviathan-v4-captura",
+      "settings": {
+        "buttons": {
+          "esquerdo": "clique-esquerdo",
+          "direito": "clique-direito",
+          "central": "clique-central",
+          "lateral-traseiro": "voltar",
+          "lateral-dianteiro": "avancar",
+          "dpi": "dpi-ciclo"
+        },
+        "dpiStages": [
+          { "id": "estagio-1", "x": 400, "y": 400 },
+          { "id": "estagio-2", "x": 800, "y": 800 },
+          { "id": "estagio-3", "x": 1600, "y": 1600 },
+          { "id": "estagio-4", "x": 3200, "y": 3200 }
+        ],
+        "activeStageId": "estagio-2",
+        "independentAxes": false,
+        "pollingRate": 4000,
+        "performanceMode": "gaming-plus",
+        "parameters": {
+          "motionSync": true,
+          "angleSnapping": false,
+          "rippleControl": false,
+          "wirelessTurbo": true,
+          "liftOffDistance": 2,
+          "sensorRotation": 0,
+          "debounce": 0,
+          "sleepTimeout": 1
+        },
+        "rPlus": {
+          "activatorButtonId": "lateral-dianteiro",
+          "buttons": {
+            "esquerdo": "desativado",
+            "direito": "desativado",
+            "central": "desativado",
+            "lateral-traseiro": "desativado",
+            "lateral-dianteiro": "desativado",
+            "dpi": "desativado"
+          }
+        }
+      },
+      "expected": "2003a00f3008900120034006800c00000000000000000003000000000002070000000000000001000000080102060400000000080001048182868400"
+    },
+    {
+      "name": "polling, modo, turbo e motion sync",
+      "query": "sintetica-52-bytes",
+      "settings": {
+        "buttons": {
+          "esquerdo": "clique-esquerdo",
+          "direito": "clique-direito",
+          "central": "clique-central",
+          "lateral-traseiro": "voltar",
+          "lateral-dianteiro": "avancar",
+          "dpi": "dpi-ciclo"
+        },
+        "dpiStages": [
+          { "id": "estagio-1", "x": 400, "y": 400 },
+          { "id": "estagio-2", "x": 800, "y": 800 },
+          { "id": "estagio-3", "x": 1600, "y": 1600 },
+          { "id": "estagio-4", "x": 3200, "y": 3200 }
+        ],
+        "activeStageId": "estagio-3",
+        "independentAxes": false,
+        "pollingRate": 4000,
+        "performanceMode": "gaming-plus",
+        "parameters": {
+          "motionSync": false,
+          "angleSnapping": true,
+          "rippleControl": true,
+          "wirelessTurbo": false,
+          "liftOffDistance": 2,
+          "sensorRotation": 0,
+          "debounce": 0,
+          "sleepTimeout": 1
+        },
+        "rPlus": {
+          "activatorButtonId": "lateral-dianteiro",
+          "buttons": {
+            "esquerdo": "desativado",
+            "direito": "desativado",
+            "central": "desativado",
+            "lateral-traseiro": "desativado",
+            "lateral-dianteiro": "desativado",
+            "dpi": "desativado"
+          }
+        }
+      },
+      "expected": "4006a00f3004900120034006800c02030000000000020708080808080808000001010401020304000264005a0001048081828300"
+    },
+    {
+      "name": "eixos independentes empacotam X nos 16 bits baixos e Y nos altos",
+      "query": "leviathan-v4-captura",
+      "settings": {
+        "buttons": {
+          "esquerdo": "clique-esquerdo",
+          "direito": "clique-direito",
+          "central": "clique-central",
+          "lateral-traseiro": "voltar",
+          "lateral-dianteiro": "avancar",
+          "dpi": "dpi-ciclo"
+        },
+        "dpiStages": [
+          { "id": "estagio-1", "x": 400, "y": 800 },
+          { "id": "estagio-2", "x": 1600, "y": 1200 }
+        ],
+        "activeStageId": "estagio-2",
+        "independentAxes": true,
+        "pollingRate": 4000,
+        "performanceMode": "gaming-plus",
+        "parameters": {
+          "motionSync": true,
+          "angleSnapping": false,
+          "rippleControl": false,
+          "wirelessTurbo": true,
+          "liftOffDistance": 2,
+          "sensorRotation": 0,
+          "debounce": 0,
+          "sleepTimeout": 1
+        },
+        "rPlus": {
+          "activatorButtonId": "lateral-dianteiro",
+          "buttons": {
+            "esquerdo": "desativado",
+            "direito": "desativado",
+            "central": "desativado",
+            "lateral-traseiro": "desativado",
+            "lateral-dianteiro": "desativado",
+            "dpi": "desativado"
+          }
+        }
+      },
+      "expected": "0000a00f300000034006b00408900120034006b00400000000000000000000000000000000000000000000000002070000000000000001000000080102060400000000080001048182868400"
+    },
+    {
+      "name": "LOD, rotação negativa, angle snapping, ripple e modo office",
+      "query": "leviathan-v4-captura",
+      "settings": {
+        "buttons": {
+          "esquerdo": "clique-esquerdo",
+          "direito": "clique-direito",
+          "central": "clique-central",
+          "lateral-traseiro": "voltar",
+          "lateral-dianteiro": "avancar",
+          "dpi": "dpi-ciclo"
+        },
+        "dpiStages": [
+          { "id": "estagio-1", "x": 400, "y": 400 },
+          { "id": "estagio-2", "x": 800, "y": 800 },
+          { "id": "estagio-3", "x": 1600, "y": 1600 },
+          { "id": "estagio-4", "x": 3200, "y": 3200 }
+        ],
+        "activeStageId": "estagio-2",
+        "independentAxes": false,
+        "pollingRate": 4000,
+        "performanceMode": "office",
+        "parameters": {
+          "motionSync": true,
+          "angleSnapping": true,
+          "rippleControl": true,
+          "wirelessTurbo": true,
+          "liftOffDistance": 3,
+          "sensorRotation": -10,
+          "debounce": 0,
+          "sleepTimeout": 1
+        },
+        "rPlus": {
+          "activatorButtonId": "lateral-dianteiro",
+          "buttons": {
+            "esquerdo": "desativado",
+            "direito": "desativado",
+            "central": "desativado",
+            "lateral-traseiro": "desativado",
+            "lateral-dianteiro": "desativado",
+            "dpi": "desativado"
+          }
+        }
+      },
+      "expected": "2003a00f3008900120034006800c00000000000000000000000000000003070000000000000001f60101080102060400000000080001048182868400"
+    }
+  ],
+  "invalidSnapshot": [
+    {
+      "name": "lod ausente",
+      "query": "leviathan-v4-captura",
+      "patch": { "lod": null },
+      "field": "lod"
+    },
+    { "name": "kd vazio", "query": "leviathan-v4-captura", "patch": { "kd": [] }, "field": "kd" },
+    {
+      "name": "at fora de -128..127",
+      "query": "leviathan-v4-captura",
+      "patch": { "at": 200 },
+      "field": "at"
+    },
+    {
+      "name": "gm em array curto",
+      "query": "leviathan-v4-captura",
+      "patch": { "gm": [1] },
+      "field": "gm"
+    },
+    {
+      "name": "gm escalar fora de 0..1",
+      "query": "leviathan-v4-captura",
+      "patch": { "gm": 2 },
+      "field": "gm"
+    },
+    {
+      "name": "cpi_l_c como texto que não é vazio",
+      "query": "leviathan-v4-captura",
+      "patch": { "cpi_l_c": "x" },
+      "field": "cpi_l_c"
+    },
+    { "name": "cpi zero", "query": "leviathan-v4-captura", "patch": { "cpi": 0 }, "field": "cpi" },
+    {
+      "name": "cpi fracionário",
+      "query": "leviathan-v4-captura",
+      "patch": { "cpi": 800.5 },
+      "field": "cpi"
+    }
   ]
 }

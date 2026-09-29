@@ -25,6 +25,11 @@ const PHYSICAL_KEYS: [(&str, u8); 6] = [
 /// que a omite derruba em silêncio o indicador de bateria.
 pub const SHOW_POWER_KEY_ID: u8 = 0x0d;
 
+/// Os botões do aparelho, na ordem da tabela.
+pub(super) fn button_ids() -> impl Iterator<Item = &'static str> {
+    PHYSICAL_KEYS.iter().map(|&(button, _)| button)
+}
+
 pub fn key_id(button_id: &str) -> Option<u8> {
     PHYSICAL_KEYS
         .iter()

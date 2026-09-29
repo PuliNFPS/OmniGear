@@ -468,6 +468,8 @@ mudança de escopo: `packedDpi` fecha quando o passo 3 migrar `mouseParamSnapsho
 escreveu as duas — nenhum teste ou vetor de conformidade cobre a direção de escrita de CPI2,
 então uma delas pode divergir da outra sem que nada em `pnpm verify` note.
 
+**Fechada em 2026-09-28:** `pack_dpi` mora ao lado de `dpi_axes` em `notify.rs`, um teste prova um pelo outro, e os vetores `paramApply` cobrem a direção de escrita com eixos independentes.
+
 ## Mudanças de comportamento deliberadas
 
 ### UTF-8 estrito em `query_json`
@@ -491,6 +493,15 @@ devolve `Err(RawmError::InvalidUtf8)`), e o comentário de documentação de `qu
 a escolha. É a única divergência de comportamento nesta etapa que firmware real pode expor e
 que nenhuma suíte de vetores cobre — os vetores comparam bytes, não a leniência de decodificação
 de texto.
+
+### Contagem de memórias no driver
+
+O driver passa a usar a regra `ocs`/`ocn` do núcleo (`onboard_slot_count`). Quando `ocn`
+discorda de `ocs.length`, a contagem é 1, e então `readOnboardIndex(oci)` rejeita qualquer
+`oci` maior que 0: a conexão falha onde antes tinha sucesso.
+
+**Decisão:** manter. Uma identidade que se contradiz não é confiável para dimensionar as
+memórias, pelo mesmo raciocínio do UTF-8 estrito. Não foi visto em nenhum firmware capturado.
 
 ## Decisão 2 — `leviathanV4.ts` é dividido agora
 
@@ -576,6 +587,10 @@ O passo 0 é novo, e os demais absorvem os arquivos que faltavam.
    `deviceRegistry.ts` e o regex de nome de `connectLeviathanV4.ts`). Juntos porque leem o
    mesmo JSON de query e descrevem o mesmo aparelho; separá-los deixaria dois leitores do
    mesmo payload. Sondas reapontadas. **Confirmação em hardware.**
+   **Fechado em 2026-09-28** pelo plano `docs/superpowers/plans/2026-09-28-migracao-leitura-dispositivo.md`,
+   confirmado em hardware pelo roteiro em `docs/smoke-test-leviathan-v4.md`:
+   `mouseParamSnapshot.ts` foi apagado; `MouseSettings` é do núcleo; a duplicata de `packedDpi`
+   fechou com `pack_dpi`.
 4. **Dump onboard:** `onboardConfig.ts`, a decodificação do `0x14`. **Confirmação em
    hardware.**
 5. **Sessão:** `LeviathanV4Driver.ts` sob a interface de passos puxados acima, mais a
@@ -585,3 +600,123 @@ O passo 0 é novo, e os demais absorvem os arquivos que faltavam.
 A barra de conclusão de cada passo continua a de `## Como verificar cada passo`: a lógica
 existe em Rust com os testes portados, o TypeScript **apagou** a sua, as duas suítes passam,
 há paridade byte a byte contra os vetores, e os passos 3 a 5 foram confirmados no mouse.
+
+## Passo 3 — desenho (2026-09-28)
+
+O passo 3 é o primeiro em que **estruturas**, e não só bytes e números, atravessam a ponte: o
+snapshot de parâmetros (18 campos, guardado pelo driver e comparado campo a campo pelas
+sondas), o `MouseSettings` que o apply consome, e a descrição do aparelho que sai do JSON de
+consulta.
+
+### Decisão 3 — estruturas atravessam por `serde`, com tipos gerados por `ts-rs`
+
+Os tipos do núcleo derivam `Serialize`/`Deserialize`; a ponte converte com
+`serde-wasm-bindgen` para objetos JS comuns; o tipo TypeScript de cada um é gerado por `ts-rs`
+e guardado como o de `MouseActionId` (versionado, conferido pelo `cargo test`).
+
+- Do lado TS, o snapshot continua um objeto simples: o `{ ...snapshot, resolution }` do driver
+  e o `compareStates` das sondas não mudam.
+- `serde` e `serde_json` viram dependência real de `gearhub-core`. Não quebra nenhuma das três
+  regras — nada disso é I/O, assíncrono ou `wasm-bindgen` —, e o desktop ganha o mesmo leitor.
+- **`MouseSettings` passa a ser do núcleo**, com `DpiStage`, `MouseParameters` e
+  `MouseRPlusSettings`, gerados em `packages/shared/src/generated/`. O Rust passa a lê-lo aqui
+  (apply) e a produzi-lo (configuração padrão), e o `begin_apply(&MouseSettings)` do passo 5
+  precisaria dele de qualquer jeito.
+- Todos os tipos gerados moram em `packages/shared/src/generated/`, inclusive `RawmMouseParamState`, que é
+  interno do protocolo. O `ts-rs` escreve os `import` entre tipos gerados como caminhos relativos ao mesmo
+  diretório (`./MouseSettings`), e a descrição do aparelho referencia `MouseSettings`: separar os diretórios
+  quebraria esses imports.
+
+Rejeitadas: texto JSON na ponte (serializa e parseia duas vezes por chamada, e os tipos TS
+continuariam precisando de geração); arrays achatados como nas notificações (não escala para 18
+campos).
+
+### O que desce
+
+| peça                                  | onde                                  |
+| ------------------------------------- | ------------------------------------- |
+| snapshot: struct, parse, encode       | `protocols/rawm/param_snapshot.rs`    |
+| `pack_dpi`, inverso de `dpi_axes`     | `protocols/rawm/notify.rs`            |
+| `MouseSettings` e partes              | `device/settings.rs`                  |
+| apply + tabela de modos de desempenho | `drivers/leviathan_v4/apply.rs`       |
+| descrição do aparelho                 | `drivers/leviathan_v4/description.rs` |
+| LOD: `raw` → milímetros               | `drivers/leviathan_v4/lod.rs`         |
+| identidade USB e nome                 | `drivers/leviathan_v4/identity.rs`    |
+
+A **descrição** lê o JSON de consulta e devolve: nome, firmware, bateria, limites de DPI
+(100–45000, passo 50, 1–8 estágios), taxas de polling, ids dos modos, faixas de LOD e de rotação
+(−30 a 30), número de memórias (regra `ocs` contra `ocn`, teto 16), memória ativa, DPI atual e a
+configuração padrão (mapeamento de fábrica, estágios, R-Plus com ativador `lateral-dianteiro`).
+
+**Fica em TypeScript**, por ser desenho: a foto e sua proporção, as coordenadas e os rótulos dos
+botões, os rótulos dos modos, os nomes "Memória N", os nomes Baixo/Médio/Alto e o
+`formatLiftOffDistance`, o filtro WebHID (com as constantes vindas do núcleo). O
+`createLeviathanV4Peripheral` passa a compor a descrição do núcleo com essa camada visual.
+`mouseParamSnapshot.ts` é apagado.
+
+**Um só leitor do número de memórias.** Hoje o construtor do driver usa `ocs.length` e
+`leviathanV4.ts` usa a regra `ocs`/`ocn` com teto — dois leitores do mesmo payload discordando
+na borda. Os dois passam a usar a regra do núcleo.
+
+**As sondas** (Decisão 1) são reapontadas, e dois defeitos antigos delas fecham aqui: o
+`KEY_IDS` 1–7 de `RawmDiagnosticPage.tsx`, que não são ids de tecla, passa a vir de
+`leviathanKeyId`; e `probeMappingSet` passa a reconstruir a sétima tecla depois do
+CONFIG_RESET, como o driver.
+
+Fica para o passo 5: a leitura de `oci` e a sessão do driver.
+
+**Pendências declaradas do passo 3** (nomeadas aqui, não inferidas):
+
+- `MouseParameters.liftOffDistance` é `u32` e `sensorRotation` é `i32` no núcleo, enquanto o
+  mouse de demonstração guarda milímetros fracionários em `liftOffDistance`. Nada do demo
+  atravessa a ponte hoje; o passo 5 (`begin_apply(&MouseSettings)`) precisa resolver isso.
+- Os sinalizadores de capacidade dos parâmetros (`motionSync`, `angleSnapping`,
+  `rippleControl`, `wirelessTurbo`: `true`) ainda moram em `leviathanV4.ts` e sobem em um passo
+  posterior.
+
+### Erros
+
+As mensagens ao usuário ficam **idênticas** às de hoje. Cada uma ganha código estável em
+`RawmError`:
+
+- `InvalidSnapshotField { field }` → `invalid-snapshot-field` ("Snapshot RAWM incompleto ou
+  invalido: {campo}.")
+- `IncompleteQuery { field }` → `incomplete-query` ("Consulta RAWM incompleta: {campo}.")
+- `InvalidPerformanceMode` → `invalid-performance-mode`
+- `InvalidDpiStages` → `invalid-dpi-stages`
+
+Para variantes com dado, a ponte envia `código:campo`; `asRawmError` separa, monta o texto e
+guarda só o código em `cause`. Uma falha do `serde` ao converter o que a casca mandou não é erro
+de protocolo e atravessa intacta, como qualquer erro que não vem do núcleo.
+
+### Vetores e testes
+
+Capturados do TypeScript atual **antes** de qualquer mudança, como no passo 2:
+
+- A consulta real capturada em 2026-09-06 passa a morar em `rawm-protocol.json`;
+  `leviathanV4Fixture.ts` lê de lá, e a fonte fica sendo uma.
+- `paramSnapshot`: consulta → snapshot → bytes do corpo.
+- `paramApply`: consulta + `MouseSettings` → bytes do corpo, com um caso de **eixos
+  independentes**. Fecha a lacuna que `## Duplicata declarada no caminho de escrita —
+packedDpi` apontou: nada cobria a direção de escrita de CPI2.
+- `invalidSnapshot`: consulta quebrada → campo que reprova.
+
+Os testes TS de snapshot, LOD, identidade e descrição são portados para o Rust; os que ficam em
+TS exercitam o WASM real.
+
+### Confirmação em hardware
+
+Obrigatória, antes do merge, registrada em `docs/smoke-test-leviathan-v4.md`:
+
+1. Conectar: nome, estágios de DPI, polling, modo, LOD e as quatro memórias corretos na tela.
+2. Aplicar mudanças de DPI, polling, LOD, modo, Motion Sync e rotação; reconectar; conferir que
+   persistiram.
+3. Rodar a página de diagnóstico.
+4. Rodar a sonda de mapeamentos e conferir que o indicador de bateria sobrevive.
+
+### Entrega
+
+Um plano, um PR, nesta ordem: vetores → `serde` e `MouseSettings` gerado → snapshot e
+`pack_dpi` → LOD e identidade → apply → descrição → ponte, `coreBridge` e erros → casca
+reapontada e `mouseParamSnapshot.ts` apagado → defeitos das sondas, documentos e roteiro de
+hardware.

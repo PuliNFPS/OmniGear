@@ -1,25 +1,28 @@
-import type { MouseActionId, MouseSettings, PeripheralSettings } from '@gearhub/shared';
+import type {
+  MouseActionId,
+  MouseSettings,
+  PeripheralSettings,
+  RawmMouseParamState,
+} from '@gearhub/shared';
 import {
+  applySettingsToMouseParam,
   dpiAxes,
   encodeAction,
   encodeConfigReset,
   encodeLeviathanShowPower,
   encodeMapping,
+  encodeMouseParamBody,
   encodeMouseParamSnapshot,
   frameEvent,
   leviathanKeyId,
+  leviathanOnboardSlotCount,
   leviathanShowPowerKeyId,
+  parseMouseParamState,
   withProtocolEnvelope,
 } from '../../core/coreBridge';
 import { isMouseSettings } from '../../domain/settings';
 import type { DeviceDriver, DeviceReport, DeviceState } from '../deviceDriver';
 import type { HardwareTransport } from '../WebHidTransport';
-import {
-  applySettingsToMouseParam,
-  encodeMouseParamBody,
-  parseMouseParamState,
-  type RawmMouseParamState,
-} from './mouseParamSnapshot';
 import { subscribeToNotifications } from './notifications';
 import { OnboardConfigCollector, type OnboardSlotConfig } from './onboardConfig';
 import { queryRawmDevice } from './session';
@@ -135,7 +138,9 @@ export class LeviathanV4Driver implements DeviceDriver {
     private readonly crcSupported: boolean,
   ) {
     this.snapshot = parseMouseParamState(rawSnapshot);
-    this.slotCount = Array.isArray(rawSnapshot.ocs) ? rawSnapshot.ocs.length : 1;
+    // The same rule the peripheral used to size the memories screen: one
+    // reader of `ocs`/`ocn`, in the core.
+    this.slotCount = leviathanOnboardSlotCount(rawSnapshot);
     this.activeOnboardIndex = this.readOnboardIndex(rawSnapshot.oci ?? 0);
     // The dump answers the query the connect already sent, so it can land
     // before anything subscribes. Listening from here is what catches it.

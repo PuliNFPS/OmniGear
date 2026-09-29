@@ -1,4 +1,8 @@
+import type { DpiStage } from './generated/DpiStage';
 import type { MouseActionId } from './generated/MouseActionId';
+import type { MouseParameters } from './generated/MouseParameters';
+import type { MouseRPlusSettings } from './generated/MouseRPlusSettings';
+import type { MouseSettings } from './generated/MouseSettings';
 
 /**
  * Actions a physical mouse button can be assigned to. Generated from the core's
@@ -78,40 +82,10 @@ export interface MouseCapabilities {
   profileSlots: number;
 }
 
-export interface DpiStage {
-  id: string;
-  x: number;
-  y: number;
-}
-
-export interface MouseParameters {
-  motionSync: boolean;
-  angleSnapping: boolean;
-  rippleControl: boolean;
-  wirelessTurbo: boolean;
-  liftOffDistance: number;
-  sensorRotation: number;
-  debounce: number;
-  sleepTimeout: number;
-}
-
-export interface MouseRPlusSettings {
-  activatorButtonId: string;
-  buttons: Record<string, MouseActionId>;
-}
+/**
+ * The editor's configuration. Generated from the core's `device/settings.rs`;
+ * `cargo test` fails when the two diverge.
+ */
+export type { DpiStage, MouseParameters, MouseRPlusSettings, MouseSettings };
 
 export type MouseParameterId = keyof MouseParameters;
-
-export interface MouseSettings {
-  /** Button id to assigned action. */
-  buttons: Record<string, MouseActionId>;
-  dpiStages: DpiStage[];
-  activeStageId: string;
-  independentAxes: boolean;
-  pollingRate: number;
-  /** Null for models without selectable sensor power modes. */
-  performanceMode: string | null;
-  parameters: MouseParameters;
-  /** Null for models without an R-Plus secondary layer. */
-  rPlus: MouseRPlusSettings | null;
-}

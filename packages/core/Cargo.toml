@@ -7,13 +7,16 @@ description = "Protocol and device abstractions for Gearhub"
 [lib]
 crate-type = ["rlib"]
 
-[dev-dependencies]
+[dependencies]
+indexmap = { version = "2", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-# Só em teste: gera o tipo TypeScript de `MouseActionId` e o confere contra o
-# arquivo versionado. Fica fora do build do WASM.
+
+[dev-dependencies]
+# Só em teste: gera os tipos TypeScript em packages/shared/src/generated/ e os
+# confere contra os arquivos versionados. Fica fora do build do WASM.
 #
 # `winapi-util` está fixado em 0.1.9 no Cargo.lock: a 0.1.11 puxa
 # `windows-sys` 0.61, que no toolchain GNU do Windows exige `dlltool.exe`. Um
 # `cargo update` sem `--precise` desfaz o pin e o build local volta a falhar.
-ts-rs = "12"
+ts-rs = { version = "12", features = ["indexmap-impl"] }

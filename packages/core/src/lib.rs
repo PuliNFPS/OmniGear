@@ -3,6 +3,9 @@ pub mod device;
 pub mod drivers;
 pub mod protocols;
 
+#[cfg(test)]
+mod bindings;
+
 const CMD_CONFIG: u8 = 0x03;
 const CMD_ACTION: u8 = 0x06;
 const CONFIG_TYPE_RESET: u8 = 0x03;
