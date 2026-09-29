@@ -10,6 +10,7 @@ use std::collections::BTreeSet;
 use ts_rs::TS;
 
 use crate::device::{DpiStage, MouseActionId, MouseParameters, MouseRPlusSettings, MouseSettings};
+use crate::drivers::leviathan_v4::{LeviathanV4Usb, NumericRange};
 use crate::protocols::rawm::MouseParamSnapshot;
 
 const DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../shared/src/generated");
@@ -21,6 +22,8 @@ fn render<T: TS + 'static>() -> String {
 /// Cada tipo guardado, pelo nome do arquivo que o `ts-rs` gera para ele.
 fn generated() -> Vec<(&'static str, String)> {
     vec![
+        ("LeviathanV4Usb", render::<LeviathanV4Usb>()),
+        ("NumericRange", render::<NumericRange>()),
         ("MouseActionId", render::<MouseActionId>()),
         ("DpiStage", render::<DpiStage>()),
         ("MouseParameters", render::<MouseParameters>()),
