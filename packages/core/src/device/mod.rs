@@ -1,8 +1,10 @@
 pub mod actions;
 pub mod capabilities;
 pub mod registry;
+pub mod settings;
 
 pub use actions::MouseActionId;
+pub use settings::{DpiStage, MouseParameters, MouseRPlusSettings, MouseSettings};
 
 use crate::command::HidCommand;
 

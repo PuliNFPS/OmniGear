@@ -607,8 +607,10 @@ e guardado como o de `MouseActionId` (versionado, conferido pelo `cargo test`).
   `MouseRPlusSettings`, gerados em `packages/shared/src/generated/`. O Rust passa a lê-lo aqui
   (apply) e a produzi-lo (configuração padrão), e o `begin_apply(&MouseSettings)` do passo 5
   precisaria dele de qualquer jeito.
-- `RawmMouseParamState` é interno do protocolo: gerado em `apps/web/src/core/generated/`, não em
-  `@gearhub/shared`.
+- Todos os tipos gerados moram em `packages/shared/src/generated/`, inclusive `RawmMouseParamState`, que é
+  interno do protocolo. O `ts-rs` escreve os `import` entre tipos gerados como caminhos relativos ao mesmo
+  diretório (`./MouseSettings`), e a descrição do aparelho referencia `MouseSettings`: separar os diretórios
+  quebraria esses imports.
 
 Rejeitadas: texto JSON na ponte (serializa e parseia duas vezes por chamada, e os tipos TS
 continuariam precisando de geração); arrays achatados como nas notificações (não escala para 18

@@ -6,9 +6,9 @@
 //! identificadores salvos nas configurações do usuário, não texto de tela.
 
 /// Uma ação atribuível a um botão físico.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
 #[cfg_attr(test, derive(ts_rs::TS))]
-#[cfg_attr(test, ts(rename_all = "kebab-case"))]
 pub enum MouseActionId {
     CliqueEsquerdo,
     CliqueDireito,
@@ -67,35 +67,6 @@ mod tests {
     use std::collections::BTreeSet;
     use ts_rs::TS;
 
-    const GENERATED: &str = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../shared/src/generated/MouseActionId.ts"
-    );
-
-    fn generated() -> String {
-        MouseActionId::export_to_string(&ts_rs::Config::default()).expect("ts-rs exporta")
-    }
-
-    /// O arquivo é versionado para que `@gearhub/shared` compile sem Rust.
-    /// Esta guarda é o que o impede de divergir do enum: um variante novo, um
-    /// rename, ou uma edição à mão no `.ts` reprovam aqui.
-    ///
-    /// Para regenerar: `UPDATE_BINDINGS=1 cargo test -p gearhub-core generated`.
-    #[test]
-    fn the_generated_typescript_matches_the_enum() {
-        let expected = generated();
-        if std::env::var_os("UPDATE_BINDINGS").is_some() {
-            std::fs::write(GENERATED, &expected).expect("escreve o arquivo gerado");
-        }
-        let committed = std::fs::read_to_string(GENERATED)
-            .expect("arquivo gerado presente")
-            .replace("\r\n", "\n");
-        assert_eq!(
-            committed, expected,
-            "MouseActionId.ts divergiu do enum; rode UPDATE_BINDINGS=1 cargo test -p gearhub-core generated"
-        );
-    }
-
     /// `as_str` é escrito à mão; o `ts-rs` deriva os nomes das variantes. Os
     /// dois conjuntos precisam ser o mesmo, senão a ponte devolveria um id que
     /// o tipo TypeScript não conhece.
@@ -114,5 +85,12 @@ mod tests {
         }
         assert_eq!(MouseActionId::parse("clique-lateral"), None);
         assert_eq!(MouseActionId::parse(""), None);
+    }
+
+    #[test]
+    fn serde_uses_the_same_ids_as_as_str() {
+        for action in MouseActionId::ALL {
+            assert_eq!(serde_json::to_value(action).unwrap(), action.as_str());
+        }
     }
 }
