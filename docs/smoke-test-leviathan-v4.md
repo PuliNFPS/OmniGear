@@ -410,10 +410,13 @@ de escrita de DPI, polling, LOD, modo e parâmetros. Os bytes estão fixados pel
 1. **Conectar.** Nome, estágios de DPI, polling, modo de desempenho, LOD e as quatro memórias
    aparecem como no mouse.
 2. **Escrever.** Mudar um estágio de DPI, o polling, o LOD, o modo, Motion Sync e a rotação;
-   aplicar; desconectar e reconectar; os valores persistiram.
+   aplicar; reconectar o app sem desligar o mouse; os valores persistiram. Não desligar o
+   mouse aqui: `applyToSession` não grava na flash, então um ciclo de energia pareceria falha.
 3. **Diagnóstico.** Abrir `diagnostico.html`, rodar a leitura: todos os estágios `ok`, o
    snapshot interpretado com os valores do mouse.
 4. **Sonda de mapeamentos.** Rodar um conjunto completo; os botões respondem como o conjunto
    diz e o indicador de bateria continua funcionando.
+5. **Gravar numa memória.** Salvar um perfil numa memória (`writeProfile`), desligar e ligar o
+   mouse, reconectar; os valores persistiram.
 
 Resultado: _preencher após o teste._

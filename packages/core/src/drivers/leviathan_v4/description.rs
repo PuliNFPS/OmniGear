@@ -8,7 +8,7 @@ use indexmap::IndexMap;
 use serde::Serialize;
 use serde_json::Value;
 
-use super::apply::PERFORMANCE_MODES;
+use super::apply::{PERFORMANCE_MODES, WIRELESS_TURBO_ON};
 use super::keys::button_ids;
 use super::lod::{NumericRange, lod_range};
 use crate::device::{DpiStage, MouseActionId, MouseParameters, MouseRPlusSettings, MouseSettings};
@@ -85,7 +85,6 @@ const FACTORY_BUTTONS: [(&str, MouseActionId); 6] = [
 ];
 const MAX_ONBOARD_SLOTS: u32 = 16;
 const DEFAULT_NAME: &str = "Leviathan V4";
-const WIRELESS_TURBO_ON: f64 = 8.0;
 
 fn incomplete(field: &'static str) -> RawmError {
     RawmError::IncompleteQuery { field }
@@ -141,7 +140,8 @@ pub fn onboard_slot_count(raw: &Value) -> u32 {
 }
 
 fn performance_mode(raw_mode: f64) -> &'static str {
-    let index = integer(&Value::from(raw_mode)).filter(|index| (0..4).contains(index));
+    let index = integer(&Value::from(raw_mode))
+        .filter(|index| (0..PERFORMANCE_MODES.len() as i64).contains(index));
     index.map_or(PERFORMANCE_MODES[0], |index| {
         PERFORMANCE_MODES[index as usize]
     })
@@ -218,7 +218,7 @@ pub fn describe(raw: &Value) -> Result<LeviathanV4Description, RawmError> {
             motion_sync: is_one(raw, "ms"),
             angle_snapping: is_one(raw, "as"),
             ripple_control: is_one(raw, "rctrl"),
-            wireless_turbo: raw.get("top").and_then(number) == Some(WIRELESS_TURBO_ON),
+            wireless_turbo: raw.get("top").and_then(number) == Some(f64::from(WIRELESS_TURBO_ON)),
             lift_off_distance: lod as u32,
             sensor_rotation: angle as i32,
             debounce: 0,

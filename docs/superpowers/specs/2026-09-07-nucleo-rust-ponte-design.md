@@ -494,6 +494,15 @@ a escolha. É a única divergência de comportamento nesta etapa que firmware re
 que nenhuma suíte de vetores cobre — os vetores comparam bytes, não a leniência de decodificação
 de texto.
 
+### Contagem de memórias no driver
+
+O driver passa a usar a regra `ocs`/`ocn` do núcleo (`onboard_slot_count`). Quando `ocn`
+discorda de `ocs.length`, a contagem é 1, e então `readOnboardIndex(oci)` rejeita qualquer
+`oci` maior que 0: a conexão falha onde antes tinha sucesso.
+
+**Decisão:** manter. Uma identidade que se contradiz não é confiável para dimensionar as
+memórias, pelo mesmo raciocínio do UTF-8 estrito. Não foi visto em nenhum firmware capturado.
+
 ## Decisão 2 — `leviathanV4.ts` é dividido agora
 
 O arquivo mistura os dois lados da fronteira, e a costura é limpa.
@@ -655,6 +664,15 @@ na borda. Os dois passam a usar a regra do núcleo.
 CONFIG_RESET, como o driver.
 
 Fica para o passo 5: a leitura de `oci` e a sessão do driver.
+
+**Pendências declaradas do passo 3** (nomeadas aqui, não inferidas):
+
+- `MouseParameters.liftOffDistance` é `u32` e `sensorRotation` é `i32` no núcleo, enquanto o
+  mouse de demonstração guarda milímetros fracionários em `liftOffDistance`. Nada do demo
+  atravessa a ponte hoje; o passo 5 (`begin_apply(&MouseSettings)`) precisa resolver isso.
+- Os sinalizadores de capacidade dos parâmetros (`motionSync`, `angleSnapping`,
+  `rippleControl`, `wirelessTurbo`: `true`) ainda moram em `leviathanV4.ts` e sobem em um passo
+  posterior.
 
 ### Erros
 

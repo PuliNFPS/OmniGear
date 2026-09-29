@@ -10,7 +10,7 @@ use crate::protocols::rawm::{MouseParamSnapshot, RawmError, pack_dpi};
 pub(super) const PERFORMANCE_MODES: [&str; 4] = ["office", "lp", "hp", "gaming-plus"];
 
 /// O valor de `top` quando o turbo sem fio está ligado.
-const WIRELESS_TURBO_ON: u32 = 0x08;
+pub(super) const WIRELESS_TURBO_ON: u32 = 0x08;
 
 /// Devolve a largura que o aparelho relatou. `cpi_l` tem largura fixa com os
 /// estágios sem uso zerados, e o editor só carrega os preenchidos: escrever só

@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { leviathanV4QueryFixture } from './leviathanV4Fixture';
+import * as coreBridge from '../../core/coreBridge';
 import { describeLeviathanV4, parseMouseParamState } from '../../core/coreBridge';
 import { formatLiftOffDistance } from './leviathanV4Lod';
 
@@ -23,6 +24,18 @@ describe('lift-off distance levels', () => {
 
   it('keeps an unknown level visible instead of hiding it', () => {
     expect(formatLiftOffDistance(9)).toBe('nível 9');
+  });
+
+  // Rendered on every screen, so a core that failed to start must not unmount the app.
+  it('falls back to the raw level when the core bridge throws', () => {
+    const spy = vi.spyOn(coreBridge, 'leviathanLodMillimetres').mockImplementation(() => {
+      throw new TypeError('core not initialised');
+    });
+    try {
+      expect(formatLiftOffDistance(2)).toBe('nível 2');
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   // The core owns the range; every level in it needs a name here, or the

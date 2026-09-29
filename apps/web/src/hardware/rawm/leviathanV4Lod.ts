@@ -13,8 +13,16 @@ const LEVEL_NAMES: Record<number, string> = { 1: 'Baixo', 2: 'Médio', 3: 'Alto'
 /** Falls back to the raw value so an unknown level stays visible, not hidden. */
 export function formatLiftOffDistance(raw: number): string {
   const name = LEVEL_NAMES[raw];
-  const millimetres = leviathanLodMillimetres(raw);
-  if (name === undefined || millimetres === null) return `nível ${raw}`;
+  if (name === undefined) return `nível ${raw}`;
+  // Chamado durante a renderização: com o núcleo que falhou ao iniciar, o
+  // `main.tsx` promete que a tela ainda aparece, então a ponte não pode derrubá-la.
+  let millimetres: number | null;
+  try {
+    millimetres = leviathanLodMillimetres(raw);
+  } catch {
+    return `nível ${raw}`;
+  }
+  if (millimetres === null) return `nível ${raw}`;
   const distance = millimetres.toLocaleString('pt-BR', { minimumFractionDigits: 1 });
   return `${name} · ${distance} mm`;
 }

@@ -1,3 +1,4 @@
+import type { RawmMouseParamState } from '@gearhub/shared';
 import {
   buildQueryEvent,
   decodeReportChunk,
@@ -12,7 +13,6 @@ import {
 import type { BrowserHidApi, BrowserHidDevice } from '../deviceDiscovery';
 import { matchDeviceDefinition } from '../deviceRegistry';
 import { WebHidTransport, type HardwareTransport } from '../WebHidTransport';
-import type { RawmMouseParamState } from '@gearhub/shared';
 
 /**
  * Read-only bring-up probe for the RAWM receiver.

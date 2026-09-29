@@ -148,7 +148,7 @@
       "rr": "G-1.0.0",
       "rrc": 1
     },
-    "sintetica-51-bytes": {
+    "sintetica-52-bytes": {
       "dn": "Leviathan V4",
       "cpi": 1600,
       "polling": 1000,
@@ -173,8 +173,8 @@
   },
   "paramSnapshot": [
     {
-      "name": "corpo de 51 bytes confirmado",
-      "query": "sintetica-51-bytes",
+      "name": "corpo completo de 52 bytes confirmado",
+      "query": "sintetica-52-bytes",
       "expected": "4006e8033004900120034006800c02010000000000020708080808080808010001010401020304080264005a0001048081828300"
     },
     {
@@ -232,7 +232,7 @@
     },
     {
       "name": "polling, modo, turbo e motion sync",
-      "query": "sintetica-51-bytes",
+      "query": "sintetica-52-bytes",
       "settings": {
         "buttons": {
           "esquerdo": "clique-esquerdo",

@@ -49,6 +49,9 @@ export function asRawmError(error: unknown): Error {
   const separator = text.indexOf(':');
   const code = separator === -1 ? text : text.slice(0, separator);
   const detail = separator === -1 ? '' : text.slice(separator + 1);
-  if (!(code in MESSAGES)) return error instanceof Error ? error : new Error(text);
-  return new Error(MESSAGES[code].replace('{campo}', detail), { cause: code });
+  if (!Object.hasOwn(MESSAGES, code)) return error instanceof Error ? error : new Error(text);
+  return new Error(
+    MESSAGES[code].replace('{campo}', () => detail),
+    { cause: code },
+  );
 }

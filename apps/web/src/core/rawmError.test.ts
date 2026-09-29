@@ -6,7 +6,7 @@ import { parseQueryJson, withProtocolEnvelope } from './coreBridge';
  * Exercita o caminho completo, com o WASM real: um `RawmError` do núcleo
  * atravessa a ponte como `JsError`, chega aqui como `Error` cuja mensagem é o
  * código estável, e `asRawmError` a reveste com o texto em português sem
- * perder o código em `cause`. Um erro de digitação em qualquer uma dos catorze
+ * perder o código em `cause`. Um erro de digitação em qualquer uma das catorze
  * strings de `RawmError::code()` deixaria de bater com `MESSAGES` e o erro
  * atravessaria sem tradução, com o código cru como mensagem — sem que nenhuma
  * suíte notasse. Este teste é o que notaria.
@@ -102,6 +102,11 @@ describe('erro RAWM através da ponte', () => {
     const error = asRawmError(new Error('invalid-snapshot-field:cpi'));
     expect(error.message).toBe('Snapshot RAWM incompleto ou invalido: cpi.');
     expect(error.cause).toBe('invalid-snapshot-field');
+  });
+
+  it('deixa passar intacto um código que só existe na cadeia de protótipos', () => {
+    const original = new Error('constructor:x');
+    expect(asRawmError(original)).toBe(original);
   });
 
   it('deixa passar intacto um erro com dois-pontos que não vem do núcleo', () => {

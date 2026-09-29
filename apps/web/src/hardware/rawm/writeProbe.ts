@@ -381,6 +381,9 @@ export async function probeProfileWrite(
       const inner = encodeMapping(entry.keyIds, entry.acao);
       if (inner) events.push(withProtocolEnvelope(inner, useCrc));
     }
+    // CONFIG_RESET clears the seventh key too, and the driver rebuilds it before
+    // committing; the probe writes flash, so it must not leave the key lost.
+    events.push(withProtocolEnvelope(encodeLeviathanShowPower(), useCrc));
     // Commits.
     events.push(withProtocolEnvelope(encodeAction(ACTION_SAVE_CONFIG_TO_FDS, 0), useCrc));
 

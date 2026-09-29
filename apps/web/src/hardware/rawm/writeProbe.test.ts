@@ -310,8 +310,8 @@ describe('probeProfileWrite', () => {
     const report = await probeProfileWrite(mouse.device, 4, entradas);
 
     expect(report.enviado).toBe(true);
-    // reset, opening save, parameters, one mapping, closing save.
-    expect(report.eventos).toBe(5);
+    // reset, opening save, parameters, one mapping, seventh key, closing save.
+    expect(report.eventos).toBe(6);
 
     const inner = (write: Uint8Array) => ({ cmd: write[5] & 0x0f, tipo: write[7] });
     const kinds = mouse.writes.filter((write) => write.length > 7).map(inner);
@@ -328,6 +328,18 @@ describe('probeProfileWrite', () => {
     const opening = mouse.writes[1];
     expect(opening[8]).toBe(0x01);
     expect(opening[9]).toBe(0x03);
+  });
+
+  it('rebuilds the seventh key before the closing save, as the driver does', async () => {
+    const mouse = fakeMouse({ ignoreWrites: true });
+
+    await probeProfileWrite(mouse.device, 4, entradas);
+
+    const showPower = withProtocolEnvelope(encodeLeviathanShowPower(), true);
+    // The parameter body spans several reports, so count from the end: the
+    // closing save is the last report and the seventh key sits right before it.
+    const last = mouse.writes.length - 1;
+    expect(Array.from(mouse.writes[last - 1])).toEqual(Array.from(showPower));
   });
 
   it('refuses a slot the mouse does not have', async () => {

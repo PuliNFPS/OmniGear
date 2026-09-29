@@ -31,7 +31,9 @@ produza `.ts` merece a pergunta — por que isto não está no núcleo?
 **Estado real (2026-09-28):** o **codec** migrou — envelope, CRC16, enquadramento de 64 bytes,
 montador de eventos, consulta e decodificação de notificações vivem em
 `packages/core/src/protocols/rawm/`, e `apps/web/src/hardware/rawm/protocol.ts` não existe
-mais. Todo o caminho de leitura está confirmado em hardware.
+mais. Todo o caminho de leitura está confirmado em hardware — exceto o que o passo 3 moveu
+(a descrição e o bloco de parâmetros da consulta, agora no núcleo), pendente do roteiro em
+`docs/smoke-test-leviathan-v4.md`.
 O vocabulário de ações (`MouseActionId`, gerado para TypeScript por `ts-rs`), a tabela
 ação↔bytes (`packages/core/src/protocols/rawm/actions.rs`) e a tabela de teclas do Leviathan V4
 (`packages/core/src/drivers/leviathan_v4/`) também vivem no núcleo, e `leviathanV4Keys.ts` não

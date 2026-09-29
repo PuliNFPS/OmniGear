@@ -62,6 +62,10 @@ fn generated_typescript_matches_the_core() {
 
 #[test]
 fn generated_directory_holds_only_what_the_core_generates() {
+    // O outro teste reescreve o diretório neste modo; olhar agora seria uma corrida.
+    if std::env::var_os("UPDATE_BINDINGS").is_some() {
+        return;
+    }
     let expected: BTreeSet<String> = generated()
         .into_iter()
         .map(|(name, _)| format!("{name}.ts"))
