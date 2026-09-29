@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import type { MouseActionId } from '@gearhub/shared';
+import type { MouseActionId, MouseSettings } from '@gearhub/shared';
 
 /**
  * Os vetores defendem as duas implementações do protocolo enquanto elas
@@ -44,6 +44,27 @@ interface LeviathanKeyVector {
   keyId: number;
 }
 
+interface ParamSnapshotVector {
+  name: string;
+  query: string;
+  expected: string;
+}
+
+interface ParamApplyVector {
+  name: string;
+  query: string;
+  settings: MouseSettings;
+  expected: string;
+}
+
+interface InvalidSnapshotVector {
+  name: string;
+  query: string;
+  /** `null` remove o campo; qualquer outro valor o substitui. */
+  patch: Record<string, unknown>;
+  field: string;
+}
+
 export interface ProtocolVectors {
   version: number;
   envelope: EnvelopeVector[];
@@ -51,6 +72,10 @@ export interface ProtocolVectors {
   mapping: MappingVector[];
   showPower: ShowPowerVector[];
   leviathanKeys: LeviathanKeyVector[];
+  queries: Record<string, Record<string, unknown>>;
+  paramSnapshot: ParamSnapshotVector[];
+  paramApply: ParamApplyVector[];
+  invalidSnapshot: InvalidSnapshotVector[];
 }
 
 export function readProtocolVectors(): ProtocolVectors {
@@ -67,4 +92,17 @@ export function fromHex(value: string): Uint8Array {
 
 export function toHex(bytes: Uint8Array | number[]): string {
   return [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+/** Aplica o `patch` de um vetor: `null` remove o campo, o resto substitui. */
+export function applyQueryPatch(
+  base: Record<string, unknown>,
+  patch: Record<string, unknown>,
+): Record<string, unknown> {
+  const query = { ...base };
+  for (const [key, value] of Object.entries(patch)) {
+    if (value === null) delete query[key];
+    else query[key] = value;
+  }
+  return query;
 }

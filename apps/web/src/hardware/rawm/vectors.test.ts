@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { fromHex, readProtocolVectors, toHex } from '../../test/vectors';
+import { applyQueryPatch, fromHex, readProtocolVectors, toHex } from '../../test/vectors';
+import {
+  applySettingsToMouseParam,
+  encodeMouseParamBody,
+  parseMouseParamState,
+} from './mouseParamSnapshot';
 import {
   buildQueryEvent,
   encodeLeviathanShowPower,
@@ -35,6 +40,10 @@ describe('vetores de conformidade do protocolo RAWM', () => {
     requireNonEmpty(vectors.mapping, 'mapping');
     requireNonEmpty(vectors.showPower, 'showPower');
     requireNonEmpty(vectors.leviathanKeys, 'leviathanKeys');
+    requireNonEmpty(Object.keys(vectors.queries), 'queries');
+    requireNonEmpty(vectors.paramSnapshot, 'paramSnapshot');
+    requireNonEmpty(vectors.paramApply, 'paramApply');
+    requireNonEmpty(vectors.invalidSnapshot, 'invalidSnapshot');
   });
 
   it.each(vectors.envelope)('envelope: $name', ({ input, crc, expected }) => {
@@ -57,6 +66,26 @@ describe('vetores de conformidade do protocolo RAWM', () => {
   it.each(vectors.leviathanKeys)('tecla do Leviathan: $buttonId', ({ buttonId, keyId }) => {
     expect(leviathanKeyId(buttonId)).toBe(keyId);
     expect(leviathanButtonId(keyId)).toBe(buttonId);
+  });
+  const query = (name: string) => {
+    const found = vectors.queries[name];
+    if (!found) throw new Error(`consulta de vetor desconhecida: ${name}`);
+    return found;
+  };
+
+  it.each(vectors.paramSnapshot)('snapshot: $name', ({ query: name, expected }) => {
+    expect(toHex(encodeMouseParamBody(parseMouseParamState(query(name))))).toBe(expected);
+  });
+
+  it.each(vectors.paramApply)('apply: $name', ({ query: name, settings, expected }) => {
+    const next = applySettingsToMouseParam(parseMouseParamState(query(name)), settings);
+    expect(toHex(encodeMouseParamBody(next))).toBe(expected);
+  });
+
+  it.each(vectors.invalidSnapshot)('snapshot inválido: $name', ({ query: name, patch, field }) => {
+    expect(() => parseMouseParamState(applyQueryPatch(query(name), patch))).toThrow(
+      `Snapshot RAWM incompleto ou invalido: ${field}.`,
+    );
   });
 });
 
