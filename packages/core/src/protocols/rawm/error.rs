@@ -32,6 +32,8 @@ pub enum RawmError {
     InvalidPerformanceMode,
     /// Estágios de DPI vazios, demais, ou sem o estágio ativo entre eles.
     InvalidDpiStages,
+    /// Campo que a descrição do aparelho exige ausente ou do tipo errado.
+    IncompleteQuery { field: &'static str },
 }
 
 impl RawmError {
@@ -51,6 +53,7 @@ impl RawmError {
             Self::InvalidSnapshotField { .. } => "invalid-snapshot-field",
             Self::InvalidPerformanceMode => "invalid-performance-mode",
             Self::InvalidDpiStages => "invalid-dpi-stages",
+            Self::IncompleteQuery { .. } => "incomplete-query",
         }
     }
 
@@ -58,7 +61,7 @@ impl RawmError {
     /// (`código:dado`), e a casca o usa para montar a mensagem.
     pub fn detail(&self) -> Option<&'static str> {
         match self {
-            Self::InvalidSnapshotField { field } => Some(field),
+            Self::InvalidSnapshotField { field } | Self::IncompleteQuery { field } => Some(field),
             _ => None,
         }
     }
@@ -93,6 +96,10 @@ mod tests {
             "invalid-performance-mode"
         );
         assert_eq!(RawmError::InvalidDpiStages.code(), "invalid-dpi-stages");
+        assert_eq!(
+            RawmError::IncompleteQuery { field: "top" }.code(),
+            "incomplete-query"
+        );
     }
 
     #[test]

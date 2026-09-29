@@ -24,13 +24,6 @@ pub(crate) fn integer(value: &Value) -> Option<i64> {
 }
 
 /// `Some` quando o valor é um número finito, como `typeof === 'number'`.
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "primeiro uso na descrição do Leviathan (Task 6); remover então"
-    )
-)]
 pub(crate) fn number(value: &Value) -> Option<f64> {
     value.as_f64()
 }
