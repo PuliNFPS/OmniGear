@@ -2,6 +2,7 @@ import type { MouseActionId, RawmMouseParamState } from '@gearhub/shared';
 import {
   encodeAction,
   encodeConfigReset,
+  encodeLeviathanShowPower,
   encodeMapping,
   encodeMouseParamBody,
   encodeMouseParamSnapshot,
@@ -291,6 +292,9 @@ export async function probeMappingSet(
       const inner = encodeMapping(entry.keyIds, entry.acao);
       if (inner) events.push(withProtocolEnvelope(inner, useCrc));
     }
+    // CONFIG_RESET clears the seventh key too, and the driver always rebuilds
+    // it. A probe that did not would confirm a sequence the app never sends.
+    events.push(withProtocolEnvelope(encodeLeviathanShowPower(), useCrc));
 
     for (const event of events) {
       for (const chunk of frameEvent(event, true)) {

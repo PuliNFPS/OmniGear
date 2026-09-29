@@ -35,15 +35,15 @@ mais. Todo o caminho de leitura está confirmado em hardware.
 O vocabulário de ações (`MouseActionId`, gerado para TypeScript por `ts-rs`), a tabela
 ação↔bytes (`packages/core/src/protocols/rawm/actions.rs`) e a tabela de teclas do Leviathan V4
 (`packages/core/src/drivers/leviathan_v4/`) também vivem no núcleo, e `leviathanV4Keys.ts` não
-existe mais.
+existe mais. O passo 3 levou o bloco de parâmetros
+(`packages/core/src/protocols/rawm/param_snapshot.rs`), a descrição, o LOD e a identidade do
+Leviathan V4 (`packages/core/src/drivers/leviathan_v4/`); `MouseSettings` é do núcleo.
 
-Ainda em TypeScript, com passo marcado no spec: `mouseParamSnapshot.ts` e a metade de
-`leviathanV4.ts` que descreve o dispositivo (passo 3), `onboardConfig.ts` (passo 4), a sessão
-de `LeviathanV4Driver.ts` e a decodificação de `session.ts` (passo 5).
+Ainda em TypeScript, com passo marcado no spec: `onboardConfig.ts` (passo 4), a sessão de
+`LeviathanV4Driver.ts` e a decodificação de `session.ts` (passo 5).
 
-Duas duplicatas de protocolo sobrevivem **de propósito e declaradas**: `packedDpi`
-(`mouseParamSnapshot.ts`), inverso do `dpi_axes` do núcleo, fecha no passo 3; e
-`declaredLength` (`onboardConfig.ts`), fecha no passo 4. Exceções devem ser declaradas assim
+Uma duplicata de protocolo sobrevive **de propósito e declarada**: `declaredLength`
+(`onboardConfig.ts`), fecha no passo 4. Exceções devem ser declaradas assim
 — nomeadas no spec, com data para sair —, nunca inferidas. Ver
 `docs/superpowers/specs/2026-09-07-nucleo-rust-ponte-design.md`.
 
@@ -51,7 +51,7 @@ Três regras que o núcleo não quebra, porque o stack do desktop é desconhecid
 I/O**, **é síncrono**, **não conhece `wasm-bindgen`** (a macro fica num crate de ponte, senão
 o núcleo é moldado pelo navegador e perde `Result` e enums com dados).
 
-Duas convenções que já existem — use, não reinvente:
+Três convenções que já existem — use, não reinvente:
 
 - **Erro novo que atravessa a ponte:** variante em `RawmError`, código estável em `code()`,
   texto em `apps/web/src/core/rawmError.ts`. A ponte converte com `js_error`, a casca com
@@ -60,6 +60,9 @@ Duas convenções que já existem — use, não reinvente:
   `packages/core/vectors/rawm-protocol.json`, lido pelo `cargo test` **e** pelo `vitest`. Os
   dois lados têm guarda contra uma seção vazia passar à toa; um vetor que só um lado lê não é
   fonte compartilhada.
+- **Estrutura nova que atravessa a ponte:** tipo com `Serialize`/`Deserialize` no núcleo,
+  `#[cfg_attr(test, derive(ts_rs::TS))]`, entrada em `bindings.rs`, e na ponte `to_js`/`from_js`
+  (serializador `json_compatible`, senão mapas viram `Map` e opcionais viram `undefined`).
 
 ## O núcleo é gerado, nunca versionado
 
@@ -86,9 +89,11 @@ qualquer `package.json` que encontre no diretório de saída.
   arquivos de `packages/core`, e a ponte está do lado errado da aresta.
 
 **A exceção é `packages/shared/src/generated/`.** O `ts-rs` gera ali tipos TypeScript a partir
-de enums do núcleo (hoje `MouseActionId`), e eles **são** versionados, para que
-`@gearhub/shared` compile sem Rust. Um teste em `packages/core/src/device/actions.rs` compara o
-arquivo com o que o `ts-rs` geraria e reprova se divergirem; para regenerar,
+de tipos do núcleo (hoje `MouseActionId`, `MouseSettings` e suas partes, o snapshot de
+parâmetros e a descrição do Leviathan V4), e eles **são** versionados, para que
+`@gearhub/shared` compile sem Rust. Um teste em `packages/core/src/bindings.rs` compara cada
+arquivo com o que o `ts-rs` geraria, reprova se divergirem e também reprova arquivo órfão no
+diretório; para regenerar,
 `UPDATE_BINDINGS=1 cargo test -p gearhub-core generated`. Nunca edite à mão, e não remova o
 caminho dos `inputs` de `test` em `packages/core/turbo.json` — sem ele, uma edição à mão deixa
 `@gearhub/core:test` em cache hit e a guarda não roda.

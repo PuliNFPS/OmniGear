@@ -400,3 +400,20 @@ sétima tecla atravessaram a ponte e foram aceitos.
 Os bytes não mudaram nesta migração — os vetores de `rawm-protocol.json` foram capturados do
 TypeScript antigo antes de qualquer mudança —, então esta confirmação atesta a ponte, não um
 encoder novo.
+
+## Passo 3 — roteiro de confirmação (pendente)
+
+O passo 3 moveu para o núcleo a leitura da consulta e o bloco de parâmetros, que é o caminho
+de escrita de DPI, polling, LOD, modo e parâmetros. Os bytes estão fixados pelos vetores
+`paramSnapshot` e `paramApply`, capturados do TypeScript antigo; o que falta é o mouse aceitar.
+
+1. **Conectar.** Nome, estágios de DPI, polling, modo de desempenho, LOD e as quatro memórias
+   aparecem como no mouse.
+2. **Escrever.** Mudar um estágio de DPI, o polling, o LOD, o modo, Motion Sync e a rotação;
+   aplicar; desconectar e reconectar; os valores persistiram.
+3. **Diagnóstico.** Abrir `diagnostico.html`, rodar a leitura: todos os estágios `ok`, o
+   snapshot interpretado com os valores do mouse.
+4. **Sonda de mapeamentos.** Rodar um conjunto completo; os botões respondem como o conjunto
+   diz e o indicador de bateria continua funcionando.
+
+Resultado: _preencher após o teste._

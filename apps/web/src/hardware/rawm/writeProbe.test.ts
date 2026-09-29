@@ -2,7 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 import type { BrowserHidDevice } from '../deviceDiscovery';
 import type { HidInputReportEvent } from '../WebHidTransport';
 import { leviathanV4QueryFixture } from './leviathanV4Fixture';
-import { frameEvent, parseMouseParamState, withProtocolEnvelope } from '../../core/coreBridge';
+import {
+  encodeLeviathanShowPower,
+  frameEvent,
+  parseMouseParamState,
+  withProtocolEnvelope,
+} from '../../core/coreBridge';
 import {
   compareStates,
   probeButtonMapping,
@@ -261,13 +266,25 @@ describe('probeMappingSet', () => {
     const report = await probeMappingSet(mouse.device, conjunto);
 
     expect(report.enviado).toBe(true);
-    // One reset plus one event per entry.
-    expect(report.eventos).toBe(conjunto.length + 1);
-    expect(mouse.writes.length).toBeGreaterThanOrEqual(conjunto.length + 1);
+    // One reset, one event per entry, and the rebuilt seventh key.
+    expect(report.eventos).toBe(conjunto.length + 2);
+    expect(mouse.writes.length).toBeGreaterThanOrEqual(conjunto.length + 2);
     // First event is the reset: inner config type 0x03.
     expect(mouse.writes[0][7]).toBe(0x03);
     // Nothing is committed to flash.
     expect(mouse.writes.some((write) => (write[0] & 0x0f) === 0x06)).toBe(false);
+  });
+
+  it('rebuilds the seventh key after the entries, as the driver does', async () => {
+    const mouse = fakeMouse({ ignoreWrites: true });
+
+    await probeMappingSet(mouse.device, [{ keyIds: [1], acao: 'clique-esquerdo' }]);
+
+    // Reset, one mapping, show power. Each event fits one report, so writes
+    // line up with events; the fixture query reports crc on.
+    const showPower = withProtocolEnvelope(encodeLeviathanShowPower(), true);
+    expect(mouse.writes).toHaveLength(3);
+    expect(Array.from(mouse.writes[2])).toEqual(Array.from(showPower));
   });
 
   // The R-Plus layer is a mapping whose key id list is activator then target.

@@ -468,6 +468,8 @@ mudança de escopo: `packedDpi` fecha quando o passo 3 migrar `mouseParamSnapsho
 escreveu as duas — nenhum teste ou vetor de conformidade cobre a direção de escrita de CPI2,
 então uma delas pode divergir da outra sem que nada em `pnpm verify` note.
 
+**Fechada em 2026-09-28:** `pack_dpi` mora ao lado de `dpi_axes` em `notify.rs`, um teste prova um pelo outro, e os vetores `paramApply` cobrem a direção de escrita com eixos independentes.
+
 ## Mudanças de comportamento deliberadas
 
 ### UTF-8 estrito em `query_json`
@@ -576,6 +578,10 @@ O passo 0 é novo, e os demais absorvem os arquivos que faltavam.
    `deviceRegistry.ts` e o regex de nome de `connectLeviathanV4.ts`). Juntos porque leem o
    mesmo JSON de query e descrevem o mesmo aparelho; separá-los deixaria dois leitores do
    mesmo payload. Sondas reapontadas. **Confirmação em hardware.**
+   **Implementado em 2026-09-28** pelo plano `docs/superpowers/plans/2026-09-28-migracao-leitura-dispositivo.md`,
+   aguardando a confirmação em hardware do roteiro em `docs/smoke-test-leviathan-v4.md`:
+   `mouseParamSnapshot.ts` foi apagado; `MouseSettings` é do núcleo; a duplicata de `packedDpi`
+   fechou com `pack_dpi`.
 4. **Dump onboard:** `onboardConfig.ts`, a decodificação do `0x14`. **Confirmação em
    hardware.**
 5. **Sessão:** `LeviathanV4Driver.ts` sob a interface de passos puxados acima, mais a
