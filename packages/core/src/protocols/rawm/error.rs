@@ -28,6 +28,10 @@ pub enum RawmError {
     /// Campo do snapshot de parâmetros ausente, do tipo errado ou fora da faixa.
     /// `field` é o nome como o firmware o envia (`cpi`, `lod`).
     InvalidSnapshotField { field: &'static str },
+    /// Modo de desempenho que este aparelho não tem, ou nenhum.
+    InvalidPerformanceMode,
+    /// Estágios de DPI vazios, demais, ou sem o estágio ativo entre eles.
+    InvalidDpiStages,
 }
 
 impl RawmError {
@@ -45,6 +49,8 @@ impl RawmError {
             Self::InvalidUtf8 => "invalid-utf8",
             Self::UnknownAction => "unknown-action",
             Self::InvalidSnapshotField { .. } => "invalid-snapshot-field",
+            Self::InvalidPerformanceMode => "invalid-performance-mode",
+            Self::InvalidDpiStages => "invalid-dpi-stages",
         }
     }
 
@@ -82,6 +88,11 @@ mod tests {
             RawmError::InvalidSnapshotField { field: "cpi" }.code(),
             "invalid-snapshot-field"
         );
+        assert_eq!(
+            RawmError::InvalidPerformanceMode.code(),
+            "invalid-performance-mode"
+        );
+        assert_eq!(RawmError::InvalidDpiStages.code(), "invalid-dpi-stages");
     }
 
     #[test]

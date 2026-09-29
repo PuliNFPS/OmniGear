@@ -1,4 +1,4 @@
-use gearhub_core::device::MouseActionId;
+use gearhub_core::device::{MouseActionId, MouseSettings};
 use gearhub_core::drivers::leviathan_v4;
 use gearhub_core::protocols::rawm::{
     RawmError, build_query_event, encode_mapping, encode_mouse_param_body,
@@ -52,6 +52,14 @@ struct ParamSnapshotVector {
 }
 
 #[derive(Deserialize)]
+struct ParamApplyVector {
+    name: String,
+    query: String,
+    settings: MouseSettings,
+    expected: String,
+}
+
+#[derive(Deserialize)]
 struct InvalidSnapshotVector {
     name: String,
     query: String,
@@ -71,6 +79,7 @@ struct Vectors {
     queries: std::collections::HashMap<String, serde_json::Value>,
     param_snapshot: Vec<ParamSnapshotVector>,
     invalid_snapshot: Vec<InvalidSnapshotVector>,
+    param_apply: Vec<ParamApplyVector>,
 }
 
 fn from_hex(value: &str) -> Vec<u8> {
@@ -238,5 +247,23 @@ fn invalid_snapshots_name_the_field_that_fails() {
             }
             other => panic!("{}: esperava campo inválido, veio {other:?}", vector.name),
         }
+    }
+}
+
+#[test]
+fn param_apply_matches_the_shared_vectors() {
+    let vectors = vectors();
+    require_non_empty(&vectors.param_apply, "paramApply");
+    for vector in &vectors.param_apply {
+        let snapshot = parse_mouse_param_snapshot(&query(&vectors, &vector.query))
+            .unwrap_or_else(|error| panic!("{}: {error:?}", vector.name));
+        let next = leviathan_v4::apply_settings(&snapshot, &vector.settings)
+            .unwrap_or_else(|error| panic!("{}: {error:?}", vector.name));
+        assert_eq!(
+            to_hex(&encode_mouse_param_body(&next)),
+            vector.expected,
+            "{}",
+            vector.name
+        );
     }
 }
