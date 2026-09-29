@@ -401,7 +401,7 @@ Os bytes não mudaram nesta migração — os vetores de `rawm-protocol.json` fo
 TypeScript antigo antes de qualquer mudança —, então esta confirmação atesta a ponte, não um
 encoder novo.
 
-## Passo 3 — roteiro de confirmação (pendente)
+## Passo 3 — roteiro de confirmação (confirmado em 2026-09-28)
 
 O passo 3 moveu para o núcleo a leitura da consulta e o bloco de parâmetros, que é o caminho
 de escrita de DPI, polling, LOD, modo e parâmetros. Os bytes estão fixados pelos vetores
@@ -419,4 +419,12 @@ de escrita de DPI, polling, LOD, modo e parâmetros. Os bytes estão fixados pel
 5. **Gravar numa memória.** Salvar um perfil numa memória (`writeProfile`), desligar e ligar o
    mouse, reconectar; os valores persistiram.
 
-Resultado: _preencher após o teste._
+Resultado (2026-09-28, app local na branch `feat/migracao-leitura-dispositivo`): **os cinco
+itens passaram.** A conexão mostrou o aparelho corretamente; as mudanças aplicadas chegaram ao
+mouse e persistiram na reconexão; todos os estágios do diagnóstico deram `ok`; a sonda de
+mapeamentos funcionou; e o perfil gravado numa memória sobreviveu a desligar e ligar o mouse.
+
+É a primeira confirmação do bloco de parâmetros montado pelo núcleo — `apply_settings`,
+`pack_dpi` e `encode_mouse_param_body` — e da descrição do aparelho lida em Rust. Com isso, o
+caminho de leitura volta a estar inteiro confirmado em hardware, e o de escrita cobre agora
+parâmetros e mapeamentos montados pelo núcleo.

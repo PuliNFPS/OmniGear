@@ -587,8 +587,8 @@ O passo 0 é novo, e os demais absorvem os arquivos que faltavam.
    `deviceRegistry.ts` e o regex de nome de `connectLeviathanV4.ts`). Juntos porque leem o
    mesmo JSON de query e descrevem o mesmo aparelho; separá-los deixaria dois leitores do
    mesmo payload. Sondas reapontadas. **Confirmação em hardware.**
-   **Implementado em 2026-09-28** pelo plano `docs/superpowers/plans/2026-09-28-migracao-leitura-dispositivo.md`,
-   aguardando a confirmação em hardware do roteiro em `docs/smoke-test-leviathan-v4.md`:
+   **Fechado em 2026-09-28** pelo plano `docs/superpowers/plans/2026-09-28-migracao-leitura-dispositivo.md`,
+   confirmado em hardware pelo roteiro em `docs/smoke-test-leviathan-v4.md`:
    `mouseParamSnapshot.ts` foi apagado; `MouseSettings` é do núcleo; a duplicata de `packedDpi`
    fechou com `pack_dpi`.
 4. **Dump onboard:** `onboardConfig.ts`, a decodificação do `0x14`. **Confirmação em
