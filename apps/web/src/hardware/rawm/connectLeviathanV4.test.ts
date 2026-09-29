@@ -85,7 +85,7 @@ describe('connectLeviathanV4', () => {
   it('queries only the virtual mouse after WebHID validates the receiver', async () => {
     const device = fakeDevice();
     const sendReport = vi.spyOn(device, 'sendReport');
-    const peripheral = await connectLeviathanV4(device, deviceDefinitions[0]);
+    const peripheral = await connectLeviathanV4(device, deviceDefinitions()[0]);
 
     try {
       expect(sendReport).toHaveBeenCalledOnce();
@@ -96,7 +96,7 @@ describe('connectLeviathanV4', () => {
   });
 
   it('validates receiver and virtual mouse before registering the live driver', async () => {
-    const peripheral = await connectLeviathanV4(fakeDevice(), deviceDefinitions[0]);
+    const peripheral = await connectLeviathanV4(fakeDevice(), deviceDefinitions()[0]);
     try {
       expect(peripheral).toMatchObject({
         id: 'rawm-leviathan-v4:1915:2346',
@@ -113,7 +113,7 @@ describe('connectLeviathanV4', () => {
   it('connects using the captured firmware responses', async () => {
     const peripheral = await connectLeviathanV4(
       fakeDevice(rawmReceiverQueryFixture, leviathanV4QueryFixture),
-      deviceDefinitions[0],
+      deviceDefinitions()[0],
     );
     try {
       expect(peripheral).toMatchObject({ name: 'LEVIATHAN V4', manufacturer: 'RAWM' });

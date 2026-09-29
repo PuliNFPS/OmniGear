@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { leviathanV4QueryFixture } from './leviathanV4Fixture';
-import { LEVIATHAN_V4_LOD_LEVELS, formatLiftOffDistance } from './leviathanV4Lod';
-import { parseMouseParamState } from './mouseParamSnapshot';
+import { describeLeviathanV4, parseMouseParamState } from '../../core/coreBridge';
+import { formatLiftOffDistance } from './leviathanV4Lod';
 
 describe('lift-off distance levels', () => {
   // Values read off the official software, which names them rather than
@@ -25,10 +25,12 @@ describe('lift-off distance levels', () => {
     expect(formatLiftOffDistance(9)).toBe('nível 9');
   });
 
-  it('spans exactly the range the capability advertises', () => {
-    const raws = LEVIATHAN_V4_LOD_LEVELS.map((level) => level.raw);
-
-    expect(raws).toEqual([1, 2, 3]);
-    expect(LEVIATHAN_V4_LOD_LEVELS.map((level) => level.millimetres)).toEqual([0.7, 1.0, 2.0]);
+  // The core owns the range; every level in it needs a name here, or the
+  // control would show "nível N" for a level the mouse really has.
+  it('names every level in the range the core advertises', () => {
+    const { min, max } = describeLeviathanV4(leviathanV4QueryFixture).liftOffDistance;
+    for (let raw = min; raw <= max; raw += 1) {
+      expect(formatLiftOffDistance(raw)).not.toMatch(/^nível/);
+    }
   });
 });

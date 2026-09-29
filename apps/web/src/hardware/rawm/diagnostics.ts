@@ -2,20 +2,17 @@ import {
   buildQueryEvent,
   decodeReportChunk,
   frameEvent,
+  isLeviathanV4Name,
   isQueryResult,
+  leviathanV4Usb,
+  parseMouseParamState,
   parseQueryJson,
   RawEventAssembler,
 } from '../../core/coreBridge';
 import type { BrowserHidApi, BrowserHidDevice } from '../deviceDiscovery';
 import { matchDeviceDefinition } from '../deviceRegistry';
 import { WebHidTransport, type HardwareTransport } from '../WebHidTransport';
-import {
-  LEVIATHAN_V4_RECEIVER_PRODUCT_ID,
-  RAWM_CONFIG_USAGE,
-  RAWM_CONFIG_USAGE_PAGE,
-  RAWM_VENDOR_ID,
-} from './leviathanV4';
-import { parseMouseParamState, type RawmMouseParamState } from './mouseParamSnapshot';
+import type { RawmMouseParamState } from '@gearhub/shared';
 
 /**
  * Read-only bring-up probe for the RAWM receiver.
@@ -93,7 +90,6 @@ const DEFAULT_TIMEOUT_MS = 3000;
  */
 const MAX_VENDOR_REPORTS = 48;
 const MAX_OTHER_REPORTS = 12;
-const LEVIATHAN_NAME = /leviathan|魔鲸\s*v4/i;
 
 function hex(bytes: Uint8Array): string {
   return [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join(' ');
@@ -216,26 +212,27 @@ export function captureQuery(
 }
 
 function collectionStage(device: BrowserHidDevice): DiagnosticStage {
+  const usb = leviathanV4Usb();
   const found = device.collections.some(
     (collection) =>
-      collection.usagePage === RAWM_CONFIG_USAGE_PAGE && collection.usage === RAWM_CONFIG_USAGE,
+      collection.usagePage === usb.configUsagePage && collection.usage === usb.configUsage,
   );
   return {
     id: 'colecao',
     label: 'Coleção vendor de configuração',
     status: found ? 'ok' : 'falha',
     detail: found
-      ? `Encontrada em ${hexId(RAWM_CONFIG_USAGE_PAGE)}/${hexId(RAWM_CONFIG_USAGE)}.`
-      : `Nenhuma coleção ${hexId(RAWM_CONFIG_USAGE_PAGE)}/${hexId(RAWM_CONFIG_USAGE)} neste dispositivo. Talvez seja a interface errada do receptor.`,
+      ? `Encontrada em ${hexId(usb.configUsagePage)}/${hexId(usb.configUsage)}.`
+      : `Nenhuma coleção ${hexId(usb.configUsagePage)}/${hexId(usb.configUsage)} neste dispositivo. Talvez seja a interface errada do receptor.`,
   };
 }
 
 function identityStage(raw: Record<string, unknown>): DiagnosticStage {
+  const usb = leviathanV4Usb();
   const productId = typeof raw.pi === 'number' ? raw.pi : null;
   const vendorId = typeof raw.vi === 'number' ? raw.vi : null;
   const matches =
-    productId === LEVIATHAN_V4_RECEIVER_PRODUCT_ID &&
-    (vendorId === null || vendorId === RAWM_VENDOR_ID);
+    productId === usb.receiverProductId && (vendorId === null || vendorId === usb.vendorId);
   return {
     id: 'identidade-receptor',
     label: 'Identidade do receptor',
@@ -244,13 +241,13 @@ function identityStage(raw: Record<string, unknown>): DiagnosticStage {
       ? `pi=${hexId(productId)} confere com o esperado.`
       : `Relatado pi=${productId === null ? '(ausente)' : hexId(productId)}, vi=${
           vendorId === null ? '(ausente)' : hexId(vendorId)
-        }. Esperado pi=${hexId(LEVIATHAN_V4_RECEIVER_PRODUCT_ID)}, vi=${hexId(RAWM_VENDOR_ID)}. Ajuste o registro antes de conectar pelo aplicativo.`,
+        }. Esperado pi=${hexId(usb.receiverProductId)}, vi=${hexId(usb.vendorId)}. Ajuste o registro antes de conectar pelo aplicativo.`,
   };
 }
 
 function nameStage(raw: Record<string, unknown>): DiagnosticStage {
   const deviceName = typeof raw.dn === 'string' ? raw.dn.trim() : '';
-  const matches = LEVIATHAN_NAME.test(deviceName);
+  const matches = isLeviathanV4Name(deviceName);
   return {
     id: 'nome-mouse',
     label: 'Nome do mouse',
@@ -403,13 +400,14 @@ export async function requestDiagnosticDevice(
   api: BrowserHidApi,
   allDevices = false,
 ): Promise<BrowserHidDevice | null> {
+  const usb = leviathanV4Usb();
   const filters = allDevices
     ? []
     : [
         {
-          vendorId: RAWM_VENDOR_ID,
-          usagePage: RAWM_CONFIG_USAGE_PAGE,
-          usage: RAWM_CONFIG_USAGE,
+          vendorId: usb.vendorId,
+          usagePage: usb.configUsagePage,
+          usage: usb.configUsage,
         },
       ];
   const chosen = await api.requestDevice({ filters });

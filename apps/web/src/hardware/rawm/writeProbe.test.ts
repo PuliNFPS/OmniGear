@@ -2,8 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { BrowserHidDevice } from '../deviceDiscovery';
 import type { HidInputReportEvent } from '../WebHidTransport';
 import { leviathanV4QueryFixture } from './leviathanV4Fixture';
-import { parseMouseParamState } from './mouseParamSnapshot';
-import { frameEvent, withProtocolEnvelope } from '../../core/coreBridge';
+import { frameEvent, parseMouseParamState, withProtocolEnvelope } from '../../core/coreBridge';
 import {
   compareStates,
   probeButtonMapping,

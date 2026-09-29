@@ -1,20 +1,17 @@
-import type { MouseActionId } from '@gearhub/shared';
+import type { MouseActionId, RawmMouseParamState } from '@gearhub/shared';
 import {
   encodeAction,
   encodeConfigReset,
   encodeMapping,
+  encodeMouseParamBody,
   encodeMouseParamSnapshot,
   frameEvent,
+  parseMouseParamState,
   withProtocolEnvelope,
 } from '../../core/coreBridge';
 import type { BrowserHidDevice } from '../deviceDiscovery';
 import { WebHidTransport, type HardwareTransport } from '../WebHidTransport';
 import { captureQuery, type RawReportLog } from './diagnostics';
-import {
-  encodeMouseParamBody,
-  parseMouseParamState,
-  type RawmMouseParamState,
-} from './mouseParamSnapshot';
 
 /**
  * Smallest possible write, for confirming the binary parameter body against

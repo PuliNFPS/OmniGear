@@ -2,14 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { applyQueryPatch, fromHex, readProtocolVectors, toHex } from '../../test/vectors';
 import {
   applySettingsToMouseParam,
+  buildQueryEvent,
   encodeMouseParamBody,
   parseMouseParamState,
-} from './mouseParamSnapshot';
-import {
-  applySettingsToMouseParam as coreApply,
-  buildQueryEvent,
-  encodeMouseParamBody as coreEncode,
-  parseMouseParamState as coreParse,
   encodeLeviathanShowPower,
   encodeMapping,
   leviathanButtonId,
@@ -78,20 +73,15 @@ describe('vetores de conformidade do protocolo RAWM', () => {
 
   it.each(vectors.paramSnapshot)('snapshot: $name', ({ query: name, expected }) => {
     expect(toHex(encodeMouseParamBody(parseMouseParamState(query(name))))).toBe(expected);
-    expect(toHex(coreEncode(coreParse(query(name))))).toBe(expected);
   });
 
   it.each(vectors.paramApply)('apply: $name', ({ query: name, settings, expected }) => {
     const next = applySettingsToMouseParam(parseMouseParamState(query(name)), settings);
     expect(toHex(encodeMouseParamBody(next))).toBe(expected);
-    expect(toHex(coreEncode(coreApply(coreParse(query(name)), settings)))).toBe(expected);
   });
 
   it.each(vectors.invalidSnapshot)('snapshot inválido: $name', ({ query: name, patch, field }) => {
     expect(() => parseMouseParamState(applyQueryPatch(query(name), patch))).toThrow(
-      `Snapshot RAWM incompleto ou invalido: ${field}.`,
-    );
-    expect(() => coreParse(applyQueryPatch(query(name), patch))).toThrow(
       `Snapshot RAWM incompleto ou invalido: ${field}.`,
     );
   });
