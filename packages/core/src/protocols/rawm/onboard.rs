@@ -137,6 +137,7 @@ mod tests {
 
     #[test]
     fn reads_every_written_action_back_as_itself() {
+        let mut exercised = 0;
         for action in MouseActionId::ALL {
             let Some(inner) = encode_mapping(&[0x0a], action) else {
                 continue;
@@ -145,7 +146,10 @@ mod tests {
             let decoded = decode_onboard_entry(&bytes).unwrap();
             assert_eq!(decoded.action, Some(action), "{}", action.as_str());
             assert_eq!(decoded.raw, bytes);
+            exercised += 1;
         }
+        // Só `Desativado` não escreve; o `continue` não pode pular o resto em silêncio.
+        assert_eq!(exercised, MouseActionId::ALL.len() - 1);
     }
 
     #[test]
@@ -171,6 +175,26 @@ mod tests {
     }
 
     #[test]
+    fn an_empty_payload_is_ignored_and_leaves_the_state_alone() {
+        let mut collector = OnboardConfigCollector::new();
+        collector.push(&[2]);
+        collector.push(&entry(&[0x0a], MouseActionId::CliqueEsquerdo));
+        assert_eq!(collector.push(&[]), None);
+        collector.push(&entry(&[0x0b], MouseActionId::CliqueDireito));
+        let slots = collector.push(&[END_OF_DUMP]).unwrap();
+        assert_eq!(slots.len(), 1);
+        assert_eq!(slots[0].index, 2);
+        let actions: Vec<_> = slots[0].bindings.iter().map(|b| b.action).collect();
+        assert_eq!(
+            actions,
+            [
+                Some(MouseActionId::CliqueEsquerdo),
+                Some(MouseActionId::CliqueDireito)
+            ]
+        );
+    }
+
+    #[test]
     fn finishing_resets_the_collector_for_the_next_dump() {
         let mut collector = OnboardConfigCollector::new();
         collector.push(&[0]);
@@ -181,7 +205,8 @@ mod tests {
     }
 
     #[test]
-    fn serde_keeps_raw_as_bytes_and_camel_case() {
+    fn serde_uses_camel_case_and_round_trips() {
+        // A prova de que `raw` vira `Uint8Array` fica na ponte (Task 4).
         let binding = decode_onboard_entry(&entry(&[0x0a], MouseActionId::CliqueEsquerdo)).unwrap();
         let json = serde_json::to_value(&binding).unwrap();
         assert_eq!(json["keyIds"], serde_json::json!([10]));

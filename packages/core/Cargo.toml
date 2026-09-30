@@ -13,6 +13,10 @@ serde = { version = "1", features = ["derive"] }
 serde_bytes = "0.11"
 serde_json = "1"
 
+[package.metadata.cargo-machete]
+# Usado só em #[serde(with = "serde_bytes")], que o cargo-machete não enxerga.
+ignored = ["serde_bytes"]
+
 [dev-dependencies]
 # Só em teste: gera os tipos TypeScript em packages/shared/src/generated/ e os
 # confere contra os arquivos versionados. Fica fora do build do WASM.
