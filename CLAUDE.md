@@ -31,9 +31,8 @@ produza `.ts` merece a pergunta — por que isto não está no núcleo?
 **Estado real (2026-09-30):** o **codec** migrou — envelope, CRC16, enquadramento de 64 bytes,
 montador de eventos, consulta e decodificação de notificações vivem em
 `packages/core/src/protocols/rawm/`, e `apps/web/src/hardware/rawm/protocol.ts` não existe
-mais. O caminho de leitura dos passos 1–3 está confirmado em hardware, inclusive a descrição e o
-bloco de parâmetros que o passo 3 moveu para o núcleo; o passo 4 (o dump onboard) aguarda o
-roteiro de hardware.
+mais. Todo o caminho de leitura está confirmado em hardware, inclusive a descrição e o bloco de
+parâmetros do passo 3 e o dump onboard do passo 4.
 O vocabulário de ações (`MouseActionId`, gerado para TypeScript por `ts-rs`), a tabela
 ação↔bytes (`packages/core/src/protocols/rawm/actions.rs`) e a tabela de teclas do Leviathan V4
 (`packages/core/src/drivers/leviathan_v4/`) também vivem no núcleo, e `leviathanV4Keys.ts` não
@@ -41,8 +40,7 @@ existe mais. O passo 3 levou o bloco de parâmetros
 (`packages/core/src/protocols/rawm/param_snapshot.rs`), a descrição, o LOD e a identidade do
 Leviathan V4 (`packages/core/src/drivers/leviathan_v4/`); `MouseSettings` é do núcleo. O passo 4
 levou o dump onboard (`packages/core/src/protocols/rawm/onboard.rs`, e `settings_from_slot` em
-`drivers/leviathan_v4/`), e `onboardConfig.ts` não existe mais; esse passo **aguarda a confirmação
-em hardware** do roteiro em `docs/smoke-test-leviathan-v4.md`.
+`drivers/leviathan_v4/`), e `onboardConfig.ts` não existe mais.
 
 Ainda em TypeScript, com passo marcado no spec: a sessão de `LeviathanV4Driver.ts` e a
 decodificação de `session.ts` (passo 5).

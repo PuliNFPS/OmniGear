@@ -593,8 +593,8 @@ O passo 0 é novo, e os demais absorvem os arquivos que faltavam.
    fechou com `pack_dpi`.
 4. **Dump onboard:** `onboardConfig.ts`, a decodificação do `0x14`. **Confirmação em
    hardware.**
-   **Implementado em 2026-09-30** pelo plano `docs/superpowers/plans/2026-09-30-migracao-dump-onboard.md`,
-   aguardando a confirmação em hardware do roteiro em `docs/smoke-test-leviathan-v4.md`:
+   **Fechado em 2026-09-30** pelo plano `docs/superpowers/plans/2026-09-30-migracao-dump-onboard.md`,
+   confirmado em hardware pelo roteiro em `docs/smoke-test-leviathan-v4.md`:
    `onboardConfig.ts` foi apagado e a duplicata `declaredLength` fechou.
 5. **Sessão:** `LeviathanV4Driver.ts` sob a interface de passos puxados acima, mais a
    decodificação de `session.ts`. O maior e o mais arriscado. Sondas reapontadas.
@@ -757,7 +757,8 @@ são objetos comuns via `serde`.
 ### Decisão 5 — os bytes crus continuam `Uint8Array`
 
 Cada entrada guarda `raw`, os bytes exatos que o mouse mandou: macros, teclas de teclado e
-comandos que o app não nomeia são reenviados a partir deles. Por padrão o `serde-wasm-bindgen`
+comandos que o app não nomeia são reenviados a partir deles — mas só em teclas fora do editor; num
+botão do editor eles se perdem (ver "Defeito conhecido, para o passo 5", abaixo). Por padrão o `serde-wasm-bindgen`
 entregaria `number[]`; com `#[serde(with = "serde_bytes")]` entrega `Uint8Array`, e o tipo gerado
 declara `Uint8Array` (`#[ts(type = "Uint8Array")]`). O driver não muda.
 
@@ -793,6 +794,12 @@ desse botão; `settings_from_slot` devolve ao botão o valor da base (não sabe 
 ali); e `mappingEvents` escreve esse valor da base por cima. Além disso, `reportedMappings` gera
 entradas `raw:…` que `intendedMappings` nunca gera, então todo apply manda `CONFIG_RESET` e o
 conjunto inteiro.
+
+O mesmo vale para uma macro numa combinação R-Plus `[ativador, alvo]`: `editorKeySets` também
+reconstrói as combinações, então `preservedEvents` descarta a entrada, e `settings_from_slot`
+ignora entradas sem nome de duas teclas — o alvo aparece como `desativado`. Quando o valor
+reconstruído é `desativado`, nada é escrito por cima, mas o `CONFIG_RESET` apaga a macro do
+mesmo jeito.
 
 O defeito existe desde antes da migração; o passo 4 só portou o comportamento com paridade. O
 teste do driver evita o caso de propósito, usando os ids `0x60`/`0x61`, fora do editor.

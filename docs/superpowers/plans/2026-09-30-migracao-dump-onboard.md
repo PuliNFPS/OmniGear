@@ -899,9 +899,9 @@ TypeScript antigo; o que falta é o mouse confirmar.
 
 1. **Conectar.** As quatro memórias aparecem com os mapeamentos que cada uma guarda, diferentes
    entre si.
-2. **O que o app não nomeia sobrevive.** Numa memória que guarda uma macro ou tecla de teclado
-   (feita pelo software oficial), aplicar uma mudança pelo app e conferir que a macro continua
-   funcionando.
+2. ~~**O que o app não nomeia sobrevive.**~~ **Substituído na execução** por "Mapeamento
+   relido": aplicar numa memória com macro num botão do editor apaga a macro, por um defeito
+   anterior à migração (ver o spec, "Defeito conhecido, para o passo 5"). Não siga a versão antiga.
 3. **Trocar de memória pelo mouse.** A tela acompanha a memória ativa.
 
 Resultado: _preencher após o teste._
