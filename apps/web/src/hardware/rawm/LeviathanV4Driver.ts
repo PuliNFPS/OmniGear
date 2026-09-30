@@ -1,6 +1,7 @@
 import type {
   MouseActionId,
   MouseSettings,
+  OnboardSlotConfig,
   PeripheralSettings,
   RawmMouseParamState,
 } from '@gearhub/shared';
@@ -17,6 +18,7 @@ import {
   leviathanKeyId,
   leviathanOnboardSlotCount,
   leviathanShowPowerKeyId,
+  OnboardConfigCollector,
   parseMouseParamState,
   withProtocolEnvelope,
 } from '../../core/coreBridge';
@@ -24,7 +26,6 @@ import { isMouseSettings } from '../../domain/settings';
 import type { DeviceDriver, DeviceReport, DeviceState } from '../deviceDriver';
 import type { HardwareTransport } from '../WebHidTransport';
 import { subscribeToNotifications } from './notifications';
-import { OnboardConfigCollector, type OnboardSlotConfig } from './onboardConfig';
 import { queryRawmDevice } from './session';
 
 const ACTION_SAVE_CONFIG_TO_FDS = 0x34;

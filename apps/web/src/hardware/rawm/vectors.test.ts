@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 import type { OnboardBinding, OnboardSlotConfig } from '@gearhub/shared';
 import { applyQueryPatch, fromHex, readProtocolVectors, toHex } from '../../test/vectors';
 import {
-  OnboardConfigCollector as CoreOnboardConfigCollector,
+  OnboardConfigCollector,
   applySettingsToMouseParam,
   buildQueryEvent,
-  decodeOnboardEntry as coreDecodeOnboardEntry,
+  decodeOnboardEntry,
   encodeMouseParamBody,
   parseMouseParamState,
   encodeLeviathanShowPower,
@@ -14,7 +14,6 @@ import {
   leviathanKeyId,
   withProtocolEnvelope,
 } from '../../core/coreBridge';
-import { OnboardConfigCollector, decodeOnboardEntry } from './onboardConfig';
 
 const vectors = readProtocolVectors();
 
@@ -89,16 +88,8 @@ describe('vetores de conformidade do protocolo RAWM', () => {
     checkOnboardEntry(decodeOnboardEntry, vector);
   });
 
-  it.each(vectors.onboardEntry)('entrada onboard pelo núcleo: $name', (vector) => {
-    checkOnboardEntry(coreDecodeOnboardEntry, vector);
-  });
-
   it.each(vectors.onboardDump)('dump onboard: $name', (vector) => {
     checkOnboardDump(new OnboardConfigCollector(), vector);
-  });
-
-  it.each(vectors.onboardDump)('dump onboard pelo núcleo: $name', (vector) => {
-    checkOnboardDump(new CoreOnboardConfigCollector(), vector);
   });
 
   it.each(vectors.envelope)('envelope: $name', ({ input, crc, expected }) => {

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import type { Peripheral } from '@gearhub/shared';
 import { driverFor, type OnboardProfileReport } from '../hardware/deviceDriver';
-import { settingsFromSlot } from '../hardware/rawm/onboardConfig';
+import { settingsFromSlot } from '../core/coreBridge';
 import { useDeviceStore } from '../store/deviceStore';
 import { useEditorStore } from '../store/editorStore';
 
