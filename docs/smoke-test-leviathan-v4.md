@@ -428,3 +428,19 @@ mapeamentos funcionou; e o perfil gravado numa memória sobreviveu a desligar e 
 `pack_dpi` e `encode_mouse_param_body` — e da descrição do aparelho lida em Rust. Com isso, o
 caminho de leitura volta a estar inteiro confirmado em hardware, e o de escrita cobre agora
 parâmetros e mapeamentos montados pelo núcleo.
+
+## Passo 4 — roteiro de confirmação (pendente)
+
+O passo 4 moveu para o núcleo a leitura do dump onboard (`0x14`): a decodificação das
+entradas, a montagem do fluxo delimitado e a leitura de cada memória como configuração. As
+entradas e os dumps estão fixados pelos vetores `onboardEntry` e `onboardDump`, capturados do
+TypeScript antigo; o que falta é o mouse confirmar.
+
+1. **Conectar.** As quatro memórias aparecem com os mapeamentos que cada uma guarda, diferentes
+   entre si.
+2. **O que o app não nomeia sobrevive.** Numa memória que guarda uma macro ou tecla de teclado
+   (feita pelo software oficial), aplicar uma mudança pelo app e conferir que a macro continua
+   funcionando.
+3. **Trocar de memória pelo mouse.** A tela acompanha a memória ativa.
+
+Resultado: _preencher após o teste._

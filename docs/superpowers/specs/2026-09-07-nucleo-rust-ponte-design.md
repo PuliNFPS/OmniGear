@@ -593,6 +593,9 @@ O passo 0 é novo, e os demais absorvem os arquivos que faltavam.
    fechou com `pack_dpi`.
 4. **Dump onboard:** `onboardConfig.ts`, a decodificação do `0x14`. **Confirmação em
    hardware.**
+   **Implementado em 2026-09-30** pelo plano `docs/superpowers/plans/2026-09-30-migracao-dump-onboard.md`,
+   aguardando a confirmação em hardware do roteiro em `docs/smoke-test-leviathan-v4.md`:
+   `onboardConfig.ts` foi apagado e a duplicata `declaredLength` fechou.
 5. **Sessão:** `LeviathanV4Driver.ts` sob a interface de passos puxados acima, mais a
    decodificação de `session.ts`. O maior e o mais arriscado. Sondas reapontadas.
    **Confirmação em hardware.**
@@ -757,6 +760,10 @@ Cada entrada guarda `raw`, os bytes exatos que o mouse mandou: macros, teclas de
 comandos que o app não nomeia são reenviados a partir deles. Por padrão o `serde-wasm-bindgen`
 entregaria `number[]`; com `#[serde(with = "serde_bytes")]` entrega `Uint8Array`, e o tipo gerado
 declara `Uint8Array` (`#[ts(type = "Uint8Array")]`). O driver não muda.
+
+O `json_compatible()` força bytes como array, e a ponte desliga isso
+(`serialize_bytes_as_arrays(false)`) — descoberto na execução. Só o campo marcado com
+`serde_bytes` vira `Uint8Array`; `Vec<u8>` comum continua array.
 
 ### Vetores e testes
 
