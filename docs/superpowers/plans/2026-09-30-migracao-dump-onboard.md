@@ -28,7 +28,7 @@
 
 1. **`pnpm core:build` antes de `pnpm --filter @gearhub/web exec vitest run …`** depois de mudar Rust.
 2. **Toolchain GNU no Windows:** `winapi-util` fica em 0.1.9 no `Cargo.lock`. Se um `cargo add` o subir, `cargo update -p winapi-util --precise 0.1.9`.
-3. **`serde-wasm-bindgen`:** a ponte usa sempre `Serializer::json_compatible()` (helper `to_js`). Com `#[serde(with = "serde_bytes")]`, `Vec<u8>` vira `Uint8Array` na ida e é lido de `Uint8Array` na volta. A Task 4 prova isso com um teste — se não valer, **pare e reporte**.
+3. **`serde-wasm-bindgen`:** a ponte usa sempre `Serializer::json_compatible()` (helper `to_js`). Com `#[serde(with = "serde_bytes")]`, `Vec<u8>` vira `Uint8Array` na ida e é lido de `Uint8Array` na volta. A Task 4 prova isso com um teste — se não valer, **pare e reporte**. (Corrigido na execução: o `json_compatible()` força bytes como array; a ponte usa `serialize_bytes_as_arrays(false)` — ver Decisão 5 no spec.)
 4. **Caminho por `process.cwd()`, nunca `import.meta.url`**, nos testes do Vitest.
 
 ---

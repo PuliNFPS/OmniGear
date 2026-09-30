@@ -28,11 +28,12 @@ O teste é uma pergunta: **isso mudaria se a casca mudasse?** Se sim, é casca.
 **Regra:** comportamento novo de dispositivo entra no Rust. Uma tarefa de dispositivo que só
 produza `.ts` merece a pergunta — por que isto não está no núcleo?
 
-**Estado real (2026-09-28):** o **codec** migrou — envelope, CRC16, enquadramento de 64 bytes,
+**Estado real (2026-09-30):** o **codec** migrou — envelope, CRC16, enquadramento de 64 bytes,
 montador de eventos, consulta e decodificação de notificações vivem em
 `packages/core/src/protocols/rawm/`, e `apps/web/src/hardware/rawm/protocol.ts` não existe
-mais. Todo o caminho de leitura está confirmado em hardware, inclusive a descrição e o bloco
-de parâmetros que o passo 3 moveu para o núcleo.
+mais. O caminho de leitura dos passos 1–3 está confirmado em hardware, inclusive a descrição e o
+bloco de parâmetros que o passo 3 moveu para o núcleo; o passo 4 (o dump onboard) aguarda o
+roteiro de hardware.
 O vocabulário de ações (`MouseActionId`, gerado para TypeScript por `ts-rs`), a tabela
 ação↔bytes (`packages/core/src/protocols/rawm/actions.rs`) e a tabela de teclas do Leviathan V4
 (`packages/core/src/drivers/leviathan_v4/`) também vivem no núcleo, e `leviathanV4Keys.ts` não
@@ -98,9 +99,9 @@ qualquer `package.json` que encontre no diretório de saída.
 **A exceção é `packages/shared/src/generated/`.** O `ts-rs` gera ali tipos TypeScript a partir
 de tipos do núcleo (hoje `MouseActionId`, `MouseSettings` e suas partes, o snapshot de
 parâmetros, a descrição do Leviathan V4 e as memórias do dump onboard), e eles **são**
-versionados, para que `@gearhub/shared` compile sem Rust. Um teste em `packages/core/src/bindings.rs` compara cada
-arquivo com o que o `ts-rs` geraria, reprova se divergirem e também reprova arquivo órfão no
-diretório; para regenerar,
+versionados, para que `@gearhub/shared` compile sem Rust. Um teste em
+`packages/core/src/bindings.rs` compara cada arquivo com o que o `ts-rs` geraria, reprova se
+divergirem e também reprova arquivo órfão no diretório; para regenerar,
 `UPDATE_BINDINGS=1 cargo test -p gearhub-core generated`. Nunca edite à mão, e não remova o
 caminho dos `inputs` de `test` em `packages/core/turbo.json` — sem ele, uma edição à mão deixa
 `@gearhub/core:test` em cache hit e a guarda não roda.

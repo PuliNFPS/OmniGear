@@ -781,9 +781,26 @@ pelos testes TS que passam a exercitar a ponte.
 Obrigatória, antes do merge, registrada em `docs/smoke-test-leviathan-v4.md`:
 
 1. Conectar: as quatro memórias aparecem com os mapeamentos que cada uma tem.
-2. Aplicar numa memória que guarda algo que o app não nomeia (uma macro, por exemplo) e
-   conferir que isso sobreviveu.
+2. **Mapeamento relido.** Numa memória sem macro, mudar o mapeamento de um botão pelo app,
+   aplicar, reconectar e conferir que a tela relê exatamente o que foi escrito.
 3. Trocar de memória pelo mouse: a tela acompanha.
+
+### Defeito conhecido, para o passo 5 — macro em botão do editor é sobrescrita
+
+Uma macro ou tecla de teclado num botão do editor é sobrescrita pelo app, e o mecanismo é este:
+`editorKeySets` inclui todo botão do editor, então `preservedEvents` descarta a entrada sem nome
+desse botão; `settings_from_slot` devolve ao botão o valor da base (não sabe nomear o que há
+ali); e `mappingEvents` escreve esse valor da base por cima. Além disso, `reportedMappings` gera
+entradas `raw:…` que `intendedMappings` nunca gera, então todo apply manda `CONFIG_RESET` e o
+conjunto inteiro.
+
+O defeito existe desde antes da migração; o passo 4 só portou o comportamento com paridade. O
+teste do driver evita o caso de propósito, usando os ids `0x60`/`0x61`, fora do editor.
+Consequência: na sessão, a macro some até desligar o mouse; com `writeProfile`, ela some da flash.
+
+Corrigir exige decidir como o editor apresenta um botão com binding sem nome — decisão de
+produto, pendente do usuário — e mora em `preservedEvents`/`mappingEvents`, portanto no passo 5.
+O roteiro de hardware do passo 4 não grava em memória que guarde macro.
 
 ### Entrega
 

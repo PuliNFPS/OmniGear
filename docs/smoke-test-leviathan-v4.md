@@ -436,11 +436,14 @@ entradas, a montagem do fluxo delimitado e a leitura de cada memória como confi
 entradas e os dumps estão fixados pelos vetores `onboardEntry` e `onboardDump`, capturados do
 TypeScript antigo; o que falta é o mouse confirmar.
 
+**Não use uma memória que guarde macro ou tecla de teclado que não dê para refazer, e nunca grave
+numa delas pelo app:** há um defeito conhecido que sobrescreve esse botão (ver o spec, "Defeito
+conhecido, para o passo 5").
+
 1. **Conectar.** As quatro memórias aparecem com os mapeamentos que cada uma guarda, diferentes
    entre si.
-2. **O que o app não nomeia sobrevive.** Numa memória que guarda uma macro ou tecla de teclado
-   (feita pelo software oficial), aplicar uma mudança pelo app e conferir que a macro continua
-   funcionando.
+2. **Mapeamento relido.** Numa memória sem macro, mudar o mapeamento de um botão pelo app,
+   aplicar, reconectar e conferir que a tela relê exatamente o que foi escrito.
 3. **Trocar de memória pelo mouse.** A tela acompanha a memória ativa.
 
 Resultado: _preencher após o teste._
