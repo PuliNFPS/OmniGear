@@ -65,6 +65,25 @@ interface InvalidSnapshotVector {
   field: string;
 }
 
+interface OnboardEntryVector {
+  name: string;
+  entry: string;
+  /** Null quando os bytes não são um evento de configuração. */
+  expected: { keyIds: number[]; action: MouseActionId | null } | null;
+}
+
+interface OnboardDumpVector {
+  name: string;
+  payloads: string[];
+  /** O retorno do último `push`; null quando o dump não terminou. */
+  expected:
+    | {
+        index: number;
+        bindings: { keyIds: number[]; action: MouseActionId | null; raw: string }[];
+      }[]
+    | null;
+}
+
 export interface ProtocolVectors {
   version: number;
   envelope: EnvelopeVector[];
@@ -76,6 +95,8 @@ export interface ProtocolVectors {
   paramSnapshot: ParamSnapshotVector[];
   paramApply: ParamApplyVector[];
   invalidSnapshot: InvalidSnapshotVector[];
+  onboardEntry: OnboardEntryVector[];
+  onboardDump: OnboardDumpVector[];
 }
 
 export function readProtocolVectors(): ProtocolVectors {
