@@ -409,6 +409,11 @@
   ],
   "onboardEntry": [
     {
+      "name": "exatamente quatro bytes, sem ids nem carga",
+      "entry": "03041600",
+      "expected": { "keyIds": [], "action": null }
+    },
+    {
       "name": "clique esquerdo",
       "entry": "030a16010a0001010000",
       "expected": { "keyIds": [10], "action": "clique-esquerdo" }

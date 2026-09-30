@@ -13,7 +13,7 @@ use crate::device::{DpiStage, MouseActionId, MouseParameters, MouseRPlusSettings
 use crate::drivers::leviathan_v4::{
     DpiAxes, DpiLimits, LeviathanV4Description, LeviathanV4Usb, NumericRange,
 };
-use crate::protocols::rawm::MouseParamSnapshot;
+use crate::protocols::rawm::{MouseParamSnapshot, OnboardBinding, OnboardSlotConfig};
 
 const DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../shared/src/generated");
 
@@ -35,6 +35,8 @@ fn generated() -> Vec<(&'static str, String)> {
         ("MouseRPlusSettings", render::<MouseRPlusSettings>()),
         ("MouseSettings", render::<MouseSettings>()),
         ("RawmMouseParamState", render::<MouseParamSnapshot>()),
+        ("OnboardBinding", render::<OnboardBinding>()),
+        ("OnboardSlotConfig", render::<OnboardSlotConfig>()),
     ]
 }
 
