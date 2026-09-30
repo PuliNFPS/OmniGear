@@ -453,13 +453,54 @@
       "entry": "030516020a",
       "expected": { "keyIds": [], "action": null }
     },
-    { "name": "não é evento de configuração", "entry": "0b0214", "expected": null },
+    { "name": "curta demais: 3 bytes", "entry": "0b0214", "expected": null },
     {
       "name": "mais curta que o comprimento declarado",
       "entry": "030c16010a0001010000",
       "expected": null
     },
-    { "name": "curta demais para cabeçalho", "entry": "030416", "expected": null }
+    { "name": "curta demais para cabeçalho", "entry": "030416", "expected": null },
+    { "name": "não é evento de configuração", "entry": "0b0a16010a0001010000", "expected": null },
+    {
+      "name": "mais longa que o comprimento declarado",
+      "entry": "030a16010a0001010000ff",
+      "expected": { "keyIds": [10], "action": "clique-esquerdo" }
+    },
+    {
+      "name": "ids no limite do fim, sem carga",
+      "entry": "030516010a",
+      "expected": { "keyIds": [10], "action": null }
+    },
+    {
+      "name": "zero ids de tecla",
+      "entry": "030916000001010000",
+      "expected": { "keyIds": [], "action": "clique-esquerdo" }
+    },
+    {
+      "name": "tecla com carga de três bytes",
+      "entry": "030816010a000101",
+      "expected": { "keyIds": [10], "action": "clique-esquerdo" }
+    },
+    {
+      "name": "tecla com carga curta demais",
+      "entry": "030716010a0001",
+      "expected": { "keyIds": [10], "action": null }
+    },
+    {
+      "name": "função com carga de dois bytes",
+      "entry": "03071801100201",
+      "expected": { "keyIds": [16], "action": "dpi-ciclo" }
+    },
+    {
+      "name": "função com carga curta demais",
+      "entry": "030618011002",
+      "expected": { "keyIds": [16], "action": null }
+    },
+    {
+      "name": "comprimento de 12 bits com nibble alto, mais curta que o declarado",
+      "entry": "130a16010a0001010000",
+      "expected": null
+    }
   ],
   "onboardDump": [
     {
@@ -519,7 +560,7 @@
     },
     {
       "name": "entrada que não é evento de configuração é descartada",
-      "payloads": ["00", "0b0214", "030a16010a0001010000", "ff"],
+      "payloads": ["00", "0b0214", "0b0a16010a0001010000", "030a16010a0001010000", "ff"],
       "expected": [
         {
           "index": 0,
