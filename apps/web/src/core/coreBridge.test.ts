@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { leviathanV4QueryFixture } from '../hardware/rawm/leviathanV4Fixture';
 import {
+  OnboardConfigCollector,
+  decodeOnboardEntry,
+  settingsFromSlot,
   actionForFunction,
   applySettingsToMouseParam,
   describeLeviathanV4,
@@ -282,5 +285,30 @@ describe('estruturas através da ponte', () => {
         ],
       }),
     ).toBe(true);
+  });
+});
+
+describe('dump onboard através da ponte', () => {
+  const entry = () => withProtocolEnvelope(encodeMapping([0x0a], 'clique-esquerdo')!, false);
+
+  it('devolve os bytes crus como Uint8Array, nos dois sentidos', () => {
+    const binding = decodeOnboardEntry(entry());
+    expect(binding?.raw).toBeInstanceOf(Uint8Array);
+    expect([...binding!.raw]).toEqual([...entry()]);
+
+    const collector = new OnboardConfigCollector();
+    collector.push(Uint8Array.from([0]));
+    collector.push(entry());
+    const slots = collector.push(Uint8Array.from([0xff]));
+    expect(slots?.[0].bindings[0].raw).toBeInstanceOf(Uint8Array);
+
+    const { defaults } = describeLeviathanV4(leviathanV4QueryFixture);
+    // A volta: o slot sai da ponte e entra de novo, com o raw como Uint8Array.
+    expect(settingsFromSlot(defaults, slots![0]).buttons.esquerdo).toBe('clique-esquerdo');
+  });
+
+  it('devolve null, não undefined, para o que não é evento e para o dump sem fim', () => {
+    expect(decodeOnboardEntry(Uint8Array.from([0x0b, 0x02, 0x14]))).toBeNull();
+    expect(new OnboardConfigCollector().push(Uint8Array.from([0]))).toBeNull();
   });
 });

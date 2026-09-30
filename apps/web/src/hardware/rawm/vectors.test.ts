@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import type { OnboardBinding, OnboardSlotConfig } from '@gearhub/shared';
 import { applyQueryPatch, fromHex, readProtocolVectors, toHex } from '../../test/vectors';
 import {
+  OnboardConfigCollector as CoreOnboardConfigCollector,
   applySettingsToMouseParam,
   buildQueryEvent,
+  decodeOnboardEntry as coreDecodeOnboardEntry,
   encodeMouseParamBody,
   parseMouseParamState,
   encodeLeviathanShowPower,
@@ -47,8 +50,11 @@ describe('vetores de conformidade do protocolo RAWM', () => {
     requireNonEmpty(vectors.onboardDump, 'onboardDump');
   });
 
-  it.each(vectors.onboardEntry)('entrada onboard: $name', ({ entry, expected }) => {
-    const decoded = decodeOnboardEntry(fromHex(entry));
+  const checkOnboardEntry = (
+    decode: (entry: Uint8Array) => OnboardBinding | null,
+    { entry, expected }: (typeof vectors.onboardEntry)[number],
+  ) => {
+    const decoded = decode(fromHex(entry));
     if (expected === null) {
       expect(decoded).toBeNull();
       return;
@@ -56,10 +62,12 @@ describe('vetores de conformidade do protocolo RAWM', () => {
     expect(decoded).not.toBeNull();
     expect({ keyIds: decoded!.keyIds, action: decoded!.action }).toEqual(expected);
     expect(toHex(decoded!.raw)).toBe(entry);
-  });
+  };
 
-  it.each(vectors.onboardDump)('dump onboard: $name', ({ payloads, expected }) => {
-    const collector = new OnboardConfigCollector();
+  const checkOnboardDump = (
+    collector: { push(payload: Uint8Array): OnboardSlotConfig[] | null },
+    { payloads, expected }: (typeof vectors.onboardDump)[number],
+  ) => {
     const results = payloads.map((payload) => collector.push(fromHex(payload)));
     expect(results.slice(0, -1).every((result) => result === null)).toBe(true);
     const last = results.at(-1) ?? null;
@@ -75,6 +83,22 @@ describe('vetores de conformidade do protocolo RAWM', () => {
             })),
           }));
     expect(shaped).toEqual(expected);
+  };
+
+  it.each(vectors.onboardEntry)('entrada onboard: $name', (vector) => {
+    checkOnboardEntry(decodeOnboardEntry, vector);
+  });
+
+  it.each(vectors.onboardEntry)('entrada onboard pelo núcleo: $name', (vector) => {
+    checkOnboardEntry(coreDecodeOnboardEntry, vector);
+  });
+
+  it.each(vectors.onboardDump)('dump onboard: $name', (vector) => {
+    checkOnboardDump(new OnboardConfigCollector(), vector);
+  });
+
+  it.each(vectors.onboardDump)('dump onboard pelo núcleo: $name', (vector) => {
+    checkOnboardDump(new CoreOnboardConfigCollector(), vector);
   });
 
   it.each(vectors.envelope)('envelope: $name', ({ input, crc, expected }) => {
