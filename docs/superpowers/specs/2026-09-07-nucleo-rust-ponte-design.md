@@ -720,3 +720,65 @@ Um plano, um PR, nesta ordem: vetores → `serde` e `MouseSettings` gerado → s
 `pack_dpi` → LOD e identidade → apply → descrição → ponte, `coreBridge` e erros → casca
 reapontada e `mouseParamSnapshot.ts` apagado → defeitos das sondas, documentos e roteiro de
 hardware.
+
+## Passo 4 — desenho (2026-09-30)
+
+O passo 4 leva o dump onboard (`NOTIFY_TYPE_MOUSE_CONFIG`, `0x14`) para o núcleo: a
+decodificação de cada entrada, a montagem do fluxo delimitado e a leitura de uma memória como
+configuração do editor. Segue as decisões dos passos anteriores; o que é novo está abaixo.
+
+### O que desce
+
+| peça                                                  | onde                                    |
+| ----------------------------------------------------- | --------------------------------------- |
+| `OnboardBinding`, `OnboardSlotConfig`                 | `protocols/rawm/onboard.rs`             |
+| `decode_onboard_entry`                                | `protocols/rawm/onboard.rs`             |
+| `OnboardConfigCollector` (marcador, entradas, `0xff`) | `protocols/rawm/onboard.rs`             |
+| `settings_from_slot`                                  | `drivers/leviathan_v4/slot_settings.rs` |
+
+`decode_onboard_entry` mede a entrada com o `event_length` de `envelope.rs`, e com isso **fecha a
+duplicata declarada `declaredLength`** — a última que sobrava.
+
+`onboardConfig.ts` é apagado. O `OnboardProfileReport` de `deviceDriver.ts`, que repete à mão a
+forma de uma memória, passa a ser o tipo gerado.
+
+**Fica em TypeScript até o passo 5:** `reportedMappings`, `preservedEvents` e `isShowPower` do
+driver, que decidem o que reenviar; e `useDeviceReports`, que é reação de tela.
+
+### Decisão 4 — o montador atravessa a ponte como classe
+
+O montador guarda estado entre notificações. O `RawEventAssembler` já atravessa assim, e o
+precedente se repete: uma classe `wasm-bindgen` na ponte envolve a do núcleo, e o que ela devolve
+são objetos comuns via `serde`.
+
+### Decisão 5 — os bytes crus continuam `Uint8Array`
+
+Cada entrada guarda `raw`, os bytes exatos que o mouse mandou: macros, teclas de teclado e
+comandos que o app não nomeia são reenviados a partir deles. Por padrão o `serde-wasm-bindgen`
+entregaria `number[]`; com `#[serde(with = "serde_bytes")]` entrega `Uint8Array`, e o tipo gerado
+declara `Uint8Array` (`#[ts(type = "Uint8Array")]`). O driver não muda.
+
+### Vetores e testes
+
+Capturados do TypeScript atual antes de qualquer mudança:
+
+- `onboardEntry`: entrada → ids de tecla e ação, ou `null` para o que não é evento de
+  configuração. Os bytes crus têm de voltar idênticos à entrada.
+- `onboardDump`: sequência de payloads → memórias montadas, ou `null` sem terminador.
+
+`settings_from_slot` não é decodificador de bytes: fica coberto por testes portados para o Rust e
+pelos testes TS que passam a exercitar a ponte.
+
+### Confirmação em hardware
+
+Obrigatória, antes do merge, registrada em `docs/smoke-test-leviathan-v4.md`:
+
+1. Conectar: as quatro memórias aparecem com os mapeamentos que cada uma tem.
+2. Aplicar numa memória que guarda algo que o app não nomeia (uma macro, por exemplo) e
+   conferir que isso sobreviveu.
+3. Trocar de memória pelo mouse: a tela acompanha.
+
+### Entrega
+
+Um plano, um PR: vetores → tipos e decodificação no núcleo → `settings_from_slot` → ponte e
+`coreBridge` → casca reapontada e `onboardConfig.ts` apagado → documentos e roteiro de hardware.
