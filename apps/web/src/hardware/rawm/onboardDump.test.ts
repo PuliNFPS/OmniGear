@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { MouseActionId } from '@gearhub/shared';
-import { OnboardConfigCollector, decodeOnboardEntry } from './onboardConfig';
-import { encodeMapping, withProtocolEnvelope } from '../../core/coreBridge';
+import {
+  OnboardConfigCollector,
+  decodeOnboardEntry,
+  encodeMapping,
+  withProtocolEnvelope,
+} from '../../core/coreBridge';
 
 /** The mouse reports entries with the length encoded, as the writer sends them. */
 function entry(keyIds: number[], actionId: MouseActionId) {

@@ -24,9 +24,16 @@ fn conversion_error(error: serde_wasm_bindgen::Error) -> JsError {
 
 /// Objetos comuns e `null` — o que os tipos gerados declaram. O serializador
 /// padrão produziria `Map` para os botões e `undefined` para os opcionais.
+///
+/// O `json_compatible` também força bytes como array comum; desligado aqui, só
+/// os campos marcados `#[serde(with = "serde_bytes")]` (hoje
+/// `OnboardBinding.raw`) viram `Uint8Array`, como o tipo gerado declara. Um
+/// `Vec<u8>` comum segue como array.
 fn to_js<T: serde::Serialize>(value: &T) -> Result<JsValue, JsError> {
     value
-        .serialize(&serde_wasm_bindgen::Serializer::json_compatible())
+        .serialize(
+            &serde_wasm_bindgen::Serializer::json_compatible().serialize_bytes_as_arrays(false),
+        )
         .map_err(conversion_error)
 }
 
@@ -135,6 +142,44 @@ impl Default for WasmRawEventAssembler {
     fn default() -> Self {
         Self::new()
     }
+}
+
+#[wasm_bindgen(js_name = OnboardConfigCollector)]
+pub struct WasmOnboardConfigCollector {
+    inner: rawm::OnboardConfigCollector,
+}
+
+#[wasm_bindgen(js_class = OnboardConfigCollector)]
+impl WasmOnboardConfigCollector {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        Self {
+            inner: rawm::OnboardConfigCollector::new(),
+        }
+    }
+
+    /// As memórias quando o terminador chega; `null` até lá.
+    pub fn push(&mut self, payload: &[u8]) -> Result<JsValue, JsError> {
+        to_js(&self.inner.push(payload))
+    }
+}
+
+impl Default for WasmOnboardConfigCollector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[wasm_bindgen(js_name = decodeOnboardEntry)]
+pub fn decode_onboard_entry(entry: &[u8]) -> Result<JsValue, JsError> {
+    to_js(&rawm::decode_onboard_entry(entry))
+}
+
+#[wasm_bindgen(js_name = settingsFromSlot)]
+pub fn settings_from_slot(base: JsValue, slot: JsValue) -> Result<JsValue, JsError> {
+    let base: MouseSettings = from_js(base)?;
+    let slot: rawm::OnboardSlotConfig = from_js(slot)?;
+    to_js(&leviathan_v4::settings_from_slot(&base, &slot))
 }
 
 /// O enum com dados não atravessa `wasm-bindgen`; esta é a forma achatada:

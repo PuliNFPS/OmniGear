@@ -242,6 +242,12 @@ Isso importa por um motivo destrutivo: se um slot com macro for lido e depois re
 some da flash. Quem for implementar a leitura precisa **guardar os bytes crus** das
 entradas não reconhecidas e reenviá-los na regravação.
 
+**Estado (2026-09-30):** os bytes crus são guardados (`OnboardBinding.raw`, no núcleo) e
+reenviados por `preservedEvents` — mas só para teclas fora do editor. Num botão do editor, ou
+numa combinação R-Plus, a macro ainda se perde; o defeito está descrito no spec
+(`docs/superpowers/specs/2026-09-07-nucleo-rust-ponte-design.md`, "Defeito conhecido, para o
+passo 5").
+
 ## 7. O que ainda depende do hardware
 
 - Se o firmware despeja os quatro slots num dump só ou apenas o ativo. O modelo de dados do

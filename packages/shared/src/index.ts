@@ -28,6 +28,8 @@ export type {
 
 export type { LeviathanV4Description } from './generated/LeviathanV4Description';
 export type { LeviathanV4Usb } from './generated/LeviathanV4Usb';
+export type { OnboardBinding } from './generated/OnboardBinding';
+export type { OnboardSlotConfig } from './generated/OnboardSlotConfig';
 export type { RawmMouseParamState } from './generated/RawmMouseParamState';
 
 export type {

@@ -6,6 +6,7 @@ mod error;
 mod framing;
 pub(crate) mod json;
 mod notify;
+mod onboard;
 mod param_snapshot;
 mod query;
 
@@ -17,5 +18,8 @@ pub use envelope::with_protocol_envelope;
 pub use error::RawmError;
 pub use framing::{decode_report_chunk, frame_event};
 pub use notify::{RawmNotification, dpi_axes, pack_dpi, parse_notification};
+pub use onboard::{
+    OnboardBinding, OnboardConfigCollector, OnboardSlotConfig, decode_onboard_entry,
+};
 pub use param_snapshot::{MouseParamSnapshot, encode_mouse_param_body, parse_mouse_param_snapshot};
 pub use query::{build_query_event, is_query_result, query_json};

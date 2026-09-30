@@ -406,5 +406,179 @@
       "patch": { "cpi": 800.5 },
       "field": "cpi"
     }
+  ],
+  "onboardEntry": [
+    {
+      "name": "exatamente quatro bytes, sem ids nem carga",
+      "entry": "03041600",
+      "expected": { "keyIds": [], "action": null }
+    },
+    {
+      "name": "clique esquerdo",
+      "entry": "030a16010a0001010000",
+      "expected": { "keyIds": [10], "action": "clique-esquerdo" }
+    },
+    {
+      "name": "rolagem para cima",
+      "entry": "030a16010c0003070000",
+      "expected": { "keyIds": [12], "action": "rolagem-cima" }
+    },
+    {
+      "name": "ciclo de DPI, uma função",
+      "entry": "030c18011002010000000000",
+      "expected": { "keyIds": [16], "action": "dpi-ciclo" }
+    },
+    {
+      "name": "camada R-Plus, ativador primeiro",
+      "entry": "030d1802100c02020000000000",
+      "expected": { "keyIds": [16, 12], "action": "dpi-aumentar" }
+    },
+    {
+      "name": "macro que o app não nomeia",
+      "entry": "030805010e000102",
+      "expected": { "keyIds": [14], "action": null }
+    },
+    {
+      "name": "tecla com modificador não é ação do app",
+      "entry": "030a16010a0201010000",
+      "expected": { "keyIds": [10], "action": null }
+    },
+    {
+      "name": "sétima tecla, show power, sem ação no app",
+      "entry": "030c18010d020e0000000000",
+      "expected": { "keyIds": [13], "action": null }
+    },
+    {
+      "name": "três ids de tecla: guardada sem ids nem ação",
+      "entry": "030c16030a0b0c0001010000",
+      "expected": { "keyIds": [], "action": null }
+    },
+    {
+      "name": "contagem de ids que passa do fim: guardada sem ids nem ação",
+      "entry": "030516020a",
+      "expected": { "keyIds": [], "action": null }
+    },
+    { "name": "curta demais: 3 bytes", "entry": "0b0214", "expected": null },
+    {
+      "name": "mais curta que o comprimento declarado",
+      "entry": "030c16010a0001010000",
+      "expected": null
+    },
+    { "name": "curta demais para cabeçalho", "entry": "030416", "expected": null },
+    { "name": "não é evento de configuração", "entry": "0b0a16010a0001010000", "expected": null },
+    {
+      "name": "mais longa que o comprimento declarado",
+      "entry": "030a16010a0001010000ff",
+      "expected": { "keyIds": [10], "action": "clique-esquerdo" }
+    },
+    {
+      "name": "ids no limite do fim, sem carga",
+      "entry": "030516010a",
+      "expected": { "keyIds": [10], "action": null }
+    },
+    {
+      "name": "zero ids de tecla",
+      "entry": "030916000001010000",
+      "expected": { "keyIds": [], "action": "clique-esquerdo" }
+    },
+    {
+      "name": "tecla com carga de três bytes",
+      "entry": "030816010a000101",
+      "expected": { "keyIds": [10], "action": "clique-esquerdo" }
+    },
+    {
+      "name": "tecla com carga curta demais",
+      "entry": "030716010a0001",
+      "expected": { "keyIds": [10], "action": null }
+    },
+    {
+      "name": "função com carga de dois bytes",
+      "entry": "03071801100201",
+      "expected": { "keyIds": [16], "action": "dpi-ciclo" }
+    },
+    {
+      "name": "função com carga curta demais",
+      "entry": "030618011002",
+      "expected": { "keyIds": [16], "action": null }
+    },
+    {
+      "name": "comprimento de 12 bits com nibble alto, mais curta que o declarado",
+      "entry": "130a16010a0001010000",
+      "expected": null
+    }
+  ],
+  "onboardDump": [
+    {
+      "name": "uma memória, uma entrada",
+      "payloads": ["00", "030a16010a0001010000", "ff"],
+      "expected": [
+        {
+          "index": 0,
+          "bindings": [
+            { "keyIds": [10], "action": "clique-esquerdo", "raw": "030a16010a0001010000" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "duas memórias, ordenadas pelo índice",
+      "payloads": [
+        "02",
+        "030a16010b0001030000",
+        "00",
+        "030a16010a0001010000",
+        "030805010e000102",
+        "ff"
+      ],
+      "expected": [
+        {
+          "index": 0,
+          "bindings": [
+            { "keyIds": [10], "action": "clique-esquerdo", "raw": "030a16010a0001010000" },
+            { "keyIds": [14], "action": null, "raw": "030805010e000102" }
+          ]
+        },
+        {
+          "index": 2,
+          "bindings": [
+            { "keyIds": [11], "action": "clique-central", "raw": "030a16010b0001030000" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "uma memória emitida de novo substitui a anterior",
+      "payloads": ["01", "030a16010a0001010000", "01", "030a16010b0001020000", "ff"],
+      "expected": [
+        {
+          "index": 1,
+          "bindings": [
+            { "keyIds": [11], "action": "clique-direito", "raw": "030a16010b0001020000" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "entrada antes de qualquer marcador é ignorada",
+      "payloads": ["030a16010a0001010000", "ff"],
+      "expected": []
+    },
+    {
+      "name": "entrada que não é evento de configuração é descartada",
+      "payloads": ["00", "0b0214", "0b0a16010a0001010000", "030a16010a0001010000", "ff"],
+      "expected": [
+        {
+          "index": 0,
+          "bindings": [
+            { "keyIds": [10], "action": "clique-esquerdo", "raw": "030a16010a0001010000" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "sem terminador não há resultado",
+      "payloads": ["00", "030a16010a0001010000"],
+      "expected": null
+    }
   ]
 }

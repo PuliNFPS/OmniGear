@@ -428,3 +428,32 @@ mapeamentos funcionou; e o perfil gravado numa memória sobreviveu a desligar e 
 `pack_dpi` e `encode_mouse_param_body` — e da descrição do aparelho lida em Rust. Com isso, o
 caminho de leitura volta a estar inteiro confirmado em hardware, e o de escrita cobre agora
 parâmetros e mapeamentos montados pelo núcleo.
+
+## Passo 4 — roteiro de confirmação (confirmado em 2026-09-30)
+
+O passo 4 moveu para o núcleo a leitura do dump onboard (`0x14`): a decodificação das
+entradas, a montagem do fluxo delimitado e a leitura de cada memória como configuração. As
+entradas e os dumps estão fixados pelos vetores `onboardEntry` e `onboardDump`, capturados do
+TypeScript antigo; o que falta é o mouse confirmar.
+
+**Não use uma memória que guarde macro ou tecla de teclado que não dê para refazer, e nunca grave
+numa delas pelo app:** há um defeito conhecido que sobrescreve esse botão (ver o spec, "Defeito
+conhecido, para o passo 5").
+
+1. **Conectar.** As quatro memórias aparecem com os mapeamentos que cada uma guarda, diferentes
+   entre si.
+2. **Mapeamento relido.** Numa memória sem macro, mudar o mapeamento de um botão pelo app,
+   aplicar, reconectar o app sem desligar o mouse e conferir que a tela relê exatamente o que foi
+   escrito. Não desligar o mouse aqui: aplicar não grava na flash.
+3. **Trocar de memória pelo mouse.** A tela acompanha a memória ativa.
+
+Resultado (2026-09-30, app local na branch `feat/migracao-dump-onboard`): **itens 1 e 2
+passaram.** As quatro memórias apareceram com os mapeamentos de cada uma, e um mapeamento mudado
+pelo app foi relido do mouse exatamente como escrito. É a primeira confirmação do dump lido em
+Rust — `decode_onboard_entry`, `OnboardConfigCollector` e `settings_from_slot` — contra o
+firmware real, nos dois sentidos: o que o mouse já tinha e o que o app acabou de escrever.
+
+O item 3 não foi feito: o Leviathan V4 troca de memória por uma função de firmware ligada a um
+botão (`FUNCTION_NEXT_ONBOARD` e afins, ver `docs/rawm-onboard-config.md`), e nenhum botão
+estava ligado a ela. O que ele exercitaria — a notificação `0x22` — não mudou neste passo e já
+foi confirmado no mouse em 2026-09-17 (seção das notificações, acima).

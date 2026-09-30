@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import type { MouseActionId, MouseSettings } from '@gearhub/shared';
+import type { MouseActionId, MouseSettings, OnboardBinding } from '@gearhub/shared';
 import { createLeviathanV4Peripheral } from './leviathanV4';
 import { leviathanV4QueryFixture } from './leviathanV4Fixture';
-import { decodeOnboardEntry, settingsFromSlot, type OnboardBinding } from './onboardConfig';
-import { encodeMapping, withProtocolEnvelope } from '../../core/coreBridge';
+import {
+  decodeOnboardEntry,
+  encodeMapping,
+  settingsFromSlot,
+  withProtocolEnvelope,
+} from '../../core/coreBridge';
 
 const base = createLeviathanV4Peripheral(leviathanV4QueryFixture, 'real').defaults as MouseSettings;
 

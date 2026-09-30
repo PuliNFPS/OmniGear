@@ -593,6 +593,9 @@ O passo 0 é novo, e os demais absorvem os arquivos que faltavam.
    fechou com `pack_dpi`.
 4. **Dump onboard:** `onboardConfig.ts`, a decodificação do `0x14`. **Confirmação em
    hardware.**
+   **Fechado em 2026-09-30** pelo plano `docs/superpowers/plans/2026-09-30-migracao-dump-onboard.md`,
+   confirmado em hardware pelo roteiro em `docs/smoke-test-leviathan-v4.md`:
+   `onboardConfig.ts` foi apagado e a duplicata `declaredLength` fechou.
 5. **Sessão:** `LeviathanV4Driver.ts` sob a interface de passos puxados acima, mais a
    decodificação de `session.ts`. O maior e o mais arriscado. Sondas reapontadas.
    **Confirmação em hardware.**
@@ -720,3 +723,93 @@ Um plano, um PR, nesta ordem: vetores → `serde` e `MouseSettings` gerado → s
 `pack_dpi` → LOD e identidade → apply → descrição → ponte, `coreBridge` e erros → casca
 reapontada e `mouseParamSnapshot.ts` apagado → defeitos das sondas, documentos e roteiro de
 hardware.
+
+## Passo 4 — desenho (2026-09-30)
+
+O passo 4 leva o dump onboard (`NOTIFY_TYPE_MOUSE_CONFIG`, `0x14`) para o núcleo: a
+decodificação de cada entrada, a montagem do fluxo delimitado e a leitura de uma memória como
+configuração do editor. Segue as decisões dos passos anteriores; o que é novo está abaixo.
+
+### O que desce
+
+| peça                                                  | onde                                    |
+| ----------------------------------------------------- | --------------------------------------- |
+| `OnboardBinding`, `OnboardSlotConfig`                 | `protocols/rawm/onboard.rs`             |
+| `decode_onboard_entry`                                | `protocols/rawm/onboard.rs`             |
+| `OnboardConfigCollector` (marcador, entradas, `0xff`) | `protocols/rawm/onboard.rs`             |
+| `settings_from_slot`                                  | `drivers/leviathan_v4/slot_settings.rs` |
+
+`decode_onboard_entry` mede a entrada com o `event_length` de `envelope.rs`, e com isso **fecha a
+duplicata declarada `declaredLength`** — a última que sobrava.
+
+`onboardConfig.ts` é apagado. O `OnboardProfileReport` de `deviceDriver.ts`, que repete à mão a
+forma de uma memória, passa a ser o tipo gerado.
+
+**Fica em TypeScript até o passo 5:** `reportedMappings`, `preservedEvents` e `isShowPower` do
+driver, que decidem o que reenviar; e `useDeviceReports`, que é reação de tela.
+
+### Decisão 4 — o montador atravessa a ponte como classe
+
+O montador guarda estado entre notificações. O `RawEventAssembler` já atravessa assim, e o
+precedente se repete: uma classe `wasm-bindgen` na ponte envolve a do núcleo, e o que ela devolve
+são objetos comuns via `serde`.
+
+### Decisão 5 — os bytes crus continuam `Uint8Array`
+
+Cada entrada guarda `raw`, os bytes exatos que o mouse mandou: macros, teclas de teclado e
+comandos que o app não nomeia são reenviados a partir deles — mas só em teclas fora do editor; num
+botão do editor eles se perdem (ver "Defeito conhecido, para o passo 5", abaixo). Por padrão o `serde-wasm-bindgen`
+entregaria `number[]`; com `#[serde(with = "serde_bytes")]` entrega `Uint8Array`, e o tipo gerado
+declara `Uint8Array` (`#[ts(type = "Uint8Array")]`). O driver não muda.
+
+O `json_compatible()` força bytes como array, e a ponte desliga isso
+(`serialize_bytes_as_arrays(false)`) — descoberto na execução. Só o campo marcado com
+`serde_bytes` vira `Uint8Array`; `Vec<u8>` comum continua array.
+
+### Vetores e testes
+
+Capturados do TypeScript atual antes de qualquer mudança:
+
+- `onboardEntry`: entrada → ids de tecla e ação, ou `null` para o que não é evento de
+  configuração. Os bytes crus têm de voltar idênticos à entrada.
+- `onboardDump`: sequência de payloads → memórias montadas, ou `null` sem terminador.
+
+`settings_from_slot` não é decodificador de bytes: fica coberto por testes portados para o Rust e
+pelos testes TS que passam a exercitar a ponte.
+
+### Confirmação em hardware
+
+Obrigatória, antes do merge, registrada em `docs/smoke-test-leviathan-v4.md`:
+
+1. Conectar: as quatro memórias aparecem com os mapeamentos que cada uma tem.
+2. **Mapeamento relido.** Numa memória sem macro, mudar o mapeamento de um botão pelo app,
+   aplicar, reconectar e conferir que a tela relê exatamente o que foi escrito.
+3. Trocar de memória pelo mouse: a tela acompanha.
+
+### Defeito conhecido, para o passo 5 — macro em botão do editor é sobrescrita
+
+Uma macro ou tecla de teclado num botão do editor é sobrescrita pelo app, e o mecanismo é este:
+`editorKeySets` inclui todo botão do editor, então `preservedEvents` descarta a entrada sem nome
+desse botão; `settings_from_slot` devolve ao botão o valor da base (não sabe nomear o que há
+ali); e `mappingEvents` escreve esse valor da base por cima. Além disso, `reportedMappings` gera
+entradas `raw:…` que `intendedMappings` nunca gera, então todo apply manda `CONFIG_RESET` e o
+conjunto inteiro.
+
+O mesmo vale para uma macro numa combinação R-Plus `[ativador, alvo]`: `editorKeySets` também
+reconstrói as combinações, então `preservedEvents` descarta a entrada, e `settings_from_slot`
+ignora entradas sem nome de duas teclas — o alvo aparece como `desativado`. Quando o valor
+reconstruído é `desativado`, nada é escrito por cima, mas o `CONFIG_RESET` apaga a macro do
+mesmo jeito.
+
+O defeito existe desde antes da migração; o passo 4 só portou o comportamento com paridade. O
+teste do driver evita o caso de propósito, usando os ids `0x60`/`0x61`, fora do editor.
+Consequência: na sessão, a macro some até desligar o mouse; com `writeProfile`, ela some da flash.
+
+Corrigir exige decidir como o editor apresenta um botão com binding sem nome — decisão de
+produto, pendente do usuário — e mora em `preservedEvents`/`mappingEvents`, portanto no passo 5.
+O roteiro de hardware do passo 4 não grava em memória que guarde macro.
+
+### Entrega
+
+Um plano, um PR: vetores → tipos e decodificação no núcleo → `settings_from_slot` → ponte e
+`coreBridge` → casca reapontada e `onboardConfig.ts` apagado → documentos e roteiro de hardware.

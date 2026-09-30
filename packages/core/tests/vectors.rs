@@ -1,8 +1,8 @@
 use gearhub_core::device::{MouseActionId, MouseSettings};
 use gearhub_core::drivers::leviathan_v4;
 use gearhub_core::protocols::rawm::{
-    RawmError, build_query_event, encode_mapping, encode_mouse_param_body,
-    parse_mouse_param_snapshot, with_protocol_envelope,
+    OnboardConfigCollector, RawmError, build_query_event, decode_onboard_entry, encode_mapping,
+    encode_mouse_param_body, parse_mouse_param_snapshot, with_protocol_envelope,
 };
 use serde::Deserialize;
 
@@ -69,6 +69,41 @@ struct InvalidSnapshotVector {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+struct ExpectedBinding {
+    key_ids: Vec<u8>,
+    action: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct OnboardEntryVector {
+    name: String,
+    entry: String,
+    expected: Option<ExpectedBinding>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ExpectedDumpBinding {
+    key_ids: Vec<u8>,
+    action: Option<String>,
+    raw: String,
+}
+
+#[derive(Deserialize)]
+struct ExpectedSlot {
+    index: u8,
+    bindings: Vec<ExpectedDumpBinding>,
+}
+
+#[derive(Deserialize)]
+struct OnboardDumpVector {
+    name: String,
+    payloads: Vec<String>,
+    expected: Option<Vec<ExpectedSlot>>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct Vectors {
     version: u32,
     envelope: Vec<EnvelopeVector>,
@@ -80,6 +115,8 @@ struct Vectors {
     param_snapshot: Vec<ParamSnapshotVector>,
     invalid_snapshot: Vec<InvalidSnapshotVector>,
     param_apply: Vec<ParamApplyVector>,
+    onboard_entry: Vec<OnboardEntryVector>,
+    onboard_dump: Vec<OnboardDumpVector>,
 }
 
 fn from_hex(value: &str) -> Vec<u8> {
@@ -265,5 +302,92 @@ fn param_apply_matches_the_shared_vectors() {
             "{}",
             vector.name
         );
+    }
+}
+
+#[test]
+fn onboard_entries_match_the_shared_vectors() {
+    let vectors = vectors();
+    require_non_empty(&vectors.onboard_entry, "onboardEntry");
+    for vector in &vectors.onboard_entry {
+        let decoded = decode_onboard_entry(&from_hex(&vector.entry));
+        match (&vector.expected, decoded) {
+            (None, None) => {}
+            (Some(expected), Some(binding)) => {
+                assert_eq!(binding.key_ids, expected.key_ids, "{}", vector.name);
+                assert_eq!(
+                    binding.action.map(|action| action.as_str()),
+                    expected.action.as_deref(),
+                    "{}",
+                    vector.name
+                );
+                assert_eq!(
+                    to_hex(&binding.raw),
+                    vector.entry,
+                    "{}: bytes crus",
+                    vector.name
+                );
+            }
+            (expected, decoded) => panic!(
+                "{}: esperava {:?}, veio {decoded:?}",
+                vector.name,
+                expected.is_some()
+            ),
+        }
+    }
+}
+
+/// (índice, [(ids, ação, bytes crus em hex)]) — o formato em que as duas pontas se comparam.
+type ShapedSlots<'a> = Vec<(u8, Vec<(Vec<u8>, Option<&'a str>, String)>)>;
+
+#[test]
+fn onboard_dumps_match_the_shared_vectors() {
+    let vectors = vectors();
+    require_non_empty(&vectors.onboard_dump, "onboardDump");
+    for vector in &vectors.onboard_dump {
+        let mut collector = OnboardConfigCollector::new();
+        let (last, earlier) = vector.payloads.split_last().expect("payloads");
+        for payload in earlier {
+            assert_eq!(
+                collector.push(&from_hex(payload)),
+                None,
+                "{}: antes do fim",
+                vector.name
+            );
+        }
+        let result = collector.push(&from_hex(last));
+        let shaped: Option<ShapedSlots<'_>> = result.as_ref().map(|slots| {
+            slots
+                .iter()
+                .map(|slot| {
+                    let bindings = slot
+                        .bindings
+                        .iter()
+                        .map(|b| {
+                            (
+                                b.key_ids.clone(),
+                                b.action.map(|a| a.as_str()),
+                                to_hex(&b.raw),
+                            )
+                        })
+                        .collect();
+                    (slot.index, bindings)
+                })
+                .collect()
+        });
+        let expected: Option<ShapedSlots<'_>> = vector.expected.as_ref().map(|slots| {
+            slots
+                .iter()
+                .map(|slot| {
+                    let bindings = slot
+                        .bindings
+                        .iter()
+                        .map(|b| (b.key_ids.clone(), b.action.as_deref(), b.raw.clone()))
+                        .collect();
+                    (slot.index, bindings)
+                })
+                .collect()
+        });
+        assert_eq!(shaped, expected, "{}", vector.name);
     }
 }

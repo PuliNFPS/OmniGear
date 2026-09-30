@@ -1,4 +1,4 @@
-import type { MouseActionId, Peripheral, PeripheralSettings } from '@gearhub/shared';
+import type { OnboardSlotConfig, Peripheral, PeripheralSettings } from '@gearhub/shared';
 
 /** A change the device made on its own, without the app asking for it. */
 export type DeviceReport =
@@ -34,11 +34,8 @@ export interface DeviceDriver {
   switchProfile?(slotIndex: number): Promise<void>;
 }
 
-/** One onboard slot as the device reports it. */
-export interface OnboardProfileReport {
-  index: number;
-  bindings: { keyIds: number[]; action: MouseActionId | null; raw: Uint8Array }[];
-}
+/** One onboard slot as the device reports it. Generated from the core. */
+export type OnboardProfileReport = OnboardSlotConfig;
 
 const APPLY_DELAY_MS = 260;
 const WRITE_DELAY_MS = 520;

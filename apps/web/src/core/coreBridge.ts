@@ -4,6 +4,7 @@ import init, {
   applySettingsToMouseParam as wasmApplySettingsToMouseParam,
   buildQueryEvent as wasmBuildQueryEvent,
   core_version,
+  decodeOnboardEntry as wasmDecodeOnboardEntry,
   decodeReportChunk as wasmDecodeReportChunk,
   describeLeviathanV4 as wasmDescribeLeviathanV4,
   dpiAxes as wasmDpiAxes,
@@ -26,10 +27,12 @@ import init, {
   leviathanShowPowerKeyId as wasmLeviathanShowPowerKeyId,
   leviathanV4Usb as wasmLeviathanV4Usb,
   matchesLeviathanV4 as wasmMatchesLeviathanV4,
+  OnboardConfigCollector as WasmOnboardConfigCollector,
   parseMouseParamState as wasmParseMouseParamState,
   parseNotification as wasmParseNotification,
   queryJson as wasmQueryJson,
   RawEventAssembler as WasmRawEventAssembler,
+  settingsFromSlot as wasmSettingsFromSlot,
   withProtocolEnvelope as wasmWithProtocolEnvelope,
 } from 'gearhub-core-wasm';
 import type {
@@ -37,6 +40,8 @@ import type {
   LeviathanV4Usb,
   MouseActionId,
   MouseSettings,
+  OnboardBinding,
+  OnboardSlotConfig,
   RawmMouseParamState,
 } from '@gearhub/shared';
 import { asRawmError } from './rawmError';
@@ -441,6 +446,33 @@ export class RawEventAssembler {
 
   reset(): void {
     this.inner.reset();
+  }
+}
+
+/**
+ * Monta o dump onboard delimitado. Recebe cada payload 0x14 e devolve as
+ * memórias quando o terminador chega, `null` até lá. O estado mora no núcleo;
+ * este invólucro existe para a forma e para o tipo.
+ */
+export class OnboardConfigCollector {
+  private readonly inner = new WasmOnboardConfigCollector();
+
+  push(payload: Uint8Array): OnboardSlotConfig[] | null {
+    return (this.inner.push(payload) as OnboardSlotConfig[] | null) ?? null;
+  }
+}
+
+/** Uma entrada do dump; `null` para bytes que não são evento de configuração. */
+export function decodeOnboardEntry(entry: Uint8Array): OnboardBinding | null {
+  return (wasmDecodeOnboardEntry(entry) as OnboardBinding | null) ?? null;
+}
+
+/** O que uma memória onboard realmente guarda, aplicado sobre a configuração base. */
+export function settingsFromSlot(base: MouseSettings, slot: OnboardSlotConfig): MouseSettings {
+  try {
+    return wasmSettingsFromSlot(base, slot) as MouseSettings;
+  } catch (error) {
+    throw asRawmError(error);
   }
 }
 
