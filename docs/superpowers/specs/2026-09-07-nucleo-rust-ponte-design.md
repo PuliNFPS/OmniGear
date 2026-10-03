@@ -868,11 +868,11 @@ USB do `connect` (que já chama `matchesLeviathanV4` do núcleo).
 **Apagados:** `session.ts` e `notifications.ts`. `LeviathanV4Driver.ts` continua, porque implementa
 o `DeviceDriver` da casca, mas sem decisão nenhuma: fila, bomba e ouvintes.
 
-**A ponte não perde exportações.** `parseNotification` e `OnboardConfigCollector` deixam de ter uso
-no app, mas continuam: `vectors.test.ts` e `onboardDump.test.ts` leem os vetores `notify` e
-`onboardDump` por eles, e um vetor que só um lado lê não é fonte compartilhada. O knip não reclama:
-roda fora do modo de produção e conta os testes, como já conta para `decodeOnboardEntry`, que só os
-testes usam desde o passo 4.
+**Sai da ponte o que só o driver usava.** `parseNotification` (com o tipo `RawmNotification`),
+`dpiAxes`, `leviathanOnboardSlotCount` e `leviathanShowPowerKeyId` ficam sem consumidor além do
+próprio teste da ponte: a sessão chama o Rust direto. `OnboardConfigCollector` e
+`decodeOnboardEntry` continuam, porque `vectors.test.ts` e `onboardDump.test.ts` leem os vetores
+`onboardEntry` e `onboardDump` por eles, e um vetor que só um lado lê não é fonte compartilhada.
 
 **As sondas não mudam.** `diagnostics.ts` e `writeProbe.ts` usam só o codec, e `captureQuery` tem o
 seu próprio montador de propósito (Decisão 1).

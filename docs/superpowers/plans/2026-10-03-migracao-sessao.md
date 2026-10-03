@@ -13,7 +13,10 @@
 ## Global Constraints
 
 - **O núcleo não faz I/O, é síncrono, não conhece `wasm-bindgen`.** `serde-wasm-bindgen` só na ponte.
-- **Migrar é apagar.** O passo só fecha quando `session.ts` e `notifications.ts` não existem e `LeviathanV4Driver.ts` não importa nenhum encoder, nem `withProtocolEnvelope`, `frameEvent`, `parseNotification`, `OnboardConfigCollector` ou `applySettingsToMouseParam`.
+- **Migrar é apagar.** O passo só fecha quando:
+  - `session.ts` e `notifications.ts` não existem;
+  - `LeviathanV4Driver.ts` não importa nenhum encoder, nem `withProtocolEnvelope`, `frameEvent`, `OnboardConfigCollector` ou `applySettingsToMouseParam`;
+  - a ponte não exporta mais o que só o driver usava: `parseNotification`, `dpiAxes`, `leviathanOnboardSlotCount` e `leviathanShowPowerKeyId`.
 - **Paridade.** Mesmos bytes, na mesma ordem, com as mesmas esperas; mesmos eventos; mesmo ciclo de vida da assinatura. A régua são os vetores da Task 1, capturados do TypeScript atual. As exceções são só as declaradas: as três do spec — `abort()` zera a assinatura, a conferência a mais antes da pausa e o montador único reiniciado num relatório malformado — e as quatro desta execução, listadas em "Desvios declarados na execução", abaixo.
 - **Escopo.** Ficam fora a macro sobrescrita, a proteção do clique esquerdo e a troca de memória ao aplicar. O defeito da macro é portado como está e registrado num vetor.
 - **Mensagens ao usuário idênticas às de hoje.** Os textos estão na tabela `### Erros` do desenho do passo 5, mais `invalid-query-json` (abaixo).
@@ -3031,8 +3034,6 @@ describe('sessão do Leviathan V4 através da ponte', () => {
 });
 ```
 
-O comentário acima de `describe('parseNotification e dpiAxes através da ponte'` cita `notifications.test.ts` e `subscribeToNotifications`, que a Task 7 apaga. Reescreva-o: a sessão do núcleo consome as notificações sem passar pela ponte, e este teste é o que exercita o achatamento de `parseNotification`, que continua lá por causa dos vetores `notify`.
-
 Run: `pnpm --filter @gearhub/web exec vitest run src/core/coreBridge.test.ts`
 Expected: FAIL. Os nomes não existem.
 
@@ -3335,7 +3336,9 @@ git commit -m "feat: expor a sessao do Leviathan V4 pela ponte"
 - Modify: `apps/web/src/hardware/rawm/LeviathanV4Driver.ts`, `connectLeviathanV4.ts`
 - Create: `apps/web/src/hardware/rawm/leviathanV4Harness.ts`
 - Rewrite: `LeviathanV4Driver.test.ts`, `LeviathanV4Driver.state.test.ts`, `LeviathanV4Driver.onboard.test.ts`
-- Modify: `connectLeviathanV4.test.ts`, `apps/web/src/components/DeviceWorkspace.liveDpi.test.tsx`, `apps/web/src/hardware/rawm/vectors.test.ts`, `apps/web/src/core/rawmError.ts` (comentário)
+- Modify: `connectLeviathanV4.test.ts`, `apps/web/src/components/DeviceWorkspace.liveDpi.test.tsx`, `apps/web/src/hardware/rawm/vectors.test.ts`
+- Modify (comentários): `apps/web/src/core/rawmError.ts`, `apps/web/src/hardware/rawm/diagnostics.ts`
+- Modify (sai da ponte o que só o driver usava): `packages/core-wasm/src/lib.rs`, `apps/web/src/core/coreBridge.ts`, `apps/web/src/core/coreBridge.test.ts`
 - Delete: `apps/web/src/hardware/rawm/{session,session.test,notifications,notifications.test,legacySessionRunners}.ts`
 
 **Interfaces:**
@@ -4041,24 +4044,36 @@ Em `apps/web/src/core/rawmError.ts`, os dois comentários citam `subscribeToNoti
 - **Primeiro:** as mensagens são as de antes da migração, e a casca as mostra ao usuário.
 - **Segundo:** o código em `cause` é o que distingue o erro da guarda de memória ativa (`active-slot-changed`) de uma falha de transporte.
 
-- [ ] **Step 6: Procurar restos**
+Em `apps/web/src/hardware/rawm/diagnostics.ts`, o comentário de `captureQuery` diz "Unlike `queryRawmDevice`". Troque por "Unlike the driver's query"; o resto do comentário continua verdadeiro.
 
-Run: `grep -rn "queryRawmDevice\|subscribeToNotifications\|validateRawmIdentity\|legacySessionRunners\|appliedMappings\|editorKeySets\|preservedEvents\|mappingEvents\|ACTION_SAVE_CONFIG_TO_FDS\|from './session'\|from './notifications'" apps/web/src`
+- [ ] **Step 6: Tirar da ponte o que só o driver usava**
+
+Sem o driver antigo, quatro exportações da ponte ficam sem consumidor além do próprio teste da ponte: a sessão chama o Rust direto. Ver "Sai da ponte o que só o driver usava" no desenho do passo 5.
+
+- **`packages/core-wasm/src/lib.rs`:** apague `parse_notification` (`parseNotification`), `dpi_axes` (`dpiAxes`), `leviathan_onboard_slot_count` (`leviathanOnboardSlotCount`) e `leviathan_show_power_key_id` (`leviathanShowPowerKeyId`).
+- **`apps/web/src/core/coreBridge.ts`:** apague os quatro invólucros, o tipo `RawmNotification` e os quatro `import` correspondentes de `'gearhub-core-wasm'`.
+- **`apps/web/src/core/coreBridge.test.ts`:** apague o `describe('parseNotification e dpiAxes através da ponte'` inteiro, com o comentário acima dele. Apague também todo caso que chame `leviathanOnboardSlotCount` ou `leviathanShowPowerKeyId`, e os imports que sobrarem. Antes, confira com `grep -n "leviathanOnboardSlotCount\|leviathanShowPowerKeyId\|parseNotification\|dpiAxes" apps/web/src/core/coreBridge.test.ts` que nenhum desses casos testa outra coisa junto. Se testar, **pare e reporte**.
+
+`OnboardConfigCollector` e `decodeOnboardEntry` ficam: os vetores `onboardDump` e `onboardEntry` são lidos por eles.
+
+- [ ] **Step 7: Procurar restos**
+
+Run: `grep -rn "queryRawmDevice\|subscribeToNotifications\|validateRawmIdentity\|legacySessionRunners\|appliedMappings\|editorKeySets\|preservedEvents\|mappingEvents\|RawmNotification\|parseNotification\|leviathanOnboardSlotCount\|leviathanShowPowerKeyId\|dpiAxes\|from './session'\|from './notifications'" apps/web/src`
+Expected: nenhuma ocorrência. `ACTION_SAVE_CONFIG_TO_FDS` continua de propósito em `writeProbe.ts` e `RawmDiagnosticPage.tsx`, porque as sondas ficam na casca (Decisão 1).
+
+Run: `grep -n "encodeMapping\|encodeConfigReset\|encodeAction\|withProtocolEnvelope\|frameEvent\|OnboardConfigCollector\|applySettingsToMouseParam\|leviathanKeyId" apps/web/src/hardware/rawm/LeviathanV4Driver.ts`
 Expected: nenhuma ocorrência.
 
-Run: `grep -n "encodeMapping\|encodeConfigReset\|encodeAction\|withProtocolEnvelope\|frameEvent\|parseNotification\|OnboardConfigCollector\|applySettingsToMouseParam\|leviathanKeyId" apps/web/src/hardware/rawm/LeviathanV4Driver.ts`
-Expected: nenhuma ocorrência.
+- [ ] **Step 8: Rodar**
 
-- [ ] **Step 7: Rodar**
+Run: `cargo clippy --workspace --all-targets -- -D warnings && pnpm test && pnpm lint && pnpm run audit`
+Expected: PASS, e o knip não aponta export sem uso. Se o knip apontar alguma exportação do `coreBridge` que só os arquivos apagados usavam, **pare e reporte** em vez de apagá-la por conta própria.
 
-Run: `pnpm test && pnpm lint && pnpm run audit`
-Expected: PASS, e o knip não aponta export sem uso. As exportações da ponte que só os testes usam (`parseNotification`, `OnboardConfigCollector`, `dpiAxes`, `leviathanOnboardSlotCount`, `leviathanShowPowerKeyId`) passam, como `decodeOnboardEntry` passa desde o passo 4.
-
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
 pnpm format
-git add apps/web/src
+git add apps/web/src packages/core-wasm/src/lib.rs
 git commit -m "refactor: o driver do Leviathan V4 vira bomba da sessao do nucleo"
 ```
 
