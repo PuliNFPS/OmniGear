@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { applyQueryPatch, fromHex, readProtocolVectors, toHex } from '../../test/vectors';
+import {
+  applyQueryPatch,
+  fromHex,
+  readProtocolVectors,
+  toHex,
+  type StepJson,
+} from '../../test/vectors';
+import {
+  legacyApply,
+  legacyEvents,
+  legacyIdentity,
+  legacyWriteProfile,
+} from './legacySessionRunners';
 import {
   OnboardConfigCollector,
   applySettingsToMouseParam,
@@ -46,6 +58,10 @@ describe('vetores de conformidade do protocolo RAWM', () => {
     requireNonEmpty(vectors.invalidSnapshot, 'invalidSnapshot');
     requireNonEmpty(vectors.onboardEntry, 'onboardEntry');
     requireNonEmpty(vectors.onboardDump, 'onboardDump');
+    requireNonEmpty(vectors.identity, 'identity');
+    requireNonEmpty(vectors.sessionEvents, 'sessionEvents');
+    requireNonEmpty(vectors.sessionApply, 'sessionApply');
+    requireNonEmpty(vectors.sessionWriteProfile, 'sessionWriteProfile');
   });
 
   it.each(vectors.onboardEntry)('entrada onboard: $name', ({ entry, expected }) => {
@@ -104,6 +120,67 @@ describe('vetores de conformidade do protocolo RAWM', () => {
     if (!found) throw new Error(`consulta de vetor desconhecida: ${name}`);
     return found;
   };
+
+  it.each(vectors.identity)(
+    'identidade (driver antigo): $name',
+    ({ query: name, patch, expected }) => {
+      expect(legacyIdentity(applyQueryPatch(query(name), patch))).toEqual(expected);
+    },
+  );
+
+  it.each(vectors.sessionEvents)(
+    'eventos (driver antigo): $name',
+    ({ query: name, patch, reports, expected }) => {
+      expect(legacyEvents(applyQueryPatch(query(name), patch), reports)).toEqual(expected);
+    },
+  );
+
+  it.each(vectors.sessionApply)(
+    'aplicação (driver antigo): $name',
+    async ({ query: name, patch, dump, applies }) => {
+      const steps = await legacyApply(
+        applyQueryPatch(query(name), patch),
+        dump,
+        applies.map(({ settings }) => settings),
+      );
+      expect(steps).toEqual(applies.map(({ expected }) => expected));
+    },
+  );
+
+  it.each(vectors.sessionWriteProfile)(
+    'gravação de perfil (driver antigo): $name',
+    async ({ query: name, patch, dump, slot, settings, expected }) => {
+      expect(
+        await legacyWriteProfile(applyQueryPatch(query(name), patch), dump, slot, settings),
+      ).toEqual(expected);
+    },
+  );
+
+  it('os vetores da sessão dizem o que os nomes dizem', () => {
+    const waits = (steps: StepJson[]) => steps.filter((step) => 'wait' in step).length;
+    const sent = (steps: StepJson[]) =>
+      steps.map((step) => ('send' in step ? step.send : '')).join('|');
+    const apply = (name: string) => {
+      const found = vectors.sessionApply.find((vector) => vector.name === name);
+      if (!found) throw new Error(`vetor ausente: ${name}`);
+      return found.applies.map(({ expected }) => expected);
+    };
+    const [onlyParameters] = apply('com dump e mapeamentos iguais: só parâmetros');
+    expect(waits(onlyParameters)).toBe(1);
+    const [full] = apply('sem dump: aplicação completa');
+    expect(waits(full)).toBeGreaterThan(8);
+    const [first, second] = apply('duas aplicações seguidas: a segunda só com parâmetros');
+    expect(waits(first)).toBeGreaterThan(8);
+    expect(waits(second)).toBe(1);
+    const [preserved] = apply('mapeamento mudado: completa, e o que o app não nomeia volta');
+    expect(sent(preserved)).toContain('0308050160010203');
+    const [macro] = apply('macro num botão do editor: sempre completa, e a macro não volta');
+    expect(waits(macro)).toBeGreaterThan(8);
+    expect(sent(macro)).not.toContain('030805010a010203');
+    const write = vectors.sessionWriteProfile.find(({ slot }) => slot === 1);
+    expect(sent(write!.expected)).toContain('0308050161040506');
+    expect(sent(write!.expected)).not.toContain('0308050160010203');
+  });
 
   it.each(vectors.paramSnapshot)('snapshot: $name', ({ query: name, expected }) => {
     expect(toHex(encodeMouseParamBody(parseMouseParamState(query(name))))).toBe(expected);

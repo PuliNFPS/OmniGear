@@ -26,7 +26,7 @@ function integer(value: unknown): number | null {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0 ? value : null;
 }
 
-function validateRawmIdentity(raw: Record<string, unknown>): RawmIdentity {
+export function validateRawmIdentity(raw: Record<string, unknown>): RawmIdentity {
   const deviceName = typeof raw.dn === 'string' ? raw.dn.trim() : '';
   const productId = integer(raw.pi);
   const vendorId = integer(raw.vi);
