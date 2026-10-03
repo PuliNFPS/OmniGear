@@ -809,6 +809,9 @@ Corrigir exige decidir como o editor apresenta um botão com binding sem nome �
 produto, pendente do usuário — e mora em `preservedEvents`/`mappingEvents`, portanto no passo 5.
 O roteiro de hardware do passo 4 não grava em memória que guarde macro.
 
+(Revisto em 2026-10-03: o passo 5 porta o defeito com paridade, e a correção vem no PR seguinte —
+ver `### Escopo: migração com paridade`, no desenho do passo 5.)
+
 ### Entrega
 
 Um plano, um PR: vetores → tipos e decodificação no núcleo → `settings_from_slot` → ponte e
@@ -867,7 +870,9 @@ o `DeviceDriver` da casca, mas sem decisão nenhuma: fila, bomba e ouvintes.
 
 **A ponte não perde exportações.** `parseNotification` e `OnboardConfigCollector` deixam de ter uso
 no app, mas continuam: `vectors.test.ts` e `onboardDump.test.ts` leem os vetores `notify` e
-`onboardDump` por eles, e um vetor que só um lado lê não é fonte compartilhada.
+`onboardDump` por eles, e um vetor que só um lado lê não é fonte compartilhada. O knip não reclama:
+roda fora do modo de produção e conta os testes, como já conta para `decodeOnboardEntry`, que só os
+testes usam desde o passo 4.
 
 **As sondas não mudam.** `diagnostics.ts` e `writeProbe.ts` usam só o codec, e `captureQuery` tem o
 seu próprio montador de propósito (Decisão 1).
@@ -878,20 +883,22 @@ chamada. Contradiz a fronteira — o estado do dispositivo é do núcleo.
 ### A interface
 
 ```rust
+#[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum Step {
     Send(HidCommand),
-    Wait(Duration),
+    Wait { ms: u32 },
 }
 
+#[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum SessionEvent {
     /// Resposta à consulta pendente.
     Queried(RawmIdentity),
-    /// O mouse trocou o DPI pelo próprio botão.
+    /// O mouse anunciou um DPI, com os dois eixos diferentes de zero.
     Dpi(DpiAxes),
-    /// O mouse trocou de memória.
-    ActiveSlot(u8),
+    /// O mouse anunciou a memória ativa — mesmo a que já era.
+    ActiveSlot { index: u8 },
     /// O dump terminou de chegar.
-    OnboardSlots(Vec<OnboardSlotConfig>),
+    OnboardSlots { slots: Vec<OnboardSlotConfig> },
 }
 
 impl LeviathanV4Session {
@@ -912,7 +919,9 @@ impl LeviathanV4Session {
 Na ponte, `LeviathanV4Session` é uma classe `wasm-bindgen` que envolve a do núcleo, como o montador
 (Decisão 4). Passos e eventos atravessam como objetos comuns por `to_js`, com tipo gerado por
 `ts-rs` (`{ kind: 'send', reportId, data }`, `{ kind: 'wait', ms }`, e um `kind` por evento); os
-bytes de `send` atravessam como `Uint8Array` (Decisão 5). `feed_report` ignora relatórios com id
+bytes de `send` atravessam como `Uint8Array` (Decisão 5). A etiqueta interna do `serde` não
+serializa variante-tupla cujo conteúdo seja número ou sequência, e o `ts-rs` não conhece
+`Duration`: por isso toda variante que não carrega uma struct é de campos nomeados. `feed_report` ignora relatórios com id
 diferente de 0 — é o núcleo que sabe em que canal o mouse fala.
 
 **Índices de memória contam de 0 no núcleo** (`oci`, `OnboardSlotConfig.index`, `ActiveSlot`,
@@ -960,6 +969,13 @@ try {
 A consulta usa a mesma bomba e, depois dela, espera o evento `Queried` contra o tempo-limite; se o
 tempo esgota, a casca chama `abort()`.
 
+**O que `abort()` faz em cada estado.** Sem operação em andamento, nada — é o caso da casca chamando
+depois que o próprio `next_step` já falhou com `ActiveSlotChanged`. Com uma escrita em andamento, a
+encerra e zera a assinatura (abaixo). Com uma consulta pendente, a encerra e não toca a assinatura —
+um tempo-limite do `readState` não mexe no `appliedMappings` hoje. A consulta pendente também se
+encerra sozinha, sem depender da casca: quando o `Queried` sai e quando um `feed_report` falha por
+causa dela.
+
 **Concorrência.** A fila continua em TypeScript: é encadeamento de promessas. O núcleo, ainda
 assim, recusa um `begin_*` enquanto outra operação está em andamento, para que uma casca de desktop
 não intercale operações sem perceber.
@@ -973,7 +989,9 @@ aplicação produz o mesmo resultado de hoje.
 
 **Guarda de memória ativa.** Vale só durante `applyToSession`, como hoje; não na gravação de perfil
 nem na consulta. A revisão de memória só sobe com uma notificação de memória diferente e dentro do
-número de memórias; uma fora da faixa é ignorada por inteiro. O núcleo confere em toda chamada de
+número de memórias; uma fora da faixa é ignorada por inteiro. Toda notificação dentro da faixa,
+mesmo a que repete a memória ativa, emite `ActiveSlot` e recalcula a assinatura — só a revisão
+depende de a memória ter mudado. O núcleo confere em toda chamada de
 `next_step`, antes de decidir qualquer passo, inclusive a que devolveria `None` — o equivalente ao
 `checkSlot()` depois da última pausa. Há uma conferência a mais, entre o último envio de um evento e
 a sua pausa de 8 ms; ela só antecipa a falha em 8 ms, e nenhum byte muda.
@@ -1041,8 +1059,9 @@ Capturados do TypeScript atual **antes** de qualquer mudança, lidos pelo `cargo
 
 - `identity`: resposta da consulta → identidade, ou código de erro (sem `dn`, `dn` em branco, sem
   `pi`, `crc` 0 e 1).
-- `sessionEvents`: fluxo de relatórios → eventos (DPI, troca de memória, memória fora da faixa
-  ignorada, polling ignorado, dump montado, relatório malformado sem consulta pendente ignorado).
+- `sessionEvents`: fluxo de relatórios → eventos (DPI, DPI zerado sem evento, troca de memória,
+  a mesma memória repetida, memória fora da faixa ignorada, polling ignorado, dump montado,
+  relatório malformado sem consulta pendente ignorado).
 - `sessionApply`: consulta, dump opcional e configurações → a sequência exata de passos, relatório a
   relatório e com as esperas. Casos: sem dump (completa); com dump e mapeamentos iguais (só
   parâmetros); mapeamento mudado, com eventos preservados fora do editor; binding sem nome em botão
