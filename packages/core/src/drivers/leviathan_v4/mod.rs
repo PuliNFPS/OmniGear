@@ -5,6 +5,7 @@ mod description;
 mod identity;
 mod keys;
 mod lod;
+mod mappings;
 mod session;
 mod slot_settings;
 

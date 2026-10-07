@@ -1,6 +1,6 @@
 use gearhub_core::device::{MouseActionId, MouseSettings};
 use gearhub_core::drivers::leviathan_v4;
-use gearhub_core::drivers::leviathan_v4::{LeviathanV4Session, SessionEvent};
+use gearhub_core::drivers::leviathan_v4::{LeviathanV4Session, SessionEvent, Step};
 use gearhub_core::protocols::rawm::{
     OnboardConfigCollector, RawmError, build_query_event, decode_onboard_entry, encode_mapping,
     encode_mouse_param_body, frame_event, parse_identity, parse_mouse_param_snapshot,
@@ -131,6 +131,32 @@ struct SessionEventsVector {
 }
 
 #[derive(Deserialize)]
+struct SessionApplyCase {
+    settings: MouseSettings,
+    expected: Vec<serde_json::Value>,
+}
+
+#[derive(Deserialize)]
+struct SessionApplyVector {
+    name: String,
+    query: String,
+    patch: serde_json::Map<String, serde_json::Value>,
+    dump: Option<Vec<String>>,
+    applies: Vec<SessionApplyCase>,
+}
+
+#[derive(Deserialize)]
+struct SessionWriteProfileVector {
+    name: String,
+    query: String,
+    patch: serde_json::Map<String, serde_json::Value>,
+    dump: Option<Vec<String>>,
+    slot: u32,
+    settings: MouseSettings,
+    expected: Vec<serde_json::Value>,
+}
+
+#[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Vectors {
     version: u32,
@@ -147,6 +173,8 @@ struct Vectors {
     onboard_dump: Vec<OnboardDumpVector>,
     identity: Vec<IdentityVector>,
     session_events: Vec<SessionEventsVector>,
+    session_apply: Vec<SessionApplyVector>,
+    session_write_profile: Vec<SessionWriteProfileVector>,
 }
 
 fn from_hex(value: &str) -> Vec<u8> {
@@ -514,5 +542,70 @@ fn session_events_match_the_shared_vectors() {
             events.extend(read.iter().map(shaped_event));
         }
         assert_eq!(events, vector.expected, "{}", vector.name);
+    }
+}
+
+fn notify_report(kind: u8, payload: &[u8]) -> [u8; 64] {
+    let mut body = vec![0x0b, 0, kind];
+    body.extend_from_slice(payload);
+    delivered(&with_protocol_envelope(&body, false).expect("notificação"))[0]
+}
+
+fn feed_dump(session: &mut LeviathanV4Session, dump: Option<&Vec<String>>) {
+    for payload in dump.into_iter().flatten() {
+        session
+            .feed_report(0, &notify_report(0x14, &from_hex(payload)))
+            .expect("dump");
+    }
+}
+
+/// Os passos até o fim, na forma dos vetores.
+fn drain(session: &mut LeviathanV4Session, name: &str) -> Vec<serde_json::Value> {
+    let mut steps = Vec::new();
+    while let Some(step) = session
+        .next_step()
+        .unwrap_or_else(|error| panic!("{name}: {error:?}"))
+    {
+        steps.push(match step {
+            Step::Send(command) => serde_json::json!({ "send": to_hex(&command.data) }),
+            Step::Wait { ms } => serde_json::json!({ "wait": ms }),
+        });
+    }
+    steps
+}
+
+#[test]
+fn session_applies_match_the_shared_vectors() {
+    let vectors = vectors();
+    require_non_empty(&vectors.session_apply, "sessionApply");
+    for vector in &vectors.session_apply {
+        let mut session = connected(&patched(query(&vectors, &vector.query), &vector.patch));
+        feed_dump(&mut session, vector.dump.as_ref());
+        for (index, apply) in vector.applies.iter().enumerate() {
+            session
+                .begin_apply(&apply.settings)
+                .unwrap_or_else(|error| panic!("{}: {error:?}", vector.name));
+            let name = format!("{} #{index}", vector.name);
+            assert_eq!(drain(&mut session, &name), apply.expected, "{name}");
+        }
+    }
+}
+
+#[test]
+fn session_profile_writes_match_the_shared_vectors() {
+    let vectors = vectors();
+    require_non_empty(&vectors.session_write_profile, "sessionWriteProfile");
+    for vector in &vectors.session_write_profile {
+        let mut session = connected(&patched(query(&vectors, &vector.query), &vector.patch));
+        feed_dump(&mut session, vector.dump.as_ref());
+        session
+            .begin_write_profile(vector.slot, &vector.settings)
+            .unwrap_or_else(|error| panic!("{}: {error:?}", vector.name));
+        assert_eq!(
+            drain(&mut session, &vector.name),
+            vector.expected,
+            "{}",
+            vector.name
+        );
     }
 }
