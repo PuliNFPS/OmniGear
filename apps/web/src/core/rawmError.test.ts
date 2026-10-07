@@ -6,7 +6,7 @@ import { parseQueryJson, withProtocolEnvelope } from './coreBridge';
  * Exercita o caminho completo, com o WASM real: um `RawmError` do núcleo
  * atravessa a ponte como `JsError`, chega aqui como `Error` cuja mensagem é o
  * código estável, e `asRawmError` a reveste com o texto em português sem
- * perder o código em `cause`. Um erro de digitação em qualquer uma das catorze
+ * perder o código em `cause`. Um erro de digitação em qualquer uma das vinte e cinco
  * strings de `RawmError::code()` deixaria de bater com `MESSAGES` e o erro
  * atravessaria sem tradução, com o código cru como mensagem — sem que nenhuma
  * suíte notasse. Este teste é o que notaria.
@@ -112,5 +112,33 @@ describe('erro RAWM através da ponte', () => {
   it('deixa passar intacto um erro com dois-pontos que não vem do núcleo', () => {
     const original = new TypeError('TypeError: x is not a function');
     expect(asRawmError(original)).toBe(original);
+  });
+});
+
+describe('erros da sessão', () => {
+  it.each([
+    ['invalid-identity', 'Resposta RAWM sem identidade válida.'],
+    ['invalid-query-json', 'Identificação RAWM inválida.'],
+    ['invalid-onboard-index', 'Indice onboard ausente ou invalido na resposta do mouse.'],
+    ['invalid-profile-slot', 'Indice de perfil RAWM invalido.'],
+    ['invalid-rplus-activator', 'Ativador R-Plus RAWM invalido.'],
+    [
+      'active-slot-changed',
+      'A memória ativa mudou durante a aplicação. Revise o perfil antes de aplicar novamente.',
+    ],
+    ['operation-in-progress', 'Outra operação RAWM ainda está em andamento.'],
+    ['not-queried', 'O mouse ainda não respondeu à consulta.'],
+  ])('%s vira o texto de sempre, com o código em cause', (code, text) => {
+    const error = asRawmError(new Error(code));
+    expect(error.message).toBe(text);
+    expect(error.cause).toBe(code);
+  });
+
+  it.each([
+    ['unrecognized-mouse:RAWM: X', 'Mouse RAWM conectado nao reconhecido: RAWM: X.'],
+    ['unknown-button:inexistente', 'Botao RAWM desconhecido: inexistente.'],
+    ['unknown-rplus-button:lateral', 'Botao R-Plus RAWM desconhecido: lateral.'],
+  ])('%s leva o dado para o texto, mesmo com ":" no dado', (raw, text) => {
+    expect(asRawmError(new Error(raw)).message).toBe(text);
   });
 });

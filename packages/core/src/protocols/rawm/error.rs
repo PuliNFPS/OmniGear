@@ -34,6 +34,28 @@ pub enum RawmError {
     InvalidDpiStages,
     /// Campo que a descrição do aparelho exige ausente ou do tipo errado.
     IncompleteQuery { field: &'static str },
+    /// Resposta de consulta sem nome ou sem id de produto.
+    InvalidIdentity,
+    /// Resposta de consulta cujo texto não é um objeto JSON.
+    InvalidQueryJson,
+    /// O mouse que respondeu não é um Leviathan V4; `name` é o nome que ele declarou.
+    UnrecognizedMouse { name: String },
+    /// `oci` ausente, fracionário ou além das memórias que o mouse tem.
+    InvalidOnboardIndex,
+    /// Memória de destino além das que o mouse tem.
+    InvalidProfileSlot,
+    /// Botão do editor que este aparelho não tem.
+    UnknownButton { button: String },
+    /// Ativador da camada R-Plus que este aparelho não tem.
+    InvalidRPlusActivator,
+    /// Botão da camada R-Plus que este aparelho não tem.
+    UnknownRPlusButton { button: String },
+    /// O mouse trocou de memória no meio de uma aplicação à sessão.
+    ActiveSlotChanged,
+    /// Uma operação começou antes de a anterior terminar.
+    OperationInProgress,
+    /// Uma escrita antes de a primeira resposta ligar a sessão.
+    NotQueried,
 }
 
 impl RawmError {
@@ -54,14 +76,27 @@ impl RawmError {
             Self::InvalidPerformanceMode => "invalid-performance-mode",
             Self::InvalidDpiStages => "invalid-dpi-stages",
             Self::IncompleteQuery { .. } => "incomplete-query",
+            Self::InvalidIdentity => "invalid-identity",
+            Self::InvalidQueryJson => "invalid-query-json",
+            Self::UnrecognizedMouse { .. } => "unrecognized-mouse",
+            Self::InvalidOnboardIndex => "invalid-onboard-index",
+            Self::InvalidProfileSlot => "invalid-profile-slot",
+            Self::UnknownButton { .. } => "unknown-button",
+            Self::InvalidRPlusActivator => "invalid-rplus-activator",
+            Self::UnknownRPlusButton { .. } => "unknown-rplus-button",
+            Self::ActiveSlotChanged => "active-slot-changed",
+            Self::OperationInProgress => "operation-in-progress",
+            Self::NotQueried => "not-queried",
         }
     }
 
     /// O dado que acompanha o código, quando há um. A ponte o envia junto
     /// (`código:dado`), e a casca o usa para montar a mensagem.
-    pub fn detail(&self) -> Option<&'static str> {
+    pub fn detail(&self) -> Option<&str> {
         match self {
             Self::InvalidSnapshotField { field } | Self::IncompleteQuery { field } => Some(field),
+            Self::UnrecognizedMouse { name } => Some(name),
+            Self::UnknownButton { button } | Self::UnknownRPlusButton { button } => Some(button),
             _ => None,
         }
     }
@@ -100,6 +135,35 @@ mod tests {
             RawmError::IncompleteQuery { field: "top" }.code(),
             "incomplete-query"
         );
+        assert_eq!(RawmError::InvalidIdentity.code(), "invalid-identity");
+        assert_eq!(RawmError::InvalidQueryJson.code(), "invalid-query-json");
+        assert_eq!(
+            RawmError::UnrecognizedMouse { name: "X".into() }.code(),
+            "unrecognized-mouse"
+        );
+        assert_eq!(
+            RawmError::InvalidOnboardIndex.code(),
+            "invalid-onboard-index"
+        );
+        assert_eq!(RawmError::InvalidProfileSlot.code(), "invalid-profile-slot");
+        assert_eq!(
+            RawmError::UnknownButton { button: "x".into() }.code(),
+            "unknown-button"
+        );
+        assert_eq!(
+            RawmError::InvalidRPlusActivator.code(),
+            "invalid-rplus-activator"
+        );
+        assert_eq!(
+            RawmError::UnknownRPlusButton { button: "x".into() }.code(),
+            "unknown-rplus-button"
+        );
+        assert_eq!(RawmError::ActiveSlotChanged.code(), "active-slot-changed");
+        assert_eq!(
+            RawmError::OperationInProgress.code(),
+            "operation-in-progress"
+        );
+        assert_eq!(RawmError::NotQueried.code(), "not-queried");
     }
 
     #[test]
@@ -109,5 +173,27 @@ mod tests {
             Some("lod")
         );
         assert_eq!(RawmError::EventTooLong.detail(), None);
+        assert_eq!(
+            RawmError::UnrecognizedMouse {
+                name: "RAWM HS Receiver".into()
+            }
+            .detail(),
+            Some("RAWM HS Receiver")
+        );
+        assert_eq!(
+            RawmError::UnknownButton {
+                button: "central".into()
+            }
+            .detail(),
+            Some("central")
+        );
+        assert_eq!(
+            RawmError::UnknownRPlusButton {
+                button: "dpi".into()
+            }
+            .detail(),
+            Some("dpi")
+        );
+        assert_eq!(RawmError::ActiveSlotChanged.detail(), None);
     }
 }

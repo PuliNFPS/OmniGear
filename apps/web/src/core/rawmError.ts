@@ -20,6 +20,18 @@ const MESSAGES: Record<string, string> = {
   'incomplete-query': 'Consulta RAWM incompleta: {campo}.',
   'invalid-performance-mode': 'Modo de desempenho RAWM invalido.',
   'invalid-dpi-stages': 'Configuracao de DPI RAWM invalida.',
+  'invalid-identity': 'Resposta RAWM sem identidade válida.',
+  'invalid-query-json': 'Identificação RAWM inválida.',
+  'unrecognized-mouse': 'Mouse RAWM conectado nao reconhecido: {campo}.',
+  'invalid-onboard-index': 'Indice onboard ausente ou invalido na resposta do mouse.',
+  'invalid-profile-slot': 'Indice de perfil RAWM invalido.',
+  'unknown-button': 'Botao RAWM desconhecido: {campo}.',
+  'invalid-rplus-activator': 'Ativador R-Plus RAWM invalido.',
+  'unknown-rplus-button': 'Botao R-Plus RAWM desconhecido: {campo}.',
+  'active-slot-changed':
+    'A memória ativa mudou durante a aplicação. Revise o perfil antes de aplicar novamente.',
+  'operation-in-progress': 'Outra operação RAWM ainda está em andamento.',
+  'not-queried': 'O mouse ainda não respondeu à consulta.',
 };
 
 /**
