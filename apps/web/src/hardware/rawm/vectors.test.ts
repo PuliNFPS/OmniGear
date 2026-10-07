@@ -12,6 +12,7 @@ import {
   legacyIdentity,
   legacyWriteProfile,
 } from './legacySessionRunners';
+import { connectedSession, drainSteps, notifyReport, shapeEvent } from '../../test/sessionVectors';
 import {
   OnboardConfigCollector,
   applySettingsToMouseParam,
@@ -23,6 +24,7 @@ import {
   encodeMapping,
   leviathanButtonId,
   leviathanKeyId,
+  parseRawmIdentity,
   withProtocolEnvelope,
 } from '../../core/coreBridge';
 
@@ -153,6 +155,47 @@ describe('vetores de conformidade do protocolo RAWM', () => {
       expect(
         await legacyWriteProfile(applyQueryPatch(query(name), patch), dump, slot, settings),
       ).toEqual(expected);
+    },
+  );
+
+  it.each(vectors.identity)('identidade (núcleo): $name', ({ query: name, patch, expected }) => {
+    const raw = applyQueryPatch(query(name), patch);
+    if (expected === null) {
+      expect(() => parseRawmIdentity(raw)).toThrow('Resposta RAWM sem identidade válida.');
+      return;
+    }
+    const { deviceName, productId, vendorId, crcSupported } = parseRawmIdentity(raw);
+    expect({ deviceName, productId, vendorId, crcSupported }).toEqual(expected);
+  });
+
+  it.each(vectors.sessionEvents)(
+    'eventos (núcleo): $name',
+    ({ query: name, patch, reports, expected }) => {
+      const session = connectedSession(applyQueryPatch(query(name), patch));
+      const events = reports.flatMap((report) => session.feedReport(0, fromHex(report)));
+      expect(events.map(shapeEvent)).toEqual(expected);
+    },
+  );
+
+  it.each(vectors.sessionApply)(
+    'aplicação (núcleo): $name',
+    ({ query: name, patch, dump, applies }) => {
+      const session = connectedSession(applyQueryPatch(query(name), patch));
+      for (const payload of dump ?? []) session.feedReport(0, notifyReport(0x14, fromHex(payload)));
+      for (const { settings, expected } of applies) {
+        session.beginApply(settings);
+        expect(drainSteps(session)).toEqual(expected);
+      }
+    },
+  );
+
+  it.each(vectors.sessionWriteProfile)(
+    'gravação de perfil (núcleo): $name',
+    ({ query: name, patch, dump, slot, settings, expected }) => {
+      const session = connectedSession(applyQueryPatch(query(name), patch));
+      for (const payload of dump ?? []) session.feedReport(0, notifyReport(0x14, fromHex(payload)));
+      session.beginWriteProfile(slot, settings);
+      expect(drainSteps(session)).toEqual(expected);
     },
   );
 

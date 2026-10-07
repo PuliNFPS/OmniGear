@@ -182,6 +182,91 @@ pub fn settings_from_slot(base: JsValue, slot: JsValue) -> Result<JsValue, JsErr
     to_js(&leviathan_v4::settings_from_slot(&base, &slot))
 }
 
+#[wasm_bindgen(js_name = parseRawmIdentity)]
+pub fn parse_rawm_identity(raw: JsValue) -> Result<JsValue, JsError> {
+    let raw: serde_json::Value = from_js(raw)?;
+    to_js(&rawm::parse_identity(raw).map_err(js_error)?)
+}
+
+#[wasm_bindgen(js_name = leviathanQueryTimeoutMs)]
+pub fn leviathan_query_timeout_ms() -> u32 {
+    leviathan_v4::QUERY_TIMEOUT_MS
+}
+
+/// A sessão atravessa como classe, como o montador (Decisão 4); passos e
+/// eventos voltam como objetos comuns.
+#[wasm_bindgen(js_name = LeviathanV4Session)]
+pub struct WasmLeviathanV4Session {
+    inner: leviathan_v4::LeviathanV4Session,
+}
+
+#[wasm_bindgen(js_class = LeviathanV4Session)]
+impl WasmLeviathanV4Session {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        Self {
+            inner: leviathan_v4::LeviathanV4Session::new(),
+        }
+    }
+
+    #[wasm_bindgen(js_name = feedReport)]
+    pub fn feed_report(&mut self, report_id: u8, report: &[u8]) -> Result<JsValue, JsError> {
+        to_js(
+            &self
+                .inner
+                .feed_report(report_id, report)
+                .map_err(js_error)?,
+        )
+    }
+
+    #[wasm_bindgen(js_name = beginQuery)]
+    pub fn begin_query(&mut self, epoch_seconds: u64) -> Result<(), JsError> {
+        self.inner.begin_query(epoch_seconds).map_err(js_error)
+    }
+
+    #[wasm_bindgen(js_name = beginApply)]
+    pub fn begin_apply(&mut self, settings: JsValue) -> Result<(), JsError> {
+        let settings: MouseSettings = from_js(settings)?;
+        self.inner.begin_apply(&settings).map_err(js_error)
+    }
+
+    #[wasm_bindgen(js_name = beginWriteProfile)]
+    pub fn begin_write_profile(&mut self, slot: u32, settings: JsValue) -> Result<(), JsError> {
+        let settings: MouseSettings = from_js(settings)?;
+        self.inner
+            .begin_write_profile(slot, &settings)
+            .map_err(js_error)
+    }
+
+    #[wasm_bindgen(js_name = nextStep)]
+    pub fn next_step(&mut self) -> Result<JsValue, JsError> {
+        to_js(&self.inner.next_step().map_err(js_error)?)
+    }
+
+    pub fn abort(&mut self) {
+        self.inner.abort();
+    }
+
+    #[wasm_bindgen(js_name = activeSlot)]
+    pub fn active_slot(&self) -> Option<u8> {
+        self.inner.active_slot()
+    }
+
+    pub fn dpi(&self) -> Result<JsValue, JsError> {
+        to_js(&self.inner.dpi())
+    }
+
+    pub fn slots(&self) -> Result<JsValue, JsError> {
+        to_js(&self.inner.slots())
+    }
+}
+
+impl Default for WasmLeviathanV4Session {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// O enum com dados não atravessa `wasm-bindgen`; esta é a forma achatada:
 /// um array de três posições fixas — `[kind, value, payload]` — em vez de um
 /// `struct` com getters. Nenhuma notificação decodificada precisa de

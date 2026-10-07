@@ -24,25 +24,32 @@ import init, {
   leviathanKeyId as wasmLeviathanKeyId,
   leviathanLodMillimetres as wasmLeviathanLodMillimetres,
   leviathanOnboardSlotCount as wasmLeviathanOnboardSlotCount,
+  leviathanQueryTimeoutMs as wasmLeviathanQueryTimeoutMs,
   leviathanShowPowerKeyId as wasmLeviathanShowPowerKeyId,
+  LeviathanV4Session as WasmLeviathanV4Session,
   leviathanV4Usb as wasmLeviathanV4Usb,
   matchesLeviathanV4 as wasmMatchesLeviathanV4,
   OnboardConfigCollector as WasmOnboardConfigCollector,
   parseMouseParamState as wasmParseMouseParamState,
   parseNotification as wasmParseNotification,
+  parseRawmIdentity as wasmParseRawmIdentity,
   queryJson as wasmQueryJson,
   RawEventAssembler as WasmRawEventAssembler,
   settingsFromSlot as wasmSettingsFromSlot,
   withProtocolEnvelope as wasmWithProtocolEnvelope,
 } from 'gearhub-core-wasm';
 import type {
+  DpiAxes,
   LeviathanV4Description,
   LeviathanV4Usb,
   MouseActionId,
   MouseSettings,
   OnboardBinding,
   OnboardSlotConfig,
+  RawmIdentity,
   RawmMouseParamState,
+  SessionEvent,
+  SessionStep,
 } from '@gearhub/shared';
 import { asRawmError } from './rawmError';
 
@@ -473,6 +480,89 @@ export function settingsFromSlot(base: MouseSettings, slot: OnboardSlotConfig): 
     return wasmSettingsFromSlot(base, slot) as MouseSettings;
   } catch (error) {
     throw asRawmError(error);
+  }
+}
+
+/** A identidade que uma resposta de consulta declara. */
+export function parseRawmIdentity(raw: Record<string, unknown>): RawmIdentity {
+  try {
+    return wasmParseRawmIdentity(raw) as RawmIdentity;
+  } catch (error) {
+    throw asRawmError(error);
+  }
+}
+
+/** Quanto esperar a resposta de uma consulta, contando a abertura do dispositivo. */
+export function leviathanQueryTimeoutMs(): number {
+  return wasmLeviathanQueryTimeoutMs();
+}
+
+/**
+ * A sessão do Leviathan V4, que vive no núcleo: o que o mouse tem e o que
+ * enviar a seguir. Este invólucro só traduz o erro tipado e dá o tipo gerado
+ * ao que a ponte devolve.
+ */
+export class LeviathanV4Session {
+  private readonly inner = new WasmLeviathanV4Session();
+
+  /** O que um relatório que chegou significa. Só falha com uma consulta pendente. */
+  feedReport(reportId: number, report: Uint8Array): SessionEvent[] {
+    try {
+      return this.inner.feedReport(reportId, report) as SessionEvent[];
+    } catch (error) {
+      throw asRawmError(error);
+    }
+  }
+
+  beginQuery(epochSeconds = Math.floor(Date.now() / 1000)): void {
+    try {
+      this.inner.beginQuery(BigInt(epochSeconds));
+    } catch (error) {
+      throw asRawmError(error);
+    }
+  }
+
+  beginApply(settings: MouseSettings): void {
+    try {
+      this.inner.beginApply(settings);
+    } catch (error) {
+      throw asRawmError(error);
+    }
+  }
+
+  /** `slot` conta de 0. */
+  beginWriteProfile(slot: number, settings: MouseSettings): void {
+    try {
+      this.inner.beginWriteProfile(slot, settings);
+    } catch (error) {
+      throw asRawmError(error);
+    }
+  }
+
+  /** O próximo passo; `null` quando a operação acabou. */
+  nextStep(): SessionStep | null {
+    try {
+      return (this.inner.nextStep() as SessionStep | null) ?? null;
+    } catch (error) {
+      throw asRawmError(error);
+    }
+  }
+
+  abort(): void {
+    this.inner.abort();
+  }
+
+  /** A memória ativa, contando de 0; `null` antes da primeira resposta. */
+  activeSlot(): number | null {
+    return this.inner.activeSlot() ?? null;
+  }
+
+  dpi(): DpiAxes | null {
+    return (this.inner.dpi() as DpiAxes | null) ?? null;
+  }
+
+  slots(): OnboardSlotConfig[] | null {
+    return (this.inner.slots() as OnboardSlotConfig[] | null) ?? null;
   }
 }
 
