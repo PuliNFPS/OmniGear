@@ -5,6 +5,7 @@ mod description;
 mod identity;
 mod keys;
 mod lod;
+mod session;
 mod slot_settings;
 
 pub use apply::apply_settings;
@@ -14,4 +15,5 @@ pub use identity::{
 };
 pub use keys::{SHOW_POWER_KEY_ID, button_id, encode_show_power, key_id};
 pub use lod::{NumericRange, lod_millimetres, lod_range};
+pub use session::{LeviathanV4Session, QUERY_TIMEOUT_MS, SessionEvent, Step};
 pub use slot_settings::settings_from_slot;

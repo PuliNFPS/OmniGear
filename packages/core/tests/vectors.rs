@@ -1,8 +1,10 @@
 use gearhub_core::device::{MouseActionId, MouseSettings};
 use gearhub_core::drivers::leviathan_v4;
+use gearhub_core::drivers::leviathan_v4::{LeviathanV4Session, SessionEvent};
 use gearhub_core::protocols::rawm::{
     OnboardConfigCollector, RawmError, build_query_event, decode_onboard_entry, encode_mapping,
-    encode_mouse_param_body, parse_identity, parse_mouse_param_snapshot, with_protocol_envelope,
+    encode_mouse_param_body, frame_event, parse_identity, parse_mouse_param_snapshot,
+    with_protocol_envelope,
 };
 use serde::Deserialize;
 
@@ -120,6 +122,15 @@ struct IdentityVector {
 }
 
 #[derive(Deserialize)]
+struct SessionEventsVector {
+    name: String,
+    query: String,
+    patch: serde_json::Map<String, serde_json::Value>,
+    reports: Vec<String>,
+    expected: Vec<serde_json::Value>,
+}
+
+#[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Vectors {
     version: u32,
@@ -135,6 +146,7 @@ struct Vectors {
     onboard_entry: Vec<OnboardEntryVector>,
     onboard_dump: Vec<OnboardDumpVector>,
     identity: Vec<IdentityVector>,
+    session_events: Vec<SessionEventsVector>,
 }
 
 fn from_hex(value: &str) -> Vec<u8> {
@@ -434,5 +446,73 @@ fn onboard_dumps_match_the_shared_vectors() {
                 .collect()
         });
         assert_eq!(shaped, expected, "{}", vector.name);
+    }
+}
+
+const PREAMBLE: [u8; 4] = [0xff; 4];
+
+/// Um evento como chega ao transporte: com o preâmbulo, no canal virtual.
+fn delivered(event: &[u8]) -> Vec<[u8; 64]> {
+    let mut chunk = PREAMBLE.to_vec();
+    chunk.extend_from_slice(event);
+    frame_event(&chunk, true)
+}
+
+/// Uma sessão ligada pela resposta que um mouse com `raw` mandaria.
+fn connected(raw: &serde_json::Value) -> LeviathanV4Session {
+    let mut session = LeviathanV4Session::new();
+    session.begin_query(0).expect("consulta");
+    while session.next_step().expect("passo").is_some() {}
+    let mut body = vec![0x02, 0];
+    body.extend(serde_json::to_vec(raw).expect("json"));
+    body.push(0);
+    let mut events = Vec::new();
+    for report in delivered(&with_protocol_envelope(&body, false).expect("resposta")) {
+        events.extend(session.feed_report(0, &report).expect("resposta lida"));
+    }
+    assert!(
+        matches!(events.last(), Some(SessionEvent::Queried(_))),
+        "a resposta não ligou a sessão"
+    );
+    session
+}
+
+/// O evento na forma dos vetores: bytes crus em hex.
+fn shaped_event(event: &SessionEvent) -> serde_json::Value {
+    use serde_json::json;
+    match event {
+        SessionEvent::Queried(identity) => {
+            json!({ "kind": "queried", "deviceName": identity.device_name })
+        }
+        SessionEvent::Dpi(axes) => json!({ "kind": "dpi", "x": axes.x, "y": axes.y }),
+        SessionEvent::ActiveSlot { index } => json!({ "kind": "active-slot", "index": index }),
+        SessionEvent::OnboardSlots { slots } => json!({
+            "kind": "onboard-slots",
+            "slots": slots.iter().map(|slot| json!({
+                "index": slot.index,
+                "bindings": slot.bindings.iter().map(|binding| json!({
+                    "keyIds": binding.key_ids,
+                    "action": binding.action.map(|action| action.as_str()),
+                    "raw": to_hex(&binding.raw),
+                })).collect::<Vec<_>>(),
+            })).collect::<Vec<_>>(),
+        }),
+    }
+}
+
+#[test]
+fn session_events_match_the_shared_vectors() {
+    let vectors = vectors();
+    require_non_empty(&vectors.session_events, "sessionEvents");
+    for vector in &vectors.session_events {
+        let mut session = connected(&patched(query(&vectors, &vector.query), &vector.patch));
+        let mut events = Vec::new();
+        for report in &vector.reports {
+            let read = session
+                .feed_report(0, &from_hex(report))
+                .unwrap_or_else(|error| panic!("{}: {error:?}", vector.name));
+            events.extend(read.iter().map(shaped_event));
+        }
+        assert_eq!(events, vector.expected, "{}", vector.name);
     }
 }
