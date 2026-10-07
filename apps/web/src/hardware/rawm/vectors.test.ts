@@ -177,6 +177,15 @@ describe('vetores de conformidade do protocolo RAWM', () => {
     const [macro] = apply('macro num botão do editor: sempre completa, e a macro não volta');
     expect(waits(macro)).toBeGreaterThan(8);
     expect(sent(macro)).not.toContain('030805010a010203');
+    const [unnamed] = apply(
+      'entrada sem nome fora do editor força o reset, mesmo com o editor igual',
+    );
+    expect(waits(unnamed)).toBeGreaterThan(8);
+    expect(sent(unnamed)).toContain('0308050160010203');
+    const [rPlusFull] = apply('R-Plus ligado, sem dump: o par entra no conjunto completo');
+    expect(waits(rPlusFull)).toBe(waits(full) + 1);
+    const [rPlusParameters] = apply('R-Plus ligado, com o par no dump: só parâmetros');
+    expect(waits(rPlusParameters)).toBe(1);
     const write = vectors.sessionWriteProfile.find(({ slot }) => slot === 1);
     expect(sent(write!.expected)).toContain('0308050161040506');
     expect(sent(write!.expected)).not.toContain('0308050160010203');

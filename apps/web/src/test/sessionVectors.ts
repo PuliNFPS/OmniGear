@@ -14,9 +14,11 @@ export function deliveredReports(event: Uint8Array): Uint8Array[] {
 
 /** Uma notificação do tipo `type`. As dos vetores cabem num relatório. */
 export function notifyReport(type: number, payload: ArrayLike<number>): Uint8Array {
-  return deliveredReports(
+  const reports = deliveredReports(
     withProtocolEnvelope([CMD_NOTIFY, 0, type, ...Array.from(payload)], false),
-  )[0];
+  );
+  if (reports.length !== 1) throw new Error('notificação maior que um relatório');
+  return reports[0];
 }
 
 /** A resposta de consulta que um mouse com `raw` mandaria, com o terminador nulo do firmware. */

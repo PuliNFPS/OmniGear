@@ -683,6 +683,28 @@
       "query": "leviathan-v4-captura",
       "patch": { "pi": -1 },
       "expected": null
+    },
+    {
+      "name": "pi zero é válido",
+      "query": "leviathan-v4-captura",
+      "patch": { "pi": 0 },
+      "expected": {
+        "deviceName": "LEVIATHAN V4",
+        "productId": 0,
+        "vendorId": 6421,
+        "crcSupported": true
+      }
+    },
+    {
+      "name": "crc 0 não conta",
+      "query": "leviathan-v4-captura",
+      "patch": { "crc": 0 },
+      "expected": {
+        "deviceName": "LEVIATHAN V4",
+        "productId": 9034,
+        "vendorId": 6421,
+        "crcSupported": false
+      }
     }
   ],
   "sessionEvents": [
@@ -781,6 +803,15 @@
         "c089ffffffff0b050020030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
       ],
       "expected": [{ "kind": "dpi", "x": 800, "y": 800 }]
+    },
+    {
+      "name": "DPI com um eixo zerado não vira evento",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "reports": [
+        "c08bffffffff0b070600004006000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      ],
+      "expected": []
     }
   ],
   "sessionApply": [
@@ -1483,6 +1514,280 @@
             { "wait": 8 },
             {
               "send": "c09103112475f1030c18010d020e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "entrada sem nome fora do editor força o reset, mesmo com o editor igual",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "dump": [
+        "00",
+        "030a16010a0001010000",
+        "030a16010b0001020000",
+        "030a16010c0001030000",
+        "030a16010e0001040000",
+        "030a16010f0001050000",
+        "030c18011002010000000000",
+        "030c18010d020e0000000000",
+        "0308050160010203",
+        "ff"
+      ],
+      "applies": [
+        {
+          "settings": {
+            "buttons": {
+              "esquerdo": "clique-esquerdo",
+              "direito": "clique-direito",
+              "central": "clique-central",
+              "lateral-traseiro": "voltar",
+              "lateral-dianteiro": "avancar",
+              "dpi": "dpi-ciclo"
+            },
+            "dpiStages": [
+              { "id": "estagio-1", "x": 400, "y": 400 },
+              { "id": "estagio-2", "x": 800, "y": 800 },
+              { "id": "estagio-3", "x": 1600, "y": 1600 },
+              { "id": "estagio-4", "x": 3200, "y": 3200 }
+            ],
+            "activeStageId": "estagio-2",
+            "independentAxes": false,
+            "pollingRate": 4000,
+            "performanceMode": "gaming-plus",
+            "parameters": {
+              "motionSync": true,
+              "angleSnapping": false,
+              "rippleControl": false,
+              "wirelessTurbo": true,
+              "liftOffDistance": 2,
+              "sensorRotation": 0,
+              "debounce": 0,
+              "sleepTimeout": 1
+            },
+            "rPlus": {
+              "activatorButtonId": "lateral-dianteiro",
+              "buttons": {
+                "esquerdo": "desativado",
+                "direito": "desativado",
+                "central": "desativado",
+                "lateral-traseiro": "desativado",
+                "lateral-dianteiro": "desativado",
+                "dpi": "desativado"
+              }
+            }
+          },
+          "expected": [
+            {
+              "send": "c088030824fcf0030303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c0be034424eee1033f152003a00f3008900120034006800c00000000000000000003000000000002070000000000000001000000080102060400000000080001"
+            },
+            {
+              "send": "c0860481828684000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24f67d030a16010a00010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f240661030a16010b00010200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24779e030a16010c00010300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24a790030a16010e00010400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f2437e2030a16010f00010500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c091031124a65f030c18011002010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c09103112475f1030c18010d020e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08d030d2455bb030805016001020300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "R-Plus ligado, sem dump: o par entra no conjunto completo",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "dump": null,
+      "applies": [
+        {
+          "settings": {
+            "buttons": {
+              "esquerdo": "clique-esquerdo",
+              "direito": "clique-direito",
+              "central": "clique-central",
+              "lateral-traseiro": "voltar",
+              "lateral-dianteiro": "avancar",
+              "dpi": "dpi-ciclo"
+            },
+            "dpiStages": [
+              { "id": "estagio-1", "x": 400, "y": 400 },
+              { "id": "estagio-2", "x": 800, "y": 800 },
+              { "id": "estagio-3", "x": 1600, "y": 1600 },
+              { "id": "estagio-4", "x": 3200, "y": 3200 }
+            ],
+            "activeStageId": "estagio-2",
+            "independentAxes": false,
+            "pollingRate": 4000,
+            "performanceMode": "gaming-plus",
+            "parameters": {
+              "motionSync": true,
+              "angleSnapping": false,
+              "rippleControl": false,
+              "wirelessTurbo": true,
+              "liftOffDistance": 2,
+              "sensorRotation": 0,
+              "debounce": 0,
+              "sleepTimeout": 1
+            },
+            "rPlus": {
+              "activatorButtonId": "lateral-dianteiro",
+              "buttons": {
+                "esquerdo": "desativado",
+                "direito": "desativado",
+                "central": "dpi-aumentar",
+                "lateral-traseiro": "desativado",
+                "lateral-dianteiro": "desativado",
+                "dpi": "desativado"
+              }
+            }
+          },
+          "expected": [
+            {
+              "send": "c088030824fcf0030303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c0be034424eee1033f152003a00f3008900120034006800c00000000000000000003000000000002070000000000000001000000080102060400000000080001"
+            },
+            {
+              "send": "c0860481828684000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24f67d030a16010a00010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f240661030a16010b00010200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24779e030a16010c00010300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24a790030a16010e00010400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f2437e2030a16010f00010500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c091031124a65f030c18011002010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c092031224d9b9030d18020f0c020200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c09103112475f1030c18010d020e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "R-Plus ligado, com o par no dump: só parâmetros",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "dump": [
+        "00",
+        "030a16010a0001010000",
+        "030a16010b0001020000",
+        "030a16010c0001030000",
+        "030a16010e0001040000",
+        "030a16010f0001050000",
+        "030c18011002010000000000",
+        "030d18020f0c02020000000000",
+        "030c18010d020e0000000000",
+        "ff"
+      ],
+      "applies": [
+        {
+          "settings": {
+            "buttons": {
+              "esquerdo": "clique-esquerdo",
+              "direito": "clique-direito",
+              "central": "clique-central",
+              "lateral-traseiro": "voltar",
+              "lateral-dianteiro": "avancar",
+              "dpi": "dpi-ciclo"
+            },
+            "dpiStages": [
+              { "id": "estagio-1", "x": 400, "y": 400 },
+              { "id": "estagio-2", "x": 800, "y": 800 },
+              { "id": "estagio-3", "x": 1600, "y": 1600 },
+              { "id": "estagio-4", "x": 3200, "y": 3200 }
+            ],
+            "activeStageId": "estagio-2",
+            "independentAxes": false,
+            "pollingRate": 500,
+            "performanceMode": "gaming-plus",
+            "parameters": {
+              "motionSync": true,
+              "angleSnapping": false,
+              "rippleControl": false,
+              "wirelessTurbo": true,
+              "liftOffDistance": 2,
+              "sensorRotation": 0,
+              "debounce": 0,
+              "sleepTimeout": 1
+            },
+            "rPlus": {
+              "activatorButtonId": "lateral-dianteiro",
+              "buttons": {
+                "esquerdo": "desativado",
+                "direito": "desativado",
+                "central": "dpi-aumentar",
+                "lateral-traseiro": "desativado",
+                "lateral-dianteiro": "desativado",
+                "dpi": "desativado"
+              }
+            }
+          },
+          "expected": [
+            {
+              "send": "c0be0344246b16033f152003f4013008900120034006800c00000000000000000003000000000002070000000000000001000000080102060400000000080001"
+            },
+            {
+              "send": "c0860481828684000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
             },
             { "wait": 8 }
           ]
