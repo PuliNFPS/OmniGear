@@ -2,7 +2,7 @@ use gearhub_core::device::{MouseActionId, MouseSettings};
 use gearhub_core::drivers::leviathan_v4;
 use gearhub_core::protocols::rawm::{
     OnboardConfigCollector, RawmError, build_query_event, decode_onboard_entry, encode_mapping,
-    encode_mouse_param_body, parse_mouse_param_snapshot, with_protocol_envelope,
+    encode_mouse_param_body, parse_identity, parse_mouse_param_snapshot, with_protocol_envelope,
 };
 use serde::Deserialize;
 
@@ -104,6 +104,23 @@ struct OnboardDumpVector {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+struct ExpectedIdentity {
+    device_name: String,
+    product_id: u32,
+    vendor_id: Option<u32>,
+    crc_supported: bool,
+}
+
+#[derive(Deserialize)]
+struct IdentityVector {
+    name: String,
+    query: String,
+    patch: serde_json::Map<String, serde_json::Value>,
+    expected: Option<ExpectedIdentity>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct Vectors {
     version: u32,
     envelope: Vec<EnvelopeVector>,
@@ -117,6 +134,7 @@ struct Vectors {
     param_apply: Vec<ParamApplyVector>,
     onboard_entry: Vec<OnboardEntryVector>,
     onboard_dump: Vec<OnboardDumpVector>,
+    identity: Vec<IdentityVector>,
 }
 
 fn from_hex(value: &str) -> Vec<u8> {
@@ -333,6 +351,33 @@ fn onboard_entries_match_the_shared_vectors() {
                 vector.name,
                 expected.is_some()
             ),
+        }
+    }
+}
+
+#[test]
+fn identities_match_the_shared_vectors() {
+    let vectors = vectors();
+    require_non_empty(&vectors.identity, "identity");
+    for vector in &vectors.identity {
+        let raw = patched(query(&vectors, &vector.query), &vector.patch);
+        match (parse_identity(raw), &vector.expected) {
+            (Ok(identity), Some(expected)) => {
+                assert_eq!(
+                    identity.device_name, expected.device_name,
+                    "{}",
+                    vector.name
+                );
+                assert_eq!(identity.product_id, expected.product_id, "{}", vector.name);
+                assert_eq!(identity.vendor_id, expected.vendor_id, "{}", vector.name);
+                assert_eq!(
+                    identity.crc_supported, expected.crc_supported,
+                    "{}",
+                    vector.name
+                );
+            }
+            (Err(RawmError::InvalidIdentity), None) => {}
+            (result, _) => panic!("{}: veio {result:?}", vector.name),
         }
     }
 }

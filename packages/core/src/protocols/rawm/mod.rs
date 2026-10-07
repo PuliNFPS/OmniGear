@@ -22,4 +22,7 @@ pub use onboard::{
     OnboardBinding, OnboardConfigCollector, OnboardSlotConfig, decode_onboard_entry,
 };
 pub use param_snapshot::{MouseParamSnapshot, encode_mouse_param_body, parse_mouse_param_snapshot};
-pub use query::{build_query_event, is_query_result, query_json};
+pub use query::{
+    RawmIdentity, build_query_event, is_query_result, parse_identity, parse_query_answer,
+    query_json,
+};
