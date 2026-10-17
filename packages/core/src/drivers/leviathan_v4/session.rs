@@ -311,12 +311,12 @@ impl LeviathanV4Session {
 
     /// Encerra a operação em andamento. Sem operação, nada. Uma escrita
     /// encerrada zera a assinatura. Uma consulta encerrada não mexe nela, mas
-    /// descarta a resposta pela metade que o montador guarda: uma resposta
-    /// cortada pelo tempo-limite não pode emendar bytes na próxima.
+    /// reinicia o montador: uma resposta cortada pelo tempo-limite não pode
+    /// emendar bytes na próxima. O reset descarta qualquer meio-evento do
+    /// montador compartilhado, não só a resposta.
     pub fn abort(&mut self) {
         match self.operation.take() {
             Some(Operation::Write(_)) => self.applied = None,
-            // Uma resposta cortada pelo tempo-limite não pode emendar bytes na próxima.
             Some(Operation::Query(_)) => self.assembler.reset(),
             None => {}
         }

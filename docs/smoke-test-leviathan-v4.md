@@ -457,3 +457,28 @@ O item 3 não foi feito: o Leviathan V4 troca de memória por uma função de fi
 botão (`FUNCTION_NEXT_ONBOARD` e afins, ver `docs/rawm-onboard-config.md`), e nenhum botão
 estava ligado a ela. O que ele exercitaria — a notificação `0x22` — não mudou neste passo e já
 foi confirmado no mouse em 2026-09-17 (seção das notificações, acima).
+
+## Passo 5 — roteiro de confirmação (pendente)
+
+O passo 5 moveu para o núcleo a sessão do driver: o leitor do fluxo de entrada, a consulta,
+a memória ativa, a assinatura do que o mouse guarda e a decisão de cada envio, com as
+pausas. Os bytes e as esperas estão fixados pelos vetores `sessionApply` e
+`sessionWriteProfile`, capturados do driver TypeScript anterior; o que falta é o mouse
+confirmar. Nenhum passo grava em memória que guarde macro (defeito conhecido, portado como
+está).
+
+1. **Conectar.** Nome, DPI, memória ativa e as quatro memórias com os mapeamentos de cada
+   uma — o leitor único pegou o dump.
+2. **Botões do mouse.** Trocar o DPI e a memória pelo mouse: a tela acompanha.
+3. **Só parâmetros.** Aplicar só DPI e polling: os botões continuam funcionando (um evento
+   só, sem `CONFIG_RESET`).
+4. **Mapeamento na sessão.** Mudar um botão e aplicar à sessão: funciona; desligar e religar
+   o mouse devolve o que está na flash.
+5. **Gravar.** Gravar numa memória sem macro e reconectar: a tela relê exatamente o que foi
+   gravado, e o indicador de bateria sobrevive.
+6. **Sondas.** Rodar a página de diagnóstico e a sonda de escrita.
+
+A troca de memória no meio de uma aplicação não é provocável à mão (a aplicação dura cerca
+de 150 ms) e fica com os testes.
+
+Resultado: _preencher após o teste._

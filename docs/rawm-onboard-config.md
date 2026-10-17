@@ -28,8 +28,9 @@ NOTIFY_TYPE_MOUSE_ONBOARD_INDEX = 0x22
 ```
 
 Chega como evento `CMD_NOTIFY` (`0x0b`), com o tipo no índice 2 e o payload a partir do 3 —
-exatamente a forma que `notifications.ts` já decodifica. Hoje esses tipos caem no `default`
-e são descartados.
+exatamente a forma que a sessão do núcleo decodifica (`LeviathanV4Session::feed_report`, em
+`packages/core/src/drivers/leviathan_v4/session.rs`). Antes da sessão, esses tipos caíam no
+`default` e eram descartados.
 
 Como _CONFIG_ type, `0x14` é `CONFIG_TYPE_MOUSE_QUICK_DROP`, outra coisa. A confusão entre
 os dois espaços de constantes é o que gerou a descrição errada no doc anterior.
@@ -82,9 +83,11 @@ cima, abaixo é para baixo.
 byte o que `buildQueryEvent()` já monta. Depois de enviar para um não-receptor, o
 fabricante apenas marca `querying_more_result = true` e **espera**.
 
-Consequência: **o mouse já despeja a config onboard a cada connect que o app faz hoje.**
-`queryRawmDevice` resolve no primeiro `0x02` e dá `unsubscribe`, jogando o dump fora. Ler
-os binds não exige comando novo — exige continuar ouvindo.
+Consequência: **o mouse já despeja a config onboard a cada connect que o app faz.** A
+consulta antiga resolvia no primeiro `0x02` e dava `unsubscribe`, jogando o dump fora. Ler
+os binds não exige comando novo — exige continuar ouvindo. Hoje um único leitor, a sessão do
+núcleo (`LeviathanV4Session` em `packages/core/src/drivers/leviathan_v4/session.rs`), vê o
+fluxo desde antes da consulta, e a consulta não descarta mais o dump.
 
 ## 5. Trocar o perfil ativo: não encontrado no lado do mouse
 

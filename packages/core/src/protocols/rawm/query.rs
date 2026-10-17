@@ -65,8 +65,7 @@ pub struct RawmIdentity {
     pub raw: Value,
 }
 
-/// Um id USB: inteiro, não negativo. Ids têm 16 bits; um valor além de `u32`
-/// conta como ausente.
+/// Um id USB: inteiro, não negativo; um valor além de `u32` conta como ausente.
 fn usb_id(value: Option<&Value>) -> Option<u32> {
     value
         .and_then(integer)
@@ -74,7 +73,8 @@ fn usb_id(value: Option<&Value>) -> Option<u32> {
 }
 
 /// A identidade que a resposta declara. O nome é aparado; sem nome ou sem
-/// produto não há identidade. Reproduz o `validateRawmIdentity` de `session.ts`.
+/// produto não há identidade. Os vetores `identity` de `rawm-protocol.json`
+/// fixam a paridade com o driver TypeScript anterior.
 pub fn parse_identity(raw: Value) -> Result<RawmIdentity, RawmError> {
     let device_name = raw
         .get("dn")

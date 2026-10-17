@@ -599,6 +599,10 @@ O passo 0 é novo, e os demais absorvem os arquivos que faltavam.
 5. **Sessão:** `LeviathanV4Driver.ts` sob a interface de passos puxados acima, mais a
    decodificação de `session.ts`. O maior e o mais arriscado. Sondas reapontadas.
    **Confirmação em hardware.**
+   **Implementado em 2026-10-17** pelo plano `docs/superpowers/plans/2026-10-03-migracao-sessao.md`,
+   aguardando a confirmação em hardware do roteiro em `docs/smoke-test-leviathan-v4.md`:
+   `session.ts` e `notifications.ts` foram apagados, e `LeviathanV4Driver.ts` só executa os
+   passos da sessão do núcleo.
 
 A barra de conclusão de cada passo continua a de `## Como verificar cada passo`: a lógica
 existe em Rust com os testes portados, o TypeScript **apagou** a sua, as duas suítes passam,
@@ -971,10 +975,12 @@ tempo esgota, a casca chama `abort()`.
 
 **O que `abort()` faz em cada estado.** Sem operação em andamento, nada — é o caso da casca chamando
 depois que o próprio `next_step` já falhou com `ActiveSlotChanged`. Com uma escrita em andamento, a
-encerra e zera a assinatura (abaixo). Com uma consulta pendente, a encerra e não toca a assinatura —
-um tempo-limite do `readState` não mexe no `appliedMappings` hoje. A consulta pendente também se
-encerra sozinha, sem depender da casca: quando o `Queried` sai e quando um `feed_report` falha por
-causa dela.
+encerra e zera a assinatura (abaixo). Com uma consulta pendente, a encerra, não toca a assinatura —
+um tempo-limite do `readState` não mexe no `appliedMappings` hoje — e reinicia o montador. No TS
+cada consulta tinha o seu montador; sem o reset, uma resposta cortada pelo tempo-limite emendaria
+bytes na próxima. O reset descarta qualquer meio-evento do montador compartilhado, não só a
+resposta. A consulta pendente também se encerra sozinha, sem depender da casca: quando o `Queried`
+sai e quando um `feed_report` falha por causa dela.
 
 **Concorrência.** A fila continua em TypeScript: é encadeamento de promessas. O núcleo, ainda
 assim, recusa um `begin_*` enquanto outra operação está em andamento, para que uma casca de desktop
@@ -1039,6 +1045,7 @@ em `rawmError.ts`:
 | `UnknownRPlusButton { button }` | `unknown-rplus-button`    | Botao R-Plus RAWM desconhecido: {campo}.                                               |
 | `OperationInProgress`           | `operation-in-progress`   | Outra operação RAWM ainda está em andamento. (nova; a fila impede que apareça)         |
 | `NotQueried`                    | `not-queried`             | O mouse ainda não respondeu à consulta. (nova; escrever antes da primeira consulta)    |
+| `InvalidQueryJson`              | `invalid-query-json`      | Identificação RAWM inválida. (ver "Desvios declarados na execução")                    |
 
 Nome e botão são dinâmicos, então as variantes com dado passam a carregar `String`, e `detail()`
 passa de `Option<&'static str>` para `Option<&str>`.
@@ -1096,6 +1103,41 @@ Obrigatória, antes do merge, registrada em `docs/smoke-test-leviathan-v4.md`:
 
 A troca de memória no meio de uma aplicação não é provocável à mão — a aplicação dura cerca de
 150 ms — e fica com os testes. Nenhum passo grava em memória que guarde macro.
+
+### Desvios declarados na execução
+
+O desenho acima não os previa. Cada um foi decidido durante a execução do plano e vale como
+exceção nomeada à paridade:
+
+1. **`InvalidQueryJson`** (`invalid-query-json`, "Identificação RAWM inválida."). Hoje uma
+   resposta que não é JSON mostra a mensagem do `SyntaxError` do navegador, e uma que é JSON mas
+   não é objeto mostra "Identificação RAWM inválida.". As duas passam a mostrar o segundo texto.
+2. **Configuração inválida falha no `begin_*`, antes de qualquer byte.** Isso cobre botão
+   desconhecido, ativador R-Plus, modo de desempenho e estágios de DPI. Hoje a aplicação completa
+   já mandou o `CONFIG_RESET` quando o modo falha, e o `writeProfile` já mandou o reset e o `SAVE`
+   de abertura. Só toca caminhos de erro que o editor não produz. Os blocos continuam decididos
+   quando começam; a conferência é um ensaio.
+3. **`begin_write_profile(slot: u32)`, e não `u8`.** O `wasm-bindgen` trunca o número para o tipo
+   do parâmetro, e com `u8` a memória 257 viraria a 1.
+4. **A checagem de tipo `isMouseSettings` não zera mais a assinatura** quando falha. O caminho é
+   inalcançável: este driver só recebe configuração de mouse.
+5. **Corte dos ids USB.** `pi` e `vi` são lidos como `u32`. Um valor acima disso conta como
+   ausente: `pi` recusa a identidade e `vi` vira nulo. O TypeScript aceitava qualquer inteiro
+   não negativo; ids USB têm 16 bits.
+6. **Aparar o nome.** `str::trim` do Rust e `String.prototype.trim` do JavaScript diferem em
+   U+0085 e U+FEFF. O firmware manda ASCII.
+7. **`abort()` de uma consulta pendente reinicia o montador.** No TypeScript cada consulta tinha
+   o seu montador. Sem o reset, uma resposta cortada pelo tempo-limite emendaria bytes na
+   próxima. O reset descarta qualquer meio-evento do montador compartilhado, não só a resposta.
+8. **Limite de cima do número da memória.** `writeProfile` recusa na casca `slotIndex > 2 ** 32`,
+   além de não inteiro e `< 1`. O glue do `wasm-bindgen` passa o número a um `i32` e daria a
+   volta. O driver antigo limitava por cima com o número de memórias.
+
+**A geração da bomba.** Uma consulta que estoura o tempo com um envio ainda preso não pode abortar
+nem roubar passos da operação seguinte: o envio velho falharia tarde, quando a sessão já estaria
+com outra operação. Por isso a casca numera as bombas. A geração sobe quando a consulta termina
+por qualquer caminho — resposta, falha por relatório estranho, tempo-limite, falha de envio —, e
+não só no tempo-limite. A bomba de uma geração antiga para sem tocar a sessão.
 
 ### Entrega
 
