@@ -597,7 +597,7 @@ O passo 0 é novo, e os demais absorvem os arquivos que faltavam.
    confirmado em hardware pelo roteiro em `docs/smoke-test-leviathan-v4.md`:
    `onboardConfig.ts` foi apagado e a duplicata `declaredLength` fechou.
 5. **Sessão:** `LeviathanV4Driver.ts` sob a interface de passos puxados acima, mais a
-   decodificação de `session.ts`. O maior e o mais arriscado. Sondas reapontadas.
+   decodificação de `session.ts`. O maior e o mais arriscado. As sondas não mudam (Decisão 1).
    **Confirmação em hardware.**
    **Implementado em 2026-10-17** pelo plano `docs/superpowers/plans/2026-10-03-migracao-sessao.md`,
    aguardando a confirmação em hardware do roteiro em `docs/smoke-test-leviathan-v4.md`:
@@ -911,7 +911,8 @@ impl LeviathanV4Session {
         -> Result<Vec<SessionEvent>, RawmError>;
     pub fn begin_query(&mut self, epoch_seconds: u64) -> Result<(), RawmError>;
     pub fn begin_apply(&mut self, settings: &MouseSettings) -> Result<(), RawmError>;
-    pub fn begin_write_profile(&mut self, slot: u8, settings: &MouseSettings)
+    // `slot: u32`, e não `u8`: ver o desvio 3, em "Desvios declarados na execução".
+    pub fn begin_write_profile(&mut self, slot: u32, settings: &MouseSettings)
         -> Result<(), RawmError>;
     pub fn next_step(&mut self) -> Result<Option<Step>, RawmError>;
     pub fn abort(&mut self);
@@ -1111,12 +1112,15 @@ exceção nomeada à paridade:
 
 1. **`InvalidQueryJson`** (`invalid-query-json`, "Identificação RAWM inválida."). Hoje uma
    resposta que não é JSON mostra a mensagem do `SyntaxError` do navegador, e uma que é JSON mas
-   não é objeto mostra "Identificação RAWM inválida.". As duas passam a mostrar o segundo texto.
+   não é objeto mostra "Identificação RAWM inválida.". Na consulta da sessão, as duas passam a
+   mostrar o segundo texto. A sonda `captureQuery` (`diagnostics.ts`) continua no
+   `parseQueryJson` da casca e mostra o `SyntaxError` (Decisão 1).
 2. **Configuração inválida falha no `begin_*`, antes de qualquer byte.** Isso cobre botão
    desconhecido, ativador R-Plus, modo de desempenho e estágios de DPI. Hoje a aplicação completa
    já mandou o `CONFIG_RESET` quando o modo falha, e o `writeProfile` já mandou o reset e o `SAVE`
    de abertura. Só toca caminhos de erro que o editor não produz. Os blocos continuam decididos
-   quando começam; a conferência é um ensaio.
+   quando começam; a conferência é um ensaio. Um `begin_write_profile` recusado não toca a
+   assinatura, porque nada foi enviado.
 3. **`begin_write_profile(slot: u32)`, e não `u8`.** O `wasm-bindgen` trunca o número para o tipo
    do parâmetro, e com `u8` a memória 257 viraria a 1.
 4. **A checagem de tipo `isMouseSettings` não zera mais a assinatura** quando falha. O caminho é

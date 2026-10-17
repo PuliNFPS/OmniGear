@@ -6,9 +6,9 @@ import { parseQueryJson, withProtocolEnvelope } from './coreBridge';
  * Exercita o caminho completo, com o WASM real: um `RawmError` do núcleo
  * atravessa a ponte como `JsError`, chega aqui como `Error` cuja mensagem é o
  * código estável, e `asRawmError` a reveste com o texto em português sem
- * perder o código em `cause`. Só alguns códigos de `RawmError::code()`
- * atravessam o WASM real aqui; os demais são conferidos pelo teste de códigos do
- * Rust e pela tabela de `MESSAGES`. Um código que não batesse com `MESSAGES`
+ * perder o código em `cause`. Só alguns códigos atravessam o WASM real aqui; o
+ * teste de `code()` do Rust fixa a string do lado do núcleo, e o casamento com
+ * `MESSAGES` é mantido à mão. Um código que não batesse com `MESSAGES`
  * atravessaria sem tradução, com o código cru como mensagem.
  */
 describe('erro RAWM através da ponte', () => {

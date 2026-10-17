@@ -473,7 +473,7 @@ impl LeviathanV4Session {
     fn advance(&mut self, write: &mut Write) -> Result<Option<Step>, RawmError> {
         loop {
             // Antes de qualquer decisão: antes de cada relatório, depois de
-            // cada pausa e antes do fim — o `checkSlot()` do driver.
+            // cada pausa e antes do fim — o `checkSlot()` do driver TypeScript anterior.
             if write
                 .guard
                 .is_some_and(|revision| revision != self.slot_revision)

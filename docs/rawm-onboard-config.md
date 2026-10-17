@@ -29,8 +29,8 @@ NOTIFY_TYPE_MOUSE_ONBOARD_INDEX = 0x22
 
 Chega como evento `CMD_NOTIFY` (`0x0b`), com o tipo no índice 2 e o payload a partir do 3 —
 exatamente a forma que a sessão do núcleo decodifica (`LeviathanV4Session::feed_report`, em
-`packages/core/src/drivers/leviathan_v4/session.rs`). Antes da sessão, esses tipos caíam no
-`default` e eram descartados.
+`packages/core/src/drivers/leviathan_v4/session.rs`). Na época desta pesquisa (2026-09-07),
+esses tipos caíam no `default` e eram descartados.
 
 Como _CONFIG_ type, `0x14` é `CONFIG_TYPE_MOUSE_QUICK_DROP`, outra coisa. A confusão entre
 os dois espaços de constantes é o que gerou a descrição errada no doc anterior.
@@ -163,7 +163,7 @@ captura real é `ocs = [0x81, 0x82, 0x86, 0x84]` — quatro slots, cores diferen
 
 Não é um mapa de ocupado/vazio, e este projeto acerta ao não tratá-lo como tal: usa `ocs`
 apenas para **contar** os slots (`onboardSlotCount`) e guarda os bytes opacos no snapshot
-(`mouseParamSnapshot.ts`). Quem diz se um slot tem conteúdo é o dump `0x14`.
+(`packages/core/src/protocols/rawm/param_snapshot.rs`). Quem diz se um slot tem conteúdo é o dump `0x14`.
 
 **Consequência prática:** escolher uma memória no hub do fabricante pode escrever a cor de
 LED daquele slot via `0x15`. O mouse reage visivelmente, o que é fácil de ler como "ele
@@ -237,12 +237,13 @@ driver usando o WASM real; a alteração não foi validada por gravação em har
 ## 6. O que o app ainda não sabe representar
 
 O decodificador do fabricante também lê `CONFIG_TYPE_MACRO`, `MACRO_APPEND`,
-`MOUSE_KEY_TYPE_KBD`, `MEDIA`, `AC_PAN` e `FUNCTION_SHELL_CMD`. A tabela `actions` de
-`LeviathanV4Driver.ts` tem 11 entradas e não cobre nada disso.
+`MOUSE_KEY_TYPE_KBD`, `MEDIA`, `AC_PAN` e `FUNCTION_SHELL_CMD`. A tabela ação↔bytes do
+núcleo (`packages/core/src/protocols/rawm/actions.rs`) tem 11 entradas e não cobre nada
+disso.
 
 Isso importa por um motivo destrutivo: se um slot com macro for lido e depois regravado,
-`writeProfile` manda `CONFIG_RESET` e reconstrói só o que `mappingEvents` conhece — o macro
-some da flash. Quem for implementar a leitura precisa **guardar os bytes crus** das
+`writeProfile` manda `CONFIG_RESET` e reconstrói só o que o conjunto do editor
+(`packages/core/src/drivers/leviathan_v4/mappings.rs`) conhece — o macro some da flash. Quem for implementar a leitura precisa **guardar os bytes crus** das
 entradas não reconhecidas e reenviá-los na regravação.
 
 **Estado (2026-09-30):** os bytes crus são guardados (`OnboardBinding.raw`, no núcleo) e

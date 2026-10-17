@@ -31,8 +31,9 @@ produza `.ts` merece a pergunta — por que isto não está no núcleo?
 **Estado real (2026-10-17):** o **codec** migrou — envelope, CRC16, enquadramento de 64 bytes,
 montador de eventos, consulta e decodificação de notificações vivem em
 `packages/core/src/protocols/rawm/`, e `apps/web/src/hardware/rawm/protocol.ts` não existe
-mais. Todo o caminho de leitura está confirmado em hardware, inclusive a descrição e o bloco de
-parâmetros do passo 3 e o dump onboard do passo 4.
+mais. Todo o caminho de leitura está confirmado em hardware até o passo 4, inclusive a descrição
+e o bloco de parâmetros do passo 3 e o dump onboard do passo 4; o leitor da sessão do passo 5
+espera o roteiro.
 O vocabulário de ações (`MouseActionId`, gerado para TypeScript por `ts-rs`), a tabela
 ação↔bytes (`packages/core/src/protocols/rawm/actions.rs`) e a tabela de teclas do Leviathan V4
 (`packages/core/src/drivers/leviathan_v4/`) também vivem no núcleo, e `leviathanV4Keys.ts` não
@@ -100,14 +101,13 @@ qualquer `package.json` que encontre no diretório de saída.
 
 **A exceção é `packages/shared/src/generated/`.** O `ts-rs` gera ali tipos TypeScript a partir
 de tipos do núcleo (hoje `MouseActionId`, `MouseSettings` e suas partes, o snapshot de
-parâmetros, a descrição do Leviathan V4, as memórias do dump onboard, a identidade da
-consulta, os passos e eventos da sessão e o `HidCommand`), e eles **são**
-versionados, para que `@gearhub/shared` compile sem Rust. Um teste em
-`packages/core/src/bindings.rs` compara cada arquivo com o que o `ts-rs` geraria, reprova se
-divergirem e também reprova arquivo órfão no diretório; para regenerar,
-`UPDATE_BINDINGS=1 cargo test -p gearhub-core generated`. Nunca edite à mão, e não remova o
-caminho dos `inputs` de `test` em `packages/core/turbo.json` — sem ele, uma edição à mão deixa
-`@gearhub/core:test` em cache hit e a guarda não roda.
+parâmetros, a descrição do Leviathan V4, as memórias do dump onboard, a identidade da consulta,
+os passos e eventos da sessão e o `HidCommand`), e eles **são** versionados, para que
+`@gearhub/shared` compile sem Rust. Um teste em `packages/core/src/bindings.rs` compara cada
+arquivo com o que o `ts-rs` geraria, reprova se divergirem e também reprova arquivo órfão no
+diretório; para regenerar, `UPDATE_BINDINGS=1 cargo test -p gearhub-core generated`. Nunca edite
+à mão, e não remova o caminho dos `inputs` de `test` em `packages/core/turbo.json` — sem ele,
+uma edição à mão deixa `@gearhub/core:test` em cache hit e a guarda não roda.
 
 ## Verificação
 
