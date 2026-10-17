@@ -7,7 +7,6 @@ import init, {
   decodeOnboardEntry as wasmDecodeOnboardEntry,
   decodeReportChunk as wasmDecodeReportChunk,
   describeLeviathanV4 as wasmDescribeLeviathanV4,
-  dpiAxes as wasmDpiAxes,
   encode_action as wasmEncodeAction,
   encode_config_reset as wasmEncodeConfigReset,
   encode_mouse_function as wasmEncodeMouseFunction,
@@ -23,15 +22,12 @@ import init, {
   leviathanButtonId as wasmLeviathanButtonId,
   leviathanKeyId as wasmLeviathanKeyId,
   leviathanLodMillimetres as wasmLeviathanLodMillimetres,
-  leviathanOnboardSlotCount as wasmLeviathanOnboardSlotCount,
   leviathanQueryTimeoutMs as wasmLeviathanQueryTimeoutMs,
-  leviathanShowPowerKeyId as wasmLeviathanShowPowerKeyId,
   LeviathanV4Session as WasmLeviathanV4Session,
   leviathanV4Usb as wasmLeviathanV4Usb,
   matchesLeviathanV4 as wasmMatchesLeviathanV4,
   OnboardConfigCollector as WasmOnboardConfigCollector,
   parseMouseParamState as wasmParseMouseParamState,
-  parseNotification as wasmParseNotification,
   parseRawmIdentity as wasmParseRawmIdentity,
   queryJson as wasmQueryJson,
   RawEventAssembler as WasmRawEventAssembler,
@@ -237,11 +233,6 @@ export function leviathanButtonId(keyId: number): string | null {
   return wasmLeviathanButtonId(keyId) ?? null;
 }
 
-/** A sétima tecla, que nenhum controle do editor alcança. */
-export function leviathanShowPowerKeyId(): number {
-  return wasmLeviathanShowPowerKeyId();
-}
-
 /** O evento que devolve à sétima tecla o indicador de bateria. */
 export function encodeLeviathanShowPower(): Uint8Array {
   return wasmEncodeLeviathanShowPower();
@@ -284,11 +275,6 @@ export function describeLeviathanV4(raw: Record<string, unknown>): LeviathanV4De
   } catch (error) {
     throw asRawmError(error);
   }
-}
-
-/** Quantas memórias onboard a consulta anuncia. */
-export function leviathanOnboardSlotCount(raw: Record<string, unknown>): number {
-  return wasmLeviathanOnboardSlotCount(raw);
 }
 
 /** A distância, em milímetros, de um nível de LOD; `null` para um nível desconhecido. */
@@ -383,54 +369,6 @@ export function decodeReportChunk(
   } catch (error) {
     throw asRawmError(error);
   }
-}
-
-/** O que o mouse anuncia por conta própria, sem que o app pergunte. */
-export type RawmNotification =
-  | { kind: 'dpi'; value: number }
-  | { kind: 'dpi-xy'; value: number }
-  | { kind: 'polling'; value: number }
-  | { kind: 'onboard-index'; index: number }
-  | { kind: 'onboard-config'; payload: Uint8Array };
-
-/**
- * O núcleo carrega o enum com dados; a ponte wasm-bindgen o achata num array
- * de três posições fixas, `[kind, value, payload]`, em vez de um `struct` com
- * getters — nenhuma notificação decodificada precisa de identidade ou estado
- * mutável, então uma classe ali só custaria uma alocação por evento sem
- * comprar nada. Esta função remonta o array na união acima, para que nenhum
- * consumidor perceba a travessia.
- */
-export function parseNotification(event: Uint8Array): RawmNotification | null {
-  const decoded = wasmParseNotification(event) as
-    [string, number, Uint8Array | undefined] | undefined;
-  if (!decoded) return null;
-  const [kind, value, payload] = decoded;
-  switch (kind) {
-    case 'dpi':
-      return { kind: 'dpi', value };
-    case 'dpi-xy':
-      return { kind: 'dpi-xy', value };
-    case 'polling':
-      return { kind: 'polling', value };
-    case 'onboard-index':
-      return { kind: 'onboard-index', index: value };
-    case 'onboard-config':
-      // The core's wasm-bindgen return type is `Uint8Array | undefined` because the flattened
-      // array slot is optional in general, but for `onboard-config` the core only ever produces
-      // this variant from a non-empty 0x14 payload (`notify.rs`'s `NOTIFY_MOUSE_CONFIG` arm
-      // requires `!payload.is_empty()`), so `payload` is never actually `undefined` here. The
-      // fallback is not a live path; it exists to satisfy the wider type.
-      return { kind: 'onboard-config', payload: payload ?? new Uint8Array() };
-    default:
-      return null;
-  }
-}
-
-/** CPI2 empacota X nos 16 bits baixos e Y nos altos. */
-export function dpiAxes(value: number): { x: number; y: number } {
-  const [x, y] = wasmDpiAxes(value);
-  return { x, y };
 }
 
 /**

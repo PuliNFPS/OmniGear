@@ -28,7 +28,7 @@ export function answerReports(raw: Record<string, unknown>): Uint8Array[] {
 }
 
 /** As memórias com os bytes crus em hex, como os vetores as guardam. */
-export function shapeSlots(slots: OnboardSlotConfig[]): SlotJson[] {
+function shapeSlots(slots: OnboardSlotConfig[]): SlotJson[] {
   return slots.map((slot) => ({
     index: slot.index,
     bindings: slot.bindings.map((binding) => ({

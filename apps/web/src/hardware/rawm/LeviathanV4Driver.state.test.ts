@@ -1,83 +1,133 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import type { MouseSettings } from '@gearhub/shared';
 import type { DeviceReport } from '../deviceDriver';
 import { LeviathanV4Driver } from './LeviathanV4Driver';
-import { leviathanV4QueryFixture as fixture } from './leviathanV4Fixture';
 import { createLeviathanV4Peripheral } from './leviathanV4';
-import { frameEvent, withProtocolEnvelope } from '../../core/coreBridge';
+import { leviathanV4QueryFixture as fixture } from './leviathanV4Fixture';
+import { connectedDriver, fakeLeviathanV4 } from './leviathanV4Harness';
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 
-function harness(raw = fixture) {
-  const listeners = new Set<(id: number, data: Uint8Array) => void>();
-  const emit = (event: Uint8Array) => {
-    for (const frame of frameEvent(Uint8Array.from([255, 255, 255, 255, ...event]), true)) {
-      for (const listener of listeners) listener(0, frame);
-    }
-  };
-  const send = vi.fn<(command: { data: Uint8Array }) => Promise<void>>(async () => {});
-  const driver = new LeviathanV4Driver(
-    {
-      open: async () => {},
-      send,
-      onInputReport: (listener) => {
-        listeners.add(listener);
-        return () => {
-          listeners.delete(listener);
-        };
-      },
-    },
-    raw,
-    true,
-  );
+const settings = createLeviathanV4Peripheral(fixture, 'test').defaults as MouseSettings;
+
+function listen(driver: LeviathanV4Driver): DeviceReport[] {
   const reports: DeviceReport[] = [];
   driver.onDeviceReport((report) => reports.push(report));
-  return {
-    driver,
-    send,
-    reports,
-    notify: (type: number, payload: number[]) =>
-      emit(withProtocolEnvelope([0x0b, 0, type, ...payload], false)),
-    answer: (snapshot: Record<string, unknown>) =>
-      emit(
-        withProtocolEnvelope(
-          [0x02, 0, ...new TextEncoder().encode(JSON.stringify(snapshot))],
-          false,
-        ),
-      ),
-  };
+  return reports;
 }
 
-it('receives DPI buttons and decodes independent axes for the editor', () => {
-  const { notify, reports } = harness();
-  notify(0x00, [0x40, 0x06]);
-  expect(reports.at(-1)).toEqual({ kind: 'dpi', value: 1600, y: 1600 });
-  notify(0x06, [0x20, 0x03, 0x40, 0x06]);
-  expect(reports.at(-1)).toEqual({ kind: 'dpi', value: 800, y: 1600 });
+it('connects with one query on the virtual channel', async () => {
+  const fake = fakeLeviathanV4();
+  const driver = new LeviathanV4Driver(fake.transport);
+  await expect(driver.query()).resolves.toMatchObject({
+    deviceName: 'LEVIATHAN V4',
+    crcSupported: true,
+  });
+  expect(fake.sent).toHaveLength(1);
+  expect(fake.sent[0][0]).toBe(0xc0);
 });
 
-it('reads the actual active index independently of the opaque ob parameter', async () => {
-  const { driver, send, answer, notify, reports } = harness({ ...fixture, ob: 3, oci: 1 });
+it('counts opening the device against the query timeout', async () => {
+  const fake = fakeLeviathanV4();
+  fake.transport.open.mockImplementation(() => new Promise<void>(() => undefined));
+  const driver = new LeviathanV4Driver(fake.transport, 5);
+  const failed = expect(driver.query()).rejects.toThrow('A consulta RAWM excedeu o tempo limite.');
+  await vi.advanceTimersByTimeAsync(5);
+  await failed;
+});
+
+it('times out without an answer, and the next query still works', async () => {
+  const fake = fakeLeviathanV4();
+  fake.answerWith(null);
+  const driver = new LeviathanV4Driver(fake.transport, 5);
+  const failed = expect(driver.query()).rejects.toThrow('tempo limite');
+  await vi.advanceTimersByTimeAsync(5);
+  await failed;
+  fake.answerWith(fixture);
+  await expect(driver.query()).resolves.toMatchObject({ deviceName: 'LEVIATHAN V4' });
+});
+
+it('fails the pending query on a report from another channel', async () => {
+  const fake = fakeLeviathanV4();
+  fake.answerWith(null);
+  const driver = new LeviathanV4Driver(fake.transport);
+  const failed = expect(driver.query()).rejects.toThrow(
+    'Relatório não pertence ao canal virtual do mouse.',
+  );
+  await vi.advanceTimersByTimeAsync(0);
+  fake.report(new Uint8Array(64).fill(0x11));
+  await failed;
+});
+
+it('refuses a mouse that is not a Leviathan V4', async () => {
+  const fake = fakeLeviathanV4({ ...fixture, dn: 'RAWM HS Receiver' });
+  await expect(new LeviathanV4Driver(fake.transport).query()).rejects.toThrow(
+    'Mouse RAWM conectado nao reconhecido: RAWM HS Receiver.',
+  );
+});
+
+it('reads the actual active memory independently of the opaque ob parameter', async () => {
+  const fake = fakeLeviathanV4({ ...fixture, ob: 3, oci: 1 });
+  const driver = await connectedDriver(fake);
+  const reports = listen(driver);
   expect(reports[0]).toEqual({ kind: 'active-profile', slotIndex: 2 });
-  send.mockImplementation(async ({ data }) => {
-    if ((data[2] & 0x0f) === 1) answer({ ...fixture, ob: 3, oci: 2, cpi: 3200 });
-  });
+  fake.answerWith({ ...fixture, ob: 3, oci: 2, cpi: 3200 });
   await expect(driver.readState()).resolves.toEqual({
     activeProfileSlot: 3,
     dpi: { x: 3200, y: 3200 },
   });
-  notify(0x22, [3]);
+  fake.notify(0x22, [3]);
   expect(reports.at(-1)).toEqual({ kind: 'active-profile', slotIndex: 4 });
 });
 
+it('receives DPI buttons and decodes independent axes for the editor', async () => {
+  const fake = fakeLeviathanV4();
+  const driver = await connectedDriver(fake);
+  const reports = listen(driver);
+  fake.notify(0x00, [0x40, 0x06]);
+  expect(reports.at(-1)).toEqual({ kind: 'dpi', value: 1600, y: 1600 });
+  fake.notify(0x06, [0x20, 0x03, 0x40, 0x06]);
+  expect(reports.at(-1)).toEqual({ kind: 'dpi', value: 800, y: 1600 });
+});
+
 it('stops sending a session configuration when the physical memory changes', async () => {
-  const { driver, send, notify } = harness();
-  send.mockImplementationOnce(async () => {
-    notify(0x22, [1]);
+  const fake = fakeLeviathanV4();
+  const driver = await connectedDriver(fake);
+  fake.transport.send.mockImplementationOnce(async ({ data }) => {
+    fake.sent.push(data);
+    fake.notify(0x22, [1]);
   });
-  const apply = driver.applyToSession(createLeviathanV4Peripheral(fixture, 'test').defaults);
-  const rejected = expect(apply).rejects.toThrow('memória ativa mudou');
+  const rejected = expect(driver.applyToSession(settings)).rejects.toThrow('memória ativa mudou');
   await vi.runAllTimersAsync();
   await rejected;
-  expect(send).toHaveBeenCalledTimes(1);
+  expect(fake.sent).toHaveLength(1);
+});
+
+it('does not let a timed-out query abort the next operation', async () => {
+  const reference = fakeLeviathanV4();
+  const clean = await connectedDriver(reference);
+  const done = clean.applyToSession(settings);
+  await vi.runAllTimersAsync();
+  await done;
+
+  const fake = fakeLeviathanV4();
+  const driver = await connectedDriver(fake);
+  let failLate: (error: Error) => void = () => undefined;
+  fake.transport.send.mockImplementationOnce(
+    () =>
+      new Promise<void>((_resolve, reject) => {
+        failLate = reject;
+      }),
+  );
+  const timedOut = expect(driver.readState()).rejects.toThrow('tempo limite');
+  await vi.advanceTimersByTimeAsync(1000);
+  await timedOut;
+  const apply = driver.applyToSession(settings);
+  // A aplicação começou e espera a primeira pausa quando o envio velho falha.
+  await vi.advanceTimersByTimeAsync(0);
+  failLate(new Error('envio tardio'));
+  await vi.runAllTimersAsync();
+  await apply;
+  expect(fake.sent).toEqual(reference.sent);
 });

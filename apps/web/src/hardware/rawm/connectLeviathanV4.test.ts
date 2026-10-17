@@ -43,7 +43,7 @@ function queryReports(value: Record<string, unknown>, virtual: boolean): Uint8Ar
 function fakeDevice(
   receiverRaw: Record<string, unknown> = receiver,
   mouseRaw: Record<string, unknown> = mouse,
-): BrowserHidDevice {
+): BrowserHidDevice & { listenerCount(): number } {
   const listeners = new Set<(event: HidInputReportEvent) => void>();
   return {
     vendorId: 0x1915,
@@ -78,6 +78,7 @@ function fakeDevice(
     removeEventListener(_type, listener) {
       listeners.delete(listener);
     },
+    listenerCount: () => listeners.size,
   };
 }
 
@@ -122,5 +123,13 @@ describe('connectLeviathanV4', () => {
     } finally {
       unregisterDeviceDriver(peripheral.id);
     }
+  });
+
+  it('refuses a mouse that is not a Leviathan V4 and stops listening', async () => {
+    const device = fakeDevice(receiver, { ...mouse, dn: 'Outro Mouse' });
+    await expect(connectLeviathanV4(device, deviceDefinitions()[0])).rejects.toThrow(
+      'Mouse RAWM conectado nao reconhecido: Outro Mouse.',
+    );
+    expect(device.listenerCount()).toBe(0);
   });
 });

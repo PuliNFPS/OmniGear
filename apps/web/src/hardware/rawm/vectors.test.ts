@@ -6,12 +6,6 @@ import {
   toHex,
   type StepJson,
 } from '../../test/vectors';
-import {
-  legacyApply,
-  legacyEvents,
-  legacyIdentity,
-  legacyWriteProfile,
-} from './legacySessionRunners';
 import { connectedSession, drainSteps, notifyReport, shapeEvent } from '../../test/sessionVectors';
 import {
   OnboardConfigCollector,
@@ -122,41 +116,6 @@ describe('vetores de conformidade do protocolo RAWM', () => {
     if (!found) throw new Error(`consulta de vetor desconhecida: ${name}`);
     return found;
   };
-
-  it.each(vectors.identity)(
-    'identidade (driver antigo): $name',
-    ({ query: name, patch, expected }) => {
-      expect(legacyIdentity(applyQueryPatch(query(name), patch))).toEqual(expected);
-    },
-  );
-
-  it.each(vectors.sessionEvents)(
-    'eventos (driver antigo): $name',
-    ({ query: name, patch, reports, expected }) => {
-      expect(legacyEvents(applyQueryPatch(query(name), patch), reports)).toEqual(expected);
-    },
-  );
-
-  it.each(vectors.sessionApply)(
-    'aplicação (driver antigo): $name',
-    async ({ query: name, patch, dump, applies }) => {
-      const steps = await legacyApply(
-        applyQueryPatch(query(name), patch),
-        dump,
-        applies.map(({ settings }) => settings),
-      );
-      expect(steps).toEqual(applies.map(({ expected }) => expected));
-    },
-  );
-
-  it.each(vectors.sessionWriteProfile)(
-    'gravação de perfil (driver antigo): $name',
-    async ({ query: name, patch, dump, slot, settings, expected }) => {
-      expect(
-        await legacyWriteProfile(applyQueryPatch(query(name), patch), dump, slot, settings),
-      ).toEqual(expected);
-    },
-  );
 
   it.each(vectors.identity)('identidade (núcleo): $name', ({ query: name, patch, expected }) => {
     const raw = applyQueryPatch(query(name), patch);

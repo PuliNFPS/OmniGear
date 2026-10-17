@@ -267,42 +267,6 @@ impl Default for WasmLeviathanV4Session {
     }
 }
 
-/// O enum com dados não atravessa `wasm-bindgen`; esta é a forma achatada:
-/// um array de três posições fixas — `[kind, value, payload]` — em vez de um
-/// `struct` com getters. Nenhuma notificação decodificada precisa de
-/// identidade nem de estado mutável, então uma classe aqui só custaria uma
-/// alocação por evento (com `free()`/`FinalizationRegistry` de brinde) sem
-/// comprar nada; `frameEvent` e `RawEventAssembler.push`, ao lado, já
-/// devolvem arrays pela mesma razão.
-#[wasm_bindgen(js_name = parseNotification)]
-pub fn parse_notification(event: &[u8]) -> Option<js_sys::Array> {
-    use rawm::RawmNotification as N;
-    rawm::parse_notification(event).map(|notification| {
-        let (kind, value, payload): (&str, u32, Option<Vec<u8>>) = match notification {
-            N::Dpi(value) => ("dpi", u32::from(value), None),
-            N::DpiXy(value) => ("dpi-xy", value, None),
-            N::Polling(value) => ("polling", u32::from(value), None),
-            N::OnboardIndex(index) => ("onboard-index", u32::from(index), None),
-            N::OnboardConfig(payload) => ("onboard-config", 0, Some(payload)),
-        };
-
-        let entry = js_sys::Array::new();
-        entry.push(&JsValue::from_str(kind));
-        entry.push(&JsValue::from_f64(f64::from(value)));
-        entry.push(&match payload {
-            Some(bytes) => JsValue::from(js_sys::Uint8Array::from(&bytes[..])),
-            None => JsValue::UNDEFINED,
-        });
-        entry
-    })
-}
-
-#[wasm_bindgen(js_name = dpiAxes)]
-pub fn dpi_axes(value: u32) -> Vec<u32> {
-    let (x, y) = rawm::dpi_axes(value);
-    vec![u32::from(x), u32::from(y)]
-}
-
 #[wasm_bindgen(js_name = encodeMapping)]
 pub fn encode_mapping(key_ids: &[u8], action: &str) -> Result<Option<Vec<u8>>, JsError> {
     let action =
@@ -328,11 +292,6 @@ pub fn leviathan_key_id(button_id: &str) -> Option<u8> {
 #[wasm_bindgen(js_name = leviathanButtonId)]
 pub fn leviathan_button_id(key_id: u8) -> Option<String> {
     leviathan_v4::button_id(key_id).map(str::to_owned)
-}
-
-#[wasm_bindgen(js_name = leviathanShowPowerKeyId)]
-pub fn leviathan_show_power_key_id() -> u8 {
-    leviathan_v4::SHOW_POWER_KEY_ID
 }
 
 #[wasm_bindgen(js_name = encodeLeviathanShowPower)]
@@ -366,12 +325,6 @@ pub fn apply_settings_to_mouse_param(
 pub fn describe_leviathan_v4(raw: JsValue) -> Result<JsValue, JsError> {
     let raw: serde_json::Value = from_js(raw)?;
     to_js(&leviathan_v4::describe(&raw).map_err(js_error)?)
-}
-
-#[wasm_bindgen(js_name = leviathanOnboardSlotCount)]
-pub fn leviathan_onboard_slot_count(raw: JsValue) -> Result<u32, JsError> {
-    let raw: serde_json::Value = from_js(raw)?;
-    Ok(leviathan_v4::onboard_slot_count(&raw))
 }
 
 #[wasm_bindgen(js_name = leviathanLodMillimetres)]
