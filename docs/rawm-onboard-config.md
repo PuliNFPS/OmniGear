@@ -29,8 +29,7 @@ NOTIFY_TYPE_MOUSE_ONBOARD_INDEX = 0x22
 
 Chega como evento `CMD_NOTIFY` (`0x0b`), com o tipo no índice 2 e o payload a partir do 3 —
 exatamente a forma que a sessão do núcleo decodifica (`LeviathanV4Session::feed_report`, em
-`packages/core/src/drivers/leviathan_v4/session.rs`). Na época desta pesquisa (2026-09-07),
-esses tipos caíam no `default` e eram descartados.
+`packages/core/src/drivers/leviathan_v4/session.rs`).
 
 Como _CONFIG_ type, `0x14` é `CONFIG_TYPE_MOUSE_QUICK_DROP`, outra coisa. A confusão entre
 os dois espaços de constantes é o que gerou a descrição errada no doc anterior.
@@ -162,8 +161,10 @@ status de um slot: os bits baixos são cor de LED (`LED_R`, `LED_G`, …) com `0
 captura real é `ocs = [0x81, 0x82, 0x86, 0x84]` — quatro slots, cores diferentes.
 
 Não é um mapa de ocupado/vazio, e este projeto acerta ao não tratá-lo como tal: usa `ocs`
-apenas para **contar** os slots (`onboardSlotCount`) e guarda os bytes opacos no snapshot
-(`packages/core/src/protocols/rawm/param_snapshot.rs`). Quem diz se um slot tem conteúdo é o dump `0x14`.
+apenas para **contar** os slots (`onboard_slot_count`, em
+`packages/core/src/drivers/leviathan_v4/description.rs`) e guarda os bytes opacos no snapshot
+(`packages/core/src/protocols/rawm/param_snapshot.rs`). Quem diz se um slot tem conteúdo é o
+dump `0x14`.
 
 **Consequência prática:** escolher uma memória no hub do fabricante pode escrever a cor de
 LED daquele slot via `0x15`. O mouse reage visivelmente, o que é fácil de ler como "ele
@@ -243,8 +244,9 @@ disso.
 
 Isso importa por um motivo destrutivo: se um slot com macro for lido e depois regravado,
 `writeProfile` manda `CONFIG_RESET` e reconstrói só o que o conjunto do editor
-(`packages/core/src/drivers/leviathan_v4/mappings.rs`) conhece — o macro some da flash. Quem for implementar a leitura precisa **guardar os bytes crus** das
-entradas não reconhecidas e reenviá-los na regravação.
+(`packages/core/src/drivers/leviathan_v4/mappings.rs`) conhece — o macro some da flash. Quem
+for implementar a leitura precisa **guardar os bytes crus** das entradas não reconhecidas e
+reenviá-los na regravação.
 
 **Estado (2026-09-30):** os bytes crus são guardados (`OnboardBinding.raw`, no núcleo) e
 reenviados por `preservedEvents` — mas só para teclas fora do editor. Num botão do editor, ou
