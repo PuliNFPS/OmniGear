@@ -39,9 +39,9 @@ export class LeviathanV4Driver implements DeviceDriver {
   /** Quem espera a resposta da consulta em andamento. */
   private answered: ((result: RawmIdentity | Error) => void) | null = null;
   /**
-   * Sobe quando uma consulta estoura o tempo. Uma bomba de geração antiga — a
-   * da consulta abandonada, ainda presa num envio — para sem tocar a sessão,
-   * que a essa altura pode estar com outra operação.
+   * Sobe quando uma consulta termina, por qualquer caminho. Uma bomba de
+   * geração antiga — a da consulta encerrada, ainda presa num envio — para sem
+   * tocar a sessão, que a essa altura pode estar com outra operação.
    */
   private generation = 0;
   private readonly unsubscribe: () => void;
@@ -140,8 +140,10 @@ export class LeviathanV4Driver implements DeviceDriver {
     try {
       events = this.session.feedReport(reportId, report);
     } catch (error) {
-      // O núcleo só falha aqui com uma consulta pendente, e já a encerrou.
-      this.answered?.(error instanceof Error ? error : new Error(String(error)));
+      // O núcleo só falha aqui com uma consulta pendente, e já a encerrou. Sem
+      // ninguém esperando, o erro não é do núcleo: que apareça.
+      if (!this.answered) throw error;
+      this.answered(error instanceof Error ? error : new Error(String(error)));
       return;
     }
     for (const event of events) this.dispatch(event);
@@ -174,6 +176,7 @@ export class LeviathanV4Driver implements DeviceDriver {
       const finish = (result: RawmIdentity | Error) => {
         if (settled) return;
         settled = true;
+        this.generation += 1;
         clearTimeout(timer);
         this.answered = null;
         if (result instanceof Error) reject(result);
@@ -181,7 +184,6 @@ export class LeviathanV4Driver implements DeviceDriver {
       };
       // O tempo conta desde antes de abrir o dispositivo.
       const timer = setTimeout(() => {
-        this.generation += 1;
         this.session.abort();
         finish(new Error('A consulta RAWM excedeu o tempo limite.'));
       }, this.queryTimeoutMs);

@@ -67,12 +67,17 @@ describe('LeviathanV4Driver', () => {
   });
 
   it('runs one operation after another', async () => {
-    const fake = fakeLeviathanV4();
-    const driver = await connectedDriver(fake);
-    await Promise.all([
-      driver.applyToSession(settings),
-      driver.applyToSession({ ...settings, pollingRate: 500 }),
-    ]);
-    expect(fake.sent.length).toBeGreaterThan(0);
+    const second = { ...settings, pollingRate: 500 } satisfies MouseSettings;
+    const sequential = fakeLeviathanV4();
+    const reference = await connectedDriver(sequential);
+    await reference.applyToSession(settings);
+    await reference.applyToSession(second);
+
+    const concurrent = fakeLeviathanV4();
+    const driver = await connectedDriver(concurrent);
+    await Promise.all([driver.applyToSession(settings), driver.applyToSession(second)]);
+
+    expect(sequential.sent.length).toBeGreaterThan(0);
+    expect(concurrent.sent).toEqual(sequential.sent);
   });
 });

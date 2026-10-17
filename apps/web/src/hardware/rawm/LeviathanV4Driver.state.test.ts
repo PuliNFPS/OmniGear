@@ -131,3 +131,34 @@ it('does not let a timed-out query abort the next operation', async () => {
   await apply;
   expect(fake.sent).toEqual(reference.sent);
 });
+
+it('does not let a query failed by a foreign report abort the next operation', async () => {
+  const reference = fakeLeviathanV4();
+  const clean = await connectedDriver(reference);
+  const done = clean.applyToSession(settings);
+  await vi.runAllTimersAsync();
+  await done;
+
+  const fake = fakeLeviathanV4();
+  const driver = await connectedDriver(fake);
+  let failLate: (error: Error) => void = () => undefined;
+  fake.transport.send.mockImplementationOnce(
+    () =>
+      new Promise<void>((_resolve, reject) => {
+        failLate = reject;
+      }),
+  );
+  const failed = expect(driver.readState()).rejects.toThrow(
+    'Relatório não pertence ao canal virtual do mouse.',
+  );
+  await vi.advanceTimersByTimeAsync(0);
+  fake.report(new Uint8Array(64).fill(0x11));
+  await failed;
+  const apply = driver.applyToSession(settings);
+  // A aplicação começou e espera a primeira pausa quando o envio velho falha.
+  await vi.advanceTimersByTimeAsync(0);
+  failLate(new Error('envio tardio'));
+  await vi.runAllTimersAsync();
+  await apply;
+  expect(fake.sent).toEqual(reference.sent);
+});

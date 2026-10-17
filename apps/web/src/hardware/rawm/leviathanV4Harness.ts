@@ -56,7 +56,6 @@ export function fakeLeviathanV4(raw: Record<string, unknown> = leviathanV4QueryF
     failAfter(count: number | null) {
       failAfter = count;
     },
-    listeners: () => listeners.size,
   };
 }
 
