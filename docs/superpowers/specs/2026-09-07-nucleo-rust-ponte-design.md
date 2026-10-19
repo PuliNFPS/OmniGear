@@ -599,10 +599,10 @@ O passo 0 é novo, e os demais absorvem os arquivos que faltavam.
 5. **Sessão:** `LeviathanV4Driver.ts` sob a interface de passos puxados acima, mais a
    decodificação de `session.ts`. O maior e o mais arriscado. As sondas não mudam (Decisão 1).
    **Confirmação em hardware.**
-   **Implementado em 2026-10-17** pelo plano `docs/superpowers/plans/2026-10-03-migracao-sessao.md`,
-   aguardando a confirmação em hardware do roteiro em `docs/smoke-test-leviathan-v4.md`:
-   `session.ts` e `notifications.ts` foram apagados, e `LeviathanV4Driver.ts` só executa os
-   passos da sessão do núcleo.
+   **Fechado em 2026-10-19** pelo plano `docs/superpowers/plans/2026-10-03-migracao-sessao.md`,
+   confirmado em hardware pelo roteiro em `docs/smoke-test-leviathan-v4.md`: `session.ts` e
+   `notifications.ts` foram apagados, e `LeviathanV4Driver.ts` só executa os passos da sessão
+   do núcleo. Com ele, a migração fechou: nenhum protocolo resta em TypeScript.
 
 A barra de conclusão de cada passo continua a de `## Como verificar cada passo`: a lógica
 existe em Rust com os testes portados, o TypeScript **apagou** a sua, as duas suítes passam,
@@ -1108,6 +1108,11 @@ Obrigatória, antes do merge, registrada em `docs/smoke-test-leviathan-v4.md`:
 A troca de memória no meio de uma aplicação não é provocável à mão — a aplicação dura cerca de
 150 ms — e fica com os testes. Nenhum passo grava em memória que guarde macro.
 
+Esta é a lista do desenho. O roteiro executado está em `docs/smoke-test-leviathan-v4.md`, com o
+que a execução acrescentou: como trocar de memória pelo mouse (item 2), como observar o caminho
+de um evento só (item 3) e a conferência da barra antes de reconectar (item 5). Confirmado em
+2026-10-19.
+
 ### Desvios declarados na execução
 
 O desenho acima não os previa. Cada um foi decidido durante a execução do plano e vale como
@@ -1146,10 +1151,12 @@ exceção nomeada à paridade:
     núcleo, então espera a fila e vem depois do tipo-guarda. O driver antigo a recusava de forma
     síncrona, antes da fila. A recusa de não inteiro, `< 1` e `> 2 ** 32` continua síncrona na
     casca.
-11. **Eventos depois de uma resposta inválida.** Se um mesmo relatório traz uma resposta de
-    consulta inválida e, depois dela, outros eventos, `feed_report` falha na resposta e descarta
-    os eventos seguintes daquele relatório. O leitor de notificações antigo, que era separado, os
-    processava. O caminho exige resposta malformada com consulta pendente.
+11. **Eventos do relatório de uma resposta inválida.** Se um mesmo relatório traz uma resposta
+    de consulta inválida junto com outros eventos, `feed_report` falha na resposta e nenhum evento
+    daquele relatório chega aos ouvintes. Os que vinham antes dela já mudaram o estado da sessão
+    (memória ativa, DPI, memórias do dump), mas a tela não fica sabendo. Os que vinham depois nem
+    são lidos. O leitor de notificações antigo, que era separado, processava todos. O caminho exige
+    resposta malformada com consulta pendente.
 
 **A geração da bomba.** Uma consulta que estoura o tempo com um envio ainda preso não pode abortar
 nem roubar passos da operação seguinte: o envio velho falharia tarde, quando a sessão já estaria

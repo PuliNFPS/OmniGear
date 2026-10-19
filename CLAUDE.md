@@ -28,12 +28,11 @@ O teste é uma pergunta: **isso mudaria se a casca mudasse?** Se sim, é casca.
 **Regra:** comportamento novo de dispositivo entra no Rust. Uma tarefa de dispositivo que só
 produza `.ts` merece a pergunta — por que isto não está no núcleo?
 
-**Estado real (2026-10-17):** o **codec** migrou — envelope, CRC16, enquadramento de 64 bytes,
-montador de eventos, consulta e decodificação de notificações vivem em
-`packages/core/src/protocols/rawm/`, e `apps/web/src/hardware/rawm/protocol.ts` não existe
-mais. Todo o caminho de leitura está confirmado em hardware até o passo 4, inclusive a descrição
-e o bloco de parâmetros do passo 3 e o dump onboard do passo 4; o leitor da sessão do passo 5
-espera o roteiro.
+**Estado real (2026-10-19):** a migração fechou. O **codec** migrou — envelope, CRC16,
+enquadramento de 64 bytes, montador de eventos, consulta e decodificação de notificações vivem
+em `packages/core/src/protocols/rawm/`, e `apps/web/src/hardware/rawm/protocol.ts` não existe
+mais. Os cinco passos estão confirmados em hardware, inclusive a descrição e o bloco de
+parâmetros do passo 3, o dump onboard do passo 4 e a sessão do passo 5.
 O vocabulário de ações (`MouseActionId`, gerado para TypeScript por `ts-rs`), a tabela
 ação↔bytes (`packages/core/src/protocols/rawm/actions.rs`) e a tabela de teclas do Leviathan V4
 (`packages/core/src/drivers/leviathan_v4/`) também vivem no núcleo, e `leviathanV4Keys.ts` não
@@ -43,9 +42,7 @@ Leviathan V4 (`packages/core/src/drivers/leviathan_v4/`); `MouseSettings` é do 
 levou o dump onboard (`packages/core/src/protocols/rawm/onboard.rs`, e `settings_from_slot` em
 `drivers/leviathan_v4/`), e `onboardConfig.ts` não existe mais. O passo 5 levou a sessão do
 driver (`packages/core/src/drivers/leviathan_v4/session.rs` e `mappings.rs`): `session.ts` e
-`notifications.ts` não existem mais, e `LeviathanV4Driver.ts` é só fila, bomba e ouvintes. O
-passo 5 está **implementado, pendente da confirmação em hardware** do roteiro em
-`docs/smoke-test-leviathan-v4.md`.
+`notifications.ts` não existem mais, e `LeviathanV4Driver.ts` é só fila, bomba e ouvintes.
 
 Nenhum protocolo resta em TypeScript; o que fica é casca — a bomba e a fila do driver,
 `WebHidTransport`, as sondas de diagnóstico (Decisão 1) e a tela.
