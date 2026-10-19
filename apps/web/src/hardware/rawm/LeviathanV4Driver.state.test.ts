@@ -132,6 +132,54 @@ it('does not let a timed-out query abort the next operation', async () => {
   expect(fake.sent).toEqual(reference.sent);
 });
 
+/** Grava o instante de cada envio; com o relógio falso, ele avança com os timers. */
+function recordSendTimes(fake: ReturnType<typeof fakeLeviathanV4>): number[] {
+  const times: number[] = [];
+  const original = fake.transport.send.getMockImplementation();
+  if (!original) throw new Error('o envio do fake não tem implementação');
+  fake.transport.send.mockImplementation(async (command) => {
+    times.push(Date.now());
+    return original(command);
+  });
+  return times;
+}
+
+function gaps(times: number[]): number[] {
+  return times.slice(1).map((time, index) => time - times[index]);
+}
+
+it('does not let a timed-out query steal the steps of the next operation', async () => {
+  const reference = fakeLeviathanV4();
+  const clean = await connectedDriver(reference);
+  const referenceTimes = recordSendTimes(reference);
+  const done = clean.applyToSession(settings);
+  await vi.runAllTimersAsync();
+  await done;
+
+  const fake = fakeLeviathanV4();
+  const driver = await connectedDriver(fake);
+  const times = recordSendTimes(fake);
+  let releaseLate: () => void = () => undefined;
+  fake.transport.send.mockImplementationOnce(
+    () =>
+      new Promise<void>((resolve) => {
+        releaseLate = resolve;
+      }),
+  );
+  const timedOut = expect(driver.readState()).rejects.toThrow('tempo limite');
+  await vi.advanceTimersByTimeAsync(1000);
+  await timedOut;
+  const apply = driver.applyToSession(settings);
+  // A aplicação começou e espera a primeira pausa quando o envio velho termina.
+  await vi.advanceTimersByTimeAsync(0);
+  releaseLate();
+  await vi.runAllTimersAsync();
+  await apply;
+  expect(referenceTimes.length).toBeGreaterThan(1);
+  expect(fake.sent).toEqual(reference.sent);
+  expect(gaps(times)).toEqual(gaps(referenceTimes));
+});
+
 it('does not let a query failed by a foreign report abort the next operation', async () => {
   const reference = fakeLeviathanV4();
   const clean = await connectedDriver(reference);
