@@ -249,7 +249,7 @@ for implementar a leitura precisa **guardar os bytes crus** das entradas não re
 reenviá-los na regravação.
 
 **Estado (2026-09-30):** os bytes crus são guardados (`OnboardBinding.raw`, no núcleo) e
-reenviados por `preservedEvents` — mas só para teclas fora do editor. Num botão do editor, ou
+reenviados por `preservedEvents` (hoje `preserved_events`, em `mappings.rs`) — mas só para teclas fora do editor. Num botão do editor, ou
 numa combinação R-Plus, a macro ainda se perde; o defeito está descrito no spec
 (`docs/superpowers/specs/2026-09-07-nucleo-rust-ponte-design.md`, "Defeito conhecido, para o
 passo 5").

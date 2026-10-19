@@ -877,6 +877,9 @@ o `DeviceDriver` da casca, mas sem decisão nenhuma: fila, bomba e ouvintes.
 próprio teste da ponte: a sessão chama o Rust direto. `OnboardConfigCollector` e
 `decodeOnboardEntry` continuam, porque `vectors.test.ts` e `onboardDump.test.ts` leem os vetores
 `onboardEntry` e `onboardDump` por eles, e um vetor que só um lado lê não é fonte compartilhada.
+`applySettingsToMouseParam` também fica, pelo mesmo motivo: `vectors.test.ts` lê os vetores
+`paramApply` por ele. E `parseRawmIdentity`, novo, existe para o `vitest` ler os vetores
+`identity`.
 
 **As sondas não mudam.** `diagnostics.ts` e `writeProbe.ts` usam só o codec, e `captureQuery` tem o
 seu próprio montador de propósito (Decisão 1).
@@ -1136,6 +1139,17 @@ exceção nomeada à paridade:
 8. **Limite de cima do número da memória.** `writeProfile` recusa na casca `slotIndex > 2 ** 32`,
    além de não inteiro e `< 1`. O glue do `wasm-bindgen` passa o número a um `i32` e daria a
    volta. O driver antigo limitava por cima com o número de memórias.
+9. **Ordem dos erros na conexão.** O núcleo confere o `oci` dentro da primeira resposta, antes de
+   a casca descrever o aparelho (`describeLeviathanV4`). O driver antigo descrevia antes de ler o
+   `oci`. Só muda qual mensagem aparece quando a resposta falha nos dois pontos ao mesmo tempo.
+10. **Ordem em `writeProfile`.** A recusa da memória além das que o mouse tem passou para o
+    núcleo, então espera a fila e vem depois do tipo-guarda. O driver antigo a recusava de forma
+    síncrona, antes da fila. A recusa de não inteiro, `< 1` e `> 2 ** 32` continua síncrona na
+    casca.
+11. **Eventos depois de uma resposta inválida.** Se um mesmo relatório traz uma resposta de
+    consulta inválida e, depois dela, outros eventos, `feed_report` falha na resposta e descarta
+    os eventos seguintes daquele relatório. O leitor de notificações antigo, que era separado, os
+    processava. O caminho exige resposta malformada com consulta pendente.
 
 **A geração da bomba.** Uma consulta que estoura o tempo com um envio ainda preso não pode abortar
 nem roubar passos da operação seguinte: o envio velho falharia tarde, quando a sessão já estaria

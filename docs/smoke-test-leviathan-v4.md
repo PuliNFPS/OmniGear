@@ -469,13 +469,27 @@ está).
 
 1. **Conectar.** Nome, DPI, memória ativa e as quatro memórias com os mapeamentos de cada
    uma — o leitor único pegou o dump.
-2. **Botões do mouse.** Trocar o DPI e a memória pelo mouse: a tela acompanha.
+2. **Botões do mouse.** A tela acompanha o que o mouse anuncia.
+   - **Trocar o DPI** pelo botão de DPI.
+   - **Trocar a memória.** O app não consegue ligar essa função: `MouseActionId` não tem troca
+     de memória, e foi por isso que o item 3 do roteiro do passo 4 foi pulado. Antes de qualquer
+     aplicação pelo app, ligue `FUNCTION_NEXT_ONBOARD` (0x12) a um botão pelo hub do fabricante
+     e então troque de memória por esse botão. A tela acompanha.
+   - **O cuidado.** Uma aplicação completa pelo app apaga essa ligação da sessão (o defeito da
+     macro), e não se deve gravar pelo app na memória que a guarda.
+   - **Se não for possível,** registre o pulo com o motivo.
 3. **Só parâmetros.** Aplicar só DPI e polling: os botões continuam funcionando (um evento
-   só, sem `CONFIG_RESET`).
+   só, sem `CONFIG_RESET`). Para observar: com o DevTools aberto, um logpoint em
+   `WebHidTransport.send` (ou um `console.count` no console) mostra 2 relatórios no caminho
+   curto, contra cerca de 10 no completo. O caminho curto só acontece quando a memória ativa
+   não tem entrada sem nome.
 4. **Mapeamento na sessão.** Mudar um botão e aplicar à sessão: funciona; desligar e religar
    o mouse devolve o que está na flash.
-5. **Gravar.** Gravar numa memória sem macro e reconectar: a tela relê exatamente o que foi
-   gravado, e o indicador de bateria sobrevive.
+5. **Gravar.** Gravar numa memória sem macro. **Antes de reconectar,** a barra mostra
+   "Alterações salvas no …", sem "Perfil salvo. Não foi possível confirmar o slot ativo;
+   reconecte para atualizar.". É a única vez que a segunda consulta roda na sessão viva (o
+   `readState` depois da gravação), e reconectar esconderia uma falha dela. Depois reconecte:
+   a tela relê exatamente o que foi gravado, e o indicador de bateria sobrevive.
 6. **Sondas.** Rodar a página de diagnóstico e a sonda de escrita.
 
 A troca de memória no meio de uma aplicação não é provocável à mão (a aplicação dura cerca
