@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { applyQueryPatch, fromHex, readProtocolVectors, toHex } from '../../test/vectors';
+import {
+  applyQueryPatch,
+  fromHex,
+  readProtocolVectors,
+  toHex,
+  type StepJson,
+} from '../../test/vectors';
+import { connectedSession, drainSteps, notifyReport, shapeEvent } from '../../test/sessionVectors';
 import {
   OnboardConfigCollector,
   applySettingsToMouseParam,
@@ -11,6 +18,7 @@ import {
   encodeMapping,
   leviathanButtonId,
   leviathanKeyId,
+  parseRawmIdentity,
   withProtocolEnvelope,
 } from '../../core/coreBridge';
 
@@ -46,6 +54,10 @@ describe('vetores de conformidade do protocolo RAWM', () => {
     requireNonEmpty(vectors.invalidSnapshot, 'invalidSnapshot');
     requireNonEmpty(vectors.onboardEntry, 'onboardEntry');
     requireNonEmpty(vectors.onboardDump, 'onboardDump');
+    requireNonEmpty(vectors.identity, 'identity');
+    requireNonEmpty(vectors.sessionEvents, 'sessionEvents');
+    requireNonEmpty(vectors.sessionApply, 'sessionApply');
+    requireNonEmpty(vectors.sessionWriteProfile, 'sessionWriteProfile');
   });
 
   it.each(vectors.onboardEntry)('entrada onboard: $name', ({ entry, expected }) => {
@@ -104,6 +116,82 @@ describe('vetores de conformidade do protocolo RAWM', () => {
     if (!found) throw new Error(`consulta de vetor desconhecida: ${name}`);
     return found;
   };
+
+  it.each(vectors.identity)('identidade (núcleo): $name', ({ query: name, patch, expected }) => {
+    const raw = applyQueryPatch(query(name), patch);
+    if (expected === null) {
+      expect(() => parseRawmIdentity(raw)).toThrow('Resposta RAWM sem identidade válida.');
+      return;
+    }
+    const { deviceName, productId, vendorId, crcSupported } = parseRawmIdentity(raw);
+    expect({ deviceName, productId, vendorId, crcSupported }).toEqual(expected);
+  });
+
+  it.each(vectors.sessionEvents)(
+    'eventos (núcleo): $name',
+    ({ query: name, patch, reports, expected }) => {
+      const session = connectedSession(applyQueryPatch(query(name), patch));
+      const events = reports.flatMap((report) => session.feedReport(0, fromHex(report)));
+      expect(events.map(shapeEvent)).toEqual(expected);
+    },
+  );
+
+  it.each(vectors.sessionApply)(
+    'aplicação (núcleo): $name',
+    ({ query: name, patch, dump, applies }) => {
+      const session = connectedSession(applyQueryPatch(query(name), patch));
+      for (const payload of dump ?? []) session.feedReport(0, notifyReport(0x14, fromHex(payload)));
+      for (const { settings, expected } of applies) {
+        session.beginApply(settings);
+        expect(drainSteps(session)).toEqual(expected);
+      }
+    },
+  );
+
+  it.each(vectors.sessionWriteProfile)(
+    'gravação de perfil (núcleo): $name',
+    ({ query: name, patch, dump, slot, settings, expected }) => {
+      const session = connectedSession(applyQueryPatch(query(name), patch));
+      for (const payload of dump ?? []) session.feedReport(0, notifyReport(0x14, fromHex(payload)));
+      session.beginWriteProfile(slot, settings);
+      expect(drainSteps(session)).toEqual(expected);
+    },
+  );
+
+  it('os vetores da sessão dizem o que os nomes dizem', () => {
+    const waits = (steps: StepJson[]) => steps.filter((step) => 'wait' in step).length;
+    const sent = (steps: StepJson[]) =>
+      steps.map((step) => ('send' in step ? step.send : '')).join('|');
+    const apply = (name: string) => {
+      const found = vectors.sessionApply.find((vector) => vector.name === name);
+      if (!found) throw new Error(`vetor ausente: ${name}`);
+      return found.applies.map(({ expected }) => expected);
+    };
+    const [onlyParameters] = apply('com dump e mapeamentos iguais: só parâmetros');
+    expect(waits(onlyParameters)).toBe(1);
+    const [full] = apply('sem dump: aplicação completa');
+    expect(waits(full)).toBeGreaterThan(8);
+    const [first, second] = apply('duas aplicações seguidas: a segunda só com parâmetros');
+    expect(waits(first)).toBeGreaterThan(8);
+    expect(waits(second)).toBe(1);
+    const [preserved] = apply('mapeamento mudado: completa, e o que o app não nomeia volta');
+    expect(sent(preserved)).toContain('0308050160010203');
+    const [macro] = apply('macro num botão do editor: sempre completa, e a macro não volta');
+    expect(waits(macro)).toBeGreaterThan(8);
+    expect(sent(macro)).not.toContain('030805010a010203');
+    const [unnamed] = apply(
+      'entrada sem nome fora do editor força o reset, mesmo com o editor igual',
+    );
+    expect(waits(unnamed)).toBeGreaterThan(8);
+    expect(sent(unnamed)).toContain('0308050160010203');
+    const [rPlusFull] = apply('R-Plus ligado, sem dump: o par entra no conjunto completo');
+    expect(waits(rPlusFull)).toBe(waits(full) + 1);
+    const [rPlusParameters] = apply('R-Plus ligado, com o par no dump: só parâmetros');
+    expect(waits(rPlusParameters)).toBe(1);
+    const write = vectors.sessionWriteProfile.find(({ slot }) => slot === 1);
+    expect(sent(write!.expected)).toContain('0308050161040506');
+    expect(sent(write!.expected)).not.toContain('0308050160010203');
+  });
 
   it.each(vectors.paramSnapshot)('snapshot: $name', ({ query: name, expected }) => {
     expect(toHex(encodeMouseParamBody(parseMouseParamState(query(name))))).toBe(expected);

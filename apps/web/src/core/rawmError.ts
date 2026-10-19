@@ -1,9 +1,7 @@
 /**
  * O núcleo devolve um código estável; o texto é decisão da casca.
  *
- * As mensagens são as mesmas de antes da migração de propósito: o
- * `subscribeToNotifications` reconhece a falha pelo `catch` e o
- * `queryRawmDevice` a mostra ao usuário.
+ * As mensagens são as de antes da migração, e a casca as mostra ao usuário.
  */
 const MESSAGES: Record<string, string> = {
   'event-too-long': 'Evento RAWM excede 4.095 bytes.',
@@ -20,6 +18,18 @@ const MESSAGES: Record<string, string> = {
   'incomplete-query': 'Consulta RAWM incompleta: {campo}.',
   'invalid-performance-mode': 'Modo de desempenho RAWM invalido.',
   'invalid-dpi-stages': 'Configuracao de DPI RAWM invalida.',
+  'invalid-identity': 'Resposta RAWM sem identidade válida.',
+  'invalid-query-json': 'Identificação RAWM inválida.',
+  'unrecognized-mouse': 'Mouse RAWM conectado nao reconhecido: {campo}.',
+  'invalid-onboard-index': 'Indice onboard ausente ou invalido na resposta do mouse.',
+  'invalid-profile-slot': 'Indice de perfil RAWM invalido.',
+  'unknown-button': 'Botao RAWM desconhecido: {campo}.',
+  'invalid-rplus-activator': 'Ativador R-Plus RAWM invalido.',
+  'unknown-rplus-button': 'Botao R-Plus RAWM desconhecido: {campo}.',
+  'active-slot-changed':
+    'A memória ativa mudou durante a aplicação. Revise o perfil antes de aplicar novamente.',
+  'operation-in-progress': 'Outra operação RAWM ainda está em andamento.',
+  'not-queried': 'O mouse ainda não respondeu à consulta.',
 };
 
 /**
@@ -32,11 +42,9 @@ const MESSAGES: Record<string, string> = {
  * usuário era `Falha de protocolo RAWM: (0 , __vite_…`. Esse erro atravessa
  * intacto.
  *
- * O código fica em `cause` de propósito: a mensagem é para o usuário, mas
- * `subscribeToNotifications` precisa distinguir uma falha do montador de uma
- * falha de decodificação, e o passo 5 vai precisar separar o erro da guarda de
- * memória ativa de um erro de transporte. Descartar o código aqui fecharia essa
- * porta em silêncio.
+ * O código fica em `cause` de propósito: a mensagem é para o usuário, e o
+ * código é o que distingue o erro da guarda de memória ativa
+ * (`active-slot-changed`) de uma falha de transporte.
  *
  * As variantes com dado chegam como `código:dado`; o dado entra no lugar de
  * `{campo}` no texto, e `cause` guarda só o código.

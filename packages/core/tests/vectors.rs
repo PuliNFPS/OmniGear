@@ -1,8 +1,10 @@
 use gearhub_core::device::{MouseActionId, MouseSettings};
 use gearhub_core::drivers::leviathan_v4;
+use gearhub_core::drivers::leviathan_v4::{LeviathanV4Session, SessionEvent, Step};
 use gearhub_core::protocols::rawm::{
     OnboardConfigCollector, RawmError, build_query_event, decode_onboard_entry, encode_mapping,
-    encode_mouse_param_body, parse_mouse_param_snapshot, with_protocol_envelope,
+    encode_mouse_param_body, frame_event, parse_identity, parse_mouse_param_snapshot,
+    with_protocol_envelope,
 };
 use serde::Deserialize;
 
@@ -104,6 +106,58 @@ struct OnboardDumpVector {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+struct ExpectedIdentity {
+    device_name: String,
+    product_id: u32,
+    vendor_id: Option<u32>,
+    crc_supported: bool,
+}
+
+#[derive(Deserialize)]
+struct IdentityVector {
+    name: String,
+    query: String,
+    patch: serde_json::Map<String, serde_json::Value>,
+    expected: Option<ExpectedIdentity>,
+}
+
+#[derive(Deserialize)]
+struct SessionEventsVector {
+    name: String,
+    query: String,
+    patch: serde_json::Map<String, serde_json::Value>,
+    reports: Vec<String>,
+    expected: Vec<serde_json::Value>,
+}
+
+#[derive(Deserialize)]
+struct SessionApplyCase {
+    settings: MouseSettings,
+    expected: Vec<serde_json::Value>,
+}
+
+#[derive(Deserialize)]
+struct SessionApplyVector {
+    name: String,
+    query: String,
+    patch: serde_json::Map<String, serde_json::Value>,
+    dump: Option<Vec<String>>,
+    applies: Vec<SessionApplyCase>,
+}
+
+#[derive(Deserialize)]
+struct SessionWriteProfileVector {
+    name: String,
+    query: String,
+    patch: serde_json::Map<String, serde_json::Value>,
+    dump: Option<Vec<String>>,
+    slot: u32,
+    settings: MouseSettings,
+    expected: Vec<serde_json::Value>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct Vectors {
     version: u32,
     envelope: Vec<EnvelopeVector>,
@@ -117,6 +171,10 @@ struct Vectors {
     param_apply: Vec<ParamApplyVector>,
     onboard_entry: Vec<OnboardEntryVector>,
     onboard_dump: Vec<OnboardDumpVector>,
+    identity: Vec<IdentityVector>,
+    session_events: Vec<SessionEventsVector>,
+    session_apply: Vec<SessionApplyVector>,
+    session_write_profile: Vec<SessionWriteProfileVector>,
 }
 
 fn from_hex(value: &str) -> Vec<u8> {
@@ -337,6 +395,33 @@ fn onboard_entries_match_the_shared_vectors() {
     }
 }
 
+#[test]
+fn identities_match_the_shared_vectors() {
+    let vectors = vectors();
+    require_non_empty(&vectors.identity, "identity");
+    for vector in &vectors.identity {
+        let raw = patched(query(&vectors, &vector.query), &vector.patch);
+        match (parse_identity(raw), &vector.expected) {
+            (Ok(identity), Some(expected)) => {
+                assert_eq!(
+                    identity.device_name, expected.device_name,
+                    "{}",
+                    vector.name
+                );
+                assert_eq!(identity.product_id, expected.product_id, "{}", vector.name);
+                assert_eq!(identity.vendor_id, expected.vendor_id, "{}", vector.name);
+                assert_eq!(
+                    identity.crc_supported, expected.crc_supported,
+                    "{}",
+                    vector.name
+                );
+            }
+            (Err(RawmError::InvalidIdentity), None) => {}
+            (result, _) => panic!("{}: veio {result:?}", vector.name),
+        }
+    }
+}
+
 /// (índice, [(ids, ação, bytes crus em hex)]) — o formato em que as duas pontas se comparam.
 type ShapedSlots<'a> = Vec<(u8, Vec<(Vec<u8>, Option<&'a str>, String)>)>;
 
@@ -389,5 +474,138 @@ fn onboard_dumps_match_the_shared_vectors() {
                 .collect()
         });
         assert_eq!(shaped, expected, "{}", vector.name);
+    }
+}
+
+const PREAMBLE: [u8; 4] = [0xff; 4];
+
+/// Um evento como chega ao transporte: com o preâmbulo, no canal virtual.
+fn delivered(event: &[u8]) -> Vec<[u8; 64]> {
+    let mut chunk = PREAMBLE.to_vec();
+    chunk.extend_from_slice(event);
+    frame_event(&chunk, true)
+}
+
+/// Uma sessão ligada pela resposta que um mouse com `raw` mandaria.
+fn connected(raw: &serde_json::Value) -> LeviathanV4Session {
+    let mut session = LeviathanV4Session::new();
+    session.begin_query(0).expect("consulta");
+    while session.next_step().expect("passo").is_some() {}
+    let mut body = vec![0x02, 0];
+    body.extend(serde_json::to_vec(raw).expect("json"));
+    body.push(0);
+    let mut events = Vec::new();
+    for report in delivered(&with_protocol_envelope(&body, false).expect("resposta")) {
+        events.extend(session.feed_report(0, &report).expect("resposta lida"));
+    }
+    assert!(
+        matches!(events.last(), Some(SessionEvent::Queried(_))),
+        "a resposta não ligou a sessão"
+    );
+    session
+}
+
+/// O evento na forma dos vetores: bytes crus em hex.
+fn shaped_event(event: &SessionEvent) -> serde_json::Value {
+    use serde_json::json;
+    match event {
+        SessionEvent::Queried(identity) => {
+            json!({ "kind": "queried", "deviceName": identity.device_name })
+        }
+        SessionEvent::Dpi(axes) => json!({ "kind": "dpi", "x": axes.x, "y": axes.y }),
+        SessionEvent::ActiveSlot { index } => json!({ "kind": "active-slot", "index": index }),
+        SessionEvent::OnboardSlots { slots } => json!({
+            "kind": "onboard-slots",
+            "slots": slots.iter().map(|slot| json!({
+                "index": slot.index,
+                "bindings": slot.bindings.iter().map(|binding| json!({
+                    "keyIds": binding.key_ids,
+                    "action": binding.action.map(|action| action.as_str()),
+                    "raw": to_hex(&binding.raw),
+                })).collect::<Vec<_>>(),
+            })).collect::<Vec<_>>(),
+        }),
+    }
+}
+
+#[test]
+fn session_events_match_the_shared_vectors() {
+    let vectors = vectors();
+    require_non_empty(&vectors.session_events, "sessionEvents");
+    for vector in &vectors.session_events {
+        let mut session = connected(&patched(query(&vectors, &vector.query), &vector.patch));
+        let mut events = Vec::new();
+        for report in &vector.reports {
+            let read = session
+                .feed_report(0, &from_hex(report))
+                .unwrap_or_else(|error| panic!("{}: {error:?}", vector.name));
+            events.extend(read.iter().map(shaped_event));
+        }
+        assert_eq!(events, vector.expected, "{}", vector.name);
+    }
+}
+
+fn notify_report(kind: u8, payload: &[u8]) -> [u8; 64] {
+    let mut body = vec![0x0b, 0, kind];
+    body.extend_from_slice(payload);
+    delivered(&with_protocol_envelope(&body, false).expect("notificação"))[0]
+}
+
+fn feed_dump(session: &mut LeviathanV4Session, dump: Option<&Vec<String>>) {
+    for payload in dump.into_iter().flatten() {
+        session
+            .feed_report(0, &notify_report(0x14, &from_hex(payload)))
+            .expect("dump");
+    }
+}
+
+/// Os passos até o fim, na forma dos vetores.
+fn drain(session: &mut LeviathanV4Session, name: &str) -> Vec<serde_json::Value> {
+    let mut steps = Vec::new();
+    while let Some(step) = session
+        .next_step()
+        .unwrap_or_else(|error| panic!("{name}: {error:?}"))
+    {
+        steps.push(match step {
+            Step::Send(command) => serde_json::json!({ "send": to_hex(&command.data) }),
+            Step::Wait { ms } => serde_json::json!({ "wait": ms }),
+        });
+    }
+    steps
+}
+
+#[test]
+fn session_applies_match_the_shared_vectors() {
+    let vectors = vectors();
+    require_non_empty(&vectors.session_apply, "sessionApply");
+    for vector in &vectors.session_apply {
+        let mut session = connected(&patched(query(&vectors, &vector.query), &vector.patch));
+        feed_dump(&mut session, vector.dump.as_ref());
+        for (index, apply) in vector.applies.iter().enumerate() {
+            session
+                .begin_apply(&apply.settings)
+                .unwrap_or_else(|error| panic!("{}: {error:?}", vector.name));
+            let name = format!("{} #{index}", vector.name);
+            assert_eq!(drain(&mut session, &name), apply.expected, "{name}");
+        }
+    }
+}
+
+#[test]
+fn session_profile_writes_match_the_shared_vectors() {
+    let vectors = vectors();
+    require_non_empty(&vectors.session_write_profile, "sessionWriteProfile");
+    for vector in &vectors.session_write_profile {
+        let mut session = connected(&patched(query(&vectors, &vector.query), &vector.patch));
+        feed_dump(&mut session, vector.dump.as_ref());
+        session
+            .begin_write_profile(vector.slot, &vector.settings)
+            .unwrap_or_else(|error| panic!("{}: {error:?}", vector.name));
+        assert_eq!(
+            drain(&mut session, &vector.name),
+            vector.expected,
+            "{}",
+            vector.name
+        );
     }
 }

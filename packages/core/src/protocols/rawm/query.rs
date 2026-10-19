@@ -1,5 +1,9 @@
+use serde::Serialize;
+use serde_json::Value;
+
 use super::envelope::{event_length, with_protocol_envelope};
 use super::error::RawmError;
+use super::json::{integer, number};
 
 const CMD_QUERY: u8 = 0x01;
 const CMD_QUERY_RESULT: u8 = 0x02;
@@ -46,6 +50,61 @@ pub fn query_json(event: &[u8]) -> Result<String, RawmError> {
         .map_err(|_| RawmError::InvalidUtf8)
 }
 
+/// Quem respondeu à consulta, e a resposta inteira.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, derive(ts_rs::TS))]
+pub struct RawmIdentity {
+    pub device_name: String,
+    pub product_id: u32,
+    /// Null quando a resposta não traz um id de fabricante válido.
+    pub vendor_id: Option<u32>,
+    pub crc_supported: bool,
+    /// A resposta como chegou, para quem descreve o aparelho.
+    #[cfg_attr(test, ts(type = "Record<string, unknown>"))]
+    pub raw: Value,
+}
+
+/// Um id USB: inteiro, não negativo; um valor além de `u32` conta como ausente.
+fn usb_id(value: Option<&Value>) -> Option<u32> {
+    value
+        .and_then(integer)
+        .and_then(|id| u32::try_from(id).ok())
+}
+
+/// A identidade que a resposta declara. O nome é aparado; sem nome ou sem
+/// produto não há identidade. Os vetores `identity` de `rawm-protocol.json`
+/// fixam a paridade com o driver TypeScript anterior.
+pub fn parse_identity(raw: Value) -> Result<RawmIdentity, RawmError> {
+    let device_name = raw
+        .get("dn")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .unwrap_or_default()
+        .to_owned();
+    if device_name.is_empty() {
+        return Err(RawmError::InvalidIdentity);
+    }
+    let product_id = usb_id(raw.get("pi")).ok_or(RawmError::InvalidIdentity)?;
+    Ok(RawmIdentity {
+        device_name,
+        product_id,
+        vendor_id: usb_id(raw.get("vi")),
+        crc_supported: raw.get("crc").and_then(number) == Some(1.0),
+        raw,
+    })
+}
+
+/// A resposta à consulta, lida até a identidade.
+pub fn parse_query_answer(event: &[u8]) -> Result<RawmIdentity, RawmError> {
+    let text = query_json(event)?;
+    let raw: Value = serde_json::from_str(&text).map_err(|_| RawmError::InvalidQueryJson)?;
+    if !raw.is_object() {
+        return Err(RawmError::InvalidQueryJson);
+    }
+    parse_identity(raw)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -90,5 +149,28 @@ mod tests {
     fn rejects_a_payload_that_is_not_valid_utf8() {
         let event = with_protocol_envelope(&[0x02, 0, 0xff, 0xfe], false).expect("válido");
         assert_eq!(query_json(&event), Err(RawmError::InvalidUtf8));
+    }
+
+    #[test]
+    fn the_answer_must_be_a_json_object() {
+        let event = |text: &str| {
+            let mut body = vec![0x02, 0];
+            body.extend_from_slice(text.as_bytes());
+            body.push(0);
+            with_protocol_envelope(&body, false).expect("válido")
+        };
+        assert_eq!(
+            parse_query_answer(&event("[1]")),
+            Err(RawmError::InvalidQueryJson)
+        );
+        assert_eq!(
+            parse_query_answer(&event("{")),
+            Err(RawmError::InvalidQueryJson)
+        );
+        assert_eq!(
+            parse_query_answer(&event(r#"{"dn":"Leviathan V4","pi":9026}"#))
+                .map(|identity| identity.product_id),
+            Ok(9026)
+        );
     }
 }

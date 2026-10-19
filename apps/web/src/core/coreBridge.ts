@@ -7,7 +7,6 @@ import init, {
   decodeOnboardEntry as wasmDecodeOnboardEntry,
   decodeReportChunk as wasmDecodeReportChunk,
   describeLeviathanV4 as wasmDescribeLeviathanV4,
-  dpiAxes as wasmDpiAxes,
   encode_action as wasmEncodeAction,
   encode_config_reset as wasmEncodeConfigReset,
   encode_mouse_function as wasmEncodeMouseFunction,
@@ -23,26 +22,30 @@ import init, {
   leviathanButtonId as wasmLeviathanButtonId,
   leviathanKeyId as wasmLeviathanKeyId,
   leviathanLodMillimetres as wasmLeviathanLodMillimetres,
-  leviathanOnboardSlotCount as wasmLeviathanOnboardSlotCount,
-  leviathanShowPowerKeyId as wasmLeviathanShowPowerKeyId,
+  leviathanQueryTimeoutMs as wasmLeviathanQueryTimeoutMs,
+  LeviathanV4Session as WasmLeviathanV4Session,
   leviathanV4Usb as wasmLeviathanV4Usb,
   matchesLeviathanV4 as wasmMatchesLeviathanV4,
   OnboardConfigCollector as WasmOnboardConfigCollector,
   parseMouseParamState as wasmParseMouseParamState,
-  parseNotification as wasmParseNotification,
+  parseRawmIdentity as wasmParseRawmIdentity,
   queryJson as wasmQueryJson,
   RawEventAssembler as WasmRawEventAssembler,
   settingsFromSlot as wasmSettingsFromSlot,
   withProtocolEnvelope as wasmWithProtocolEnvelope,
 } from 'gearhub-core-wasm';
 import type {
+  DpiAxes,
   LeviathanV4Description,
   LeviathanV4Usb,
   MouseActionId,
   MouseSettings,
   OnboardBinding,
   OnboardSlotConfig,
+  RawmIdentity,
   RawmMouseParamState,
+  SessionEvent,
+  SessionStep,
 } from '@gearhub/shared';
 import { asRawmError } from './rawmError';
 
@@ -230,11 +233,6 @@ export function leviathanButtonId(keyId: number): string | null {
   return wasmLeviathanButtonId(keyId) ?? null;
 }
 
-/** A sétima tecla, que nenhum controle do editor alcança. */
-export function leviathanShowPowerKeyId(): number {
-  return wasmLeviathanShowPowerKeyId();
-}
-
 /** O evento que devolve à sétima tecla o indicador de bateria. */
 export function encodeLeviathanShowPower(): Uint8Array {
   return wasmEncodeLeviathanShowPower();
@@ -277,11 +275,6 @@ export function describeLeviathanV4(raw: Record<string, unknown>): LeviathanV4De
   } catch (error) {
     throw asRawmError(error);
   }
-}
-
-/** Quantas memórias onboard a consulta anuncia. */
-export function leviathanOnboardSlotCount(raw: Record<string, unknown>): number {
-  return wasmLeviathanOnboardSlotCount(raw);
 }
 
 /** A distância, em milímetros, de um nível de LOD; `null` para um nível desconhecido. */
@@ -378,54 +371,6 @@ export function decodeReportChunk(
   }
 }
 
-/** O que o mouse anuncia por conta própria, sem que o app pergunte. */
-export type RawmNotification =
-  | { kind: 'dpi'; value: number }
-  | { kind: 'dpi-xy'; value: number }
-  | { kind: 'polling'; value: number }
-  | { kind: 'onboard-index'; index: number }
-  | { kind: 'onboard-config'; payload: Uint8Array };
-
-/**
- * O núcleo carrega o enum com dados; a ponte wasm-bindgen o achata num array
- * de três posições fixas, `[kind, value, payload]`, em vez de um `struct` com
- * getters — nenhuma notificação decodificada precisa de identidade ou estado
- * mutável, então uma classe ali só custaria uma alocação por evento sem
- * comprar nada. Esta função remonta o array na união acima, para que nenhum
- * consumidor perceba a travessia.
- */
-export function parseNotification(event: Uint8Array): RawmNotification | null {
-  const decoded = wasmParseNotification(event) as
-    [string, number, Uint8Array | undefined] | undefined;
-  if (!decoded) return null;
-  const [kind, value, payload] = decoded;
-  switch (kind) {
-    case 'dpi':
-      return { kind: 'dpi', value };
-    case 'dpi-xy':
-      return { kind: 'dpi-xy', value };
-    case 'polling':
-      return { kind: 'polling', value };
-    case 'onboard-index':
-      return { kind: 'onboard-index', index: value };
-    case 'onboard-config':
-      // The core's wasm-bindgen return type is `Uint8Array | undefined` because the flattened
-      // array slot is optional in general, but for `onboard-config` the core only ever produces
-      // this variant from a non-empty 0x14 payload (`notify.rs`'s `NOTIFY_MOUSE_CONFIG` arm
-      // requires `!payload.is_empty()`), so `payload` is never actually `undefined` here. The
-      // fallback is not a live path; it exists to satisfy the wider type.
-      return { kind: 'onboard-config', payload: payload ?? new Uint8Array() };
-    default:
-      return null;
-  }
-}
-
-/** CPI2 empacota X nos 16 bits baixos e Y nos altos. */
-export function dpiAxes(value: number): { x: number; y: number } {
-  const [x, y] = wasmDpiAxes(value);
-  return { x, y };
-}
-
 /**
  * Junta os pedaços que chegam num fluxo de eventos.
  *
@@ -473,6 +418,89 @@ export function settingsFromSlot(base: MouseSettings, slot: OnboardSlotConfig): 
     return wasmSettingsFromSlot(base, slot) as MouseSettings;
   } catch (error) {
     throw asRawmError(error);
+  }
+}
+
+/** A identidade que uma resposta de consulta declara. */
+export function parseRawmIdentity(raw: Record<string, unknown>): RawmIdentity {
+  try {
+    return wasmParseRawmIdentity(raw) as RawmIdentity;
+  } catch (error) {
+    throw asRawmError(error);
+  }
+}
+
+/** Quanto esperar a resposta de uma consulta, contando a abertura do dispositivo. */
+export function leviathanQueryTimeoutMs(): number {
+  return wasmLeviathanQueryTimeoutMs();
+}
+
+/**
+ * A sessão do Leviathan V4, que vive no núcleo: o que o mouse tem e o que
+ * enviar a seguir. Este invólucro só traduz o erro tipado e dá o tipo gerado
+ * ao que a ponte devolve.
+ */
+export class LeviathanV4Session {
+  private readonly inner = new WasmLeviathanV4Session();
+
+  /** O que um relatório que chegou significa. Só falha com uma consulta pendente. */
+  feedReport(reportId: number, report: Uint8Array): SessionEvent[] {
+    try {
+      return this.inner.feedReport(reportId, report) as SessionEvent[];
+    } catch (error) {
+      throw asRawmError(error);
+    }
+  }
+
+  beginQuery(epochSeconds = Math.floor(Date.now() / 1000)): void {
+    try {
+      this.inner.beginQuery(BigInt(epochSeconds));
+    } catch (error) {
+      throw asRawmError(error);
+    }
+  }
+
+  beginApply(settings: MouseSettings): void {
+    try {
+      this.inner.beginApply(settings);
+    } catch (error) {
+      throw asRawmError(error);
+    }
+  }
+
+  /** `slot` conta de 0. */
+  beginWriteProfile(slot: number, settings: MouseSettings): void {
+    try {
+      this.inner.beginWriteProfile(slot, settings);
+    } catch (error) {
+      throw asRawmError(error);
+    }
+  }
+
+  /** O próximo passo; `null` quando a operação acabou. */
+  nextStep(): SessionStep | null {
+    try {
+      return (this.inner.nextStep() as SessionStep | null) ?? null;
+    } catch (error) {
+      throw asRawmError(error);
+    }
+  }
+
+  abort(): void {
+    this.inner.abort();
+  }
+
+  /** A memória ativa, contando de 0; `null` antes da primeira resposta. */
+  activeSlot(): number | null {
+    return this.inner.activeSlot() ?? null;
+  }
+
+  dpi(): DpiAxes | null {
+    return (this.inner.dpi() as DpiAxes | null) ?? null;
+  }
+
+  slots(): OnboardSlotConfig[] | null {
+    return (this.inner.slots() as OnboardSlotConfig[] | null) ?? null;
   }
 }
 

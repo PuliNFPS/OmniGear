@@ -9,11 +9,12 @@ use std::collections::BTreeSet;
 
 use ts_rs::TS;
 
+use crate::command::HidCommand;
 use crate::device::{DpiStage, MouseActionId, MouseParameters, MouseRPlusSettings, MouseSettings};
 use crate::drivers::leviathan_v4::{
-    DpiAxes, DpiLimits, LeviathanV4Description, LeviathanV4Usb, NumericRange,
+    DpiAxes, DpiLimits, LeviathanV4Description, LeviathanV4Usb, NumericRange, SessionEvent, Step,
 };
-use crate::protocols::rawm::{MouseParamSnapshot, OnboardBinding, OnboardSlotConfig};
+use crate::protocols::rawm::{MouseParamSnapshot, OnboardBinding, OnboardSlotConfig, RawmIdentity};
 
 const DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../shared/src/generated");
 
@@ -37,6 +38,10 @@ fn generated() -> Vec<(&'static str, String)> {
         ("RawmMouseParamState", render::<MouseParamSnapshot>()),
         ("OnboardBinding", render::<OnboardBinding>()),
         ("OnboardSlotConfig", render::<OnboardSlotConfig>()),
+        ("RawmIdentity", render::<RawmIdentity>()),
+        ("HidCommand", render::<HidCommand>()),
+        ("SessionStep", render::<Step>()),
+        ("SessionEvent", render::<SessionEvent>()),
     ]
 }
 

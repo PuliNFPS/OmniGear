@@ -580,5 +580,1419 @@
       "payloads": ["00", "030a16010a0001010000"],
       "expected": null
     }
+  ],
+  "identity": [
+    {
+      "name": "o mouse da captura",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "expected": {
+        "deviceName": "LEVIATHAN V4",
+        "productId": 9034,
+        "vendorId": 6421,
+        "crcSupported": true
+      }
+    },
+    {
+      "name": "o receptor, sem crc",
+      "query": "leviathan-v4-captura",
+      "patch": { "dn": "RAWM HS Receiver", "pi": 9030, "vi": 6421, "crc": null },
+      "expected": {
+        "deviceName": "RAWM HS Receiver",
+        "productId": 9030,
+        "vendorId": 6421,
+        "crcSupported": false
+      }
+    },
+    {
+      "name": "nome com espaços nas pontas é aparado",
+      "query": "leviathan-v4-captura",
+      "patch": { "dn": "  Leviathan V4  " },
+      "expected": {
+        "deviceName": "Leviathan V4",
+        "productId": 9034,
+        "vendorId": 6421,
+        "crcSupported": true
+      }
+    },
+    {
+      "name": "sem vi: fabricante nulo",
+      "query": "leviathan-v4-captura",
+      "patch": { "vi": null },
+      "expected": {
+        "deviceName": "LEVIATHAN V4",
+        "productId": 9034,
+        "vendorId": null,
+        "crcSupported": true
+      }
+    },
+    {
+      "name": "vi que não é número: fabricante nulo",
+      "query": "leviathan-v4-captura",
+      "patch": { "vi": "a" },
+      "expected": {
+        "deviceName": "LEVIATHAN V4",
+        "productId": 9034,
+        "vendorId": null,
+        "crcSupported": true
+      }
+    },
+    {
+      "name": "crc diferente de 1 não conta",
+      "query": "leviathan-v4-captura",
+      "patch": { "crc": 2 },
+      "expected": {
+        "deviceName": "LEVIATHAN V4",
+        "productId": 9034,
+        "vendorId": 6421,
+        "crcSupported": false
+      }
+    },
+    {
+      "name": "sem dn",
+      "query": "leviathan-v4-captura",
+      "patch": { "dn": null },
+      "expected": null
+    },
+    {
+      "name": "dn em branco",
+      "query": "leviathan-v4-captura",
+      "patch": { "dn": "   " },
+      "expected": null
+    },
+    {
+      "name": "dn que não é texto",
+      "query": "leviathan-v4-captura",
+      "patch": { "dn": 5 },
+      "expected": null
+    },
+    {
+      "name": "sem pi",
+      "query": "leviathan-v4-captura",
+      "patch": { "pi": null },
+      "expected": null
+    },
+    {
+      "name": "pi fracionário",
+      "query": "leviathan-v4-captura",
+      "patch": { "pi": 1.5 },
+      "expected": null
+    },
+    {
+      "name": "pi negativo",
+      "query": "leviathan-v4-captura",
+      "patch": { "pi": -1 },
+      "expected": null
+    },
+    {
+      "name": "pi zero é válido",
+      "query": "leviathan-v4-captura",
+      "patch": { "pi": 0 },
+      "expected": {
+        "deviceName": "LEVIATHAN V4",
+        "productId": 0,
+        "vendorId": 6421,
+        "crcSupported": true
+      }
+    },
+    {
+      "name": "crc 0 não conta",
+      "query": "leviathan-v4-captura",
+      "patch": { "crc": 0 },
+      "expected": {
+        "deviceName": "LEVIATHAN V4",
+        "productId": 9034,
+        "vendorId": 6421,
+        "crcSupported": false
+      }
+    }
+  ],
+  "sessionEvents": [
+    {
+      "name": "DPI simétrico",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "reports": [
+        "c089ffffffff0b050040060000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      ],
+      "expected": [{ "kind": "dpi", "x": 1600, "y": 1600 }]
+    },
+    {
+      "name": "DPI com eixos independentes",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "reports": [
+        "c08bffffffff0b070620034006000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      ],
+      "expected": [{ "kind": "dpi", "x": 800, "y": 1600 }]
+    },
+    {
+      "name": "DPI zerado não vira evento",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "reports": [
+        "c089ffffffff0b050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      ],
+      "expected": []
+    },
+    {
+      "name": "troca de memória",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "reports": [
+        "c088ffffffff0b042201000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      ],
+      "expected": [{ "kind": "active-slot", "index": 1 }]
+    },
+    {
+      "name": "a mesma memória anunciada de novo",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "reports": [
+        "c088ffffffff0b042200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      ],
+      "expected": [{ "kind": "active-slot", "index": 0 }]
+    },
+    {
+      "name": "memória além das que o mouse tem é ignorada",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "reports": [
+        "c088ffffffff0b042204000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      ],
+      "expected": []
+    },
+    {
+      "name": "polling é ignorado",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "reports": [
+        "c089ffffffff0b0501e8030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      ],
+      "expected": []
+    },
+    {
+      "name": "dump montado",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "reports": [
+        "c088ffffffff0b041400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "c091ffffffff0b0d14030a16010a0001010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "c088ffffffff0b0414ff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      ],
+      "expected": [
+        {
+          "kind": "onboard-slots",
+          "slots": [
+            {
+              "index": 0,
+              "bindings": [
+                { "keyIds": [10], "action": "clique-esquerdo", "raw": "030a16010a0001010000" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "relatório que não decodifica, sem consulta pendente, é pulado",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "reports": [
+        "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+        "c089ffffffff0b050020030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      ],
+      "expected": [{ "kind": "dpi", "x": 800, "y": 800 }]
+    },
+    {
+      "name": "DPI com um eixo zerado não vira evento",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "reports": [
+        "c08bffffffff0b070600004006000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      ],
+      "expected": []
+    }
+  ],
+  "sessionApply": [
+    {
+      "name": "sem dump: aplicação completa",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "dump": null,
+      "applies": [
+        {
+          "settings": {
+            "buttons": {
+              "esquerdo": "clique-esquerdo",
+              "direito": "clique-direito",
+              "central": "clique-central",
+              "lateral-traseiro": "voltar",
+              "lateral-dianteiro": "avancar",
+              "dpi": "dpi-ciclo"
+            },
+            "dpiStages": [
+              { "id": "estagio-1", "x": 400, "y": 400 },
+              { "id": "estagio-2", "x": 800, "y": 800 },
+              { "id": "estagio-3", "x": 1600, "y": 1600 },
+              { "id": "estagio-4", "x": 3200, "y": 3200 }
+            ],
+            "activeStageId": "estagio-2",
+            "independentAxes": false,
+            "pollingRate": 500,
+            "performanceMode": "gaming-plus",
+            "parameters": {
+              "motionSync": true,
+              "angleSnapping": false,
+              "rippleControl": false,
+              "wirelessTurbo": true,
+              "liftOffDistance": 2,
+              "sensorRotation": 0,
+              "debounce": 0,
+              "sleepTimeout": 1
+            },
+            "rPlus": {
+              "activatorButtonId": "lateral-dianteiro",
+              "buttons": {
+                "esquerdo": "desativado",
+                "direito": "desativado",
+                "central": "desativado",
+                "lateral-traseiro": "desativado",
+                "lateral-dianteiro": "desativado",
+                "dpi": "desativado"
+              }
+            }
+          },
+          "expected": [
+            {
+              "send": "c088030824fcf0030303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c0be0344246b16033f152003f4013008900120034006800c00000000000000000003000000000002070000000000000001000000080102060400000000080001"
+            },
+            {
+              "send": "c0860481828684000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24f67d030a16010a00010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f240661030a16010b00010200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24779e030a16010c00010300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24a790030a16010e00010400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f2437e2030a16010f00010500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c091031124a65f030c18011002010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c09103112475f1030c18010d020e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "com dump e mapeamentos iguais: só parâmetros",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "dump": [
+        "00",
+        "030a16010a0001010000",
+        "030a16010b0001020000",
+        "030a16010c0001030000",
+        "030a16010e0001040000",
+        "030a16010f0001050000",
+        "030c18011002010000000000",
+        "030c18010d020e0000000000",
+        "ff"
+      ],
+      "applies": [
+        {
+          "settings": {
+            "buttons": {
+              "esquerdo": "clique-esquerdo",
+              "direito": "clique-direito",
+              "central": "clique-central",
+              "lateral-traseiro": "voltar",
+              "lateral-dianteiro": "avancar",
+              "dpi": "dpi-ciclo"
+            },
+            "dpiStages": [
+              { "id": "estagio-1", "x": 400, "y": 400 },
+              { "id": "estagio-2", "x": 800, "y": 800 },
+              { "id": "estagio-3", "x": 1600, "y": 1600 },
+              { "id": "estagio-4", "x": 3200, "y": 3200 }
+            ],
+            "activeStageId": "estagio-2",
+            "independentAxes": false,
+            "pollingRate": 500,
+            "performanceMode": "gaming-plus",
+            "parameters": {
+              "motionSync": true,
+              "angleSnapping": false,
+              "rippleControl": false,
+              "wirelessTurbo": true,
+              "liftOffDistance": 2,
+              "sensorRotation": 0,
+              "debounce": 0,
+              "sleepTimeout": 1
+            },
+            "rPlus": {
+              "activatorButtonId": "lateral-dianteiro",
+              "buttons": {
+                "esquerdo": "desativado",
+                "direito": "desativado",
+                "central": "desativado",
+                "lateral-traseiro": "desativado",
+                "lateral-dianteiro": "desativado",
+                "dpi": "desativado"
+              }
+            }
+          },
+          "expected": [
+            {
+              "send": "c0be0344246b16033f152003f4013008900120034006800c00000000000000000003000000000002070000000000000001000000080102060400000000080001"
+            },
+            {
+              "send": "c0860481828684000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mapeamento mudado: completa, e o que o app não nomeia volta",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "dump": [
+        "00",
+        "030a16010a0001010000",
+        "030a16010b0001020000",
+        "030a16010c0001030000",
+        "030a16010e0001040000",
+        "030a16010f0001050000",
+        "030c18011002010000000000",
+        "030c18010d020e0000000000",
+        "0308050160010203",
+        "ff"
+      ],
+      "applies": [
+        {
+          "settings": {
+            "buttons": {
+              "esquerdo": "clique-esquerdo",
+              "direito": "clique-direito",
+              "central": "desativado",
+              "lateral-traseiro": "voltar",
+              "lateral-dianteiro": "avancar",
+              "dpi": "dpi-ciclo"
+            },
+            "dpiStages": [
+              { "id": "estagio-1", "x": 400, "y": 400 },
+              { "id": "estagio-2", "x": 800, "y": 800 },
+              { "id": "estagio-3", "x": 1600, "y": 1600 },
+              { "id": "estagio-4", "x": 3200, "y": 3200 }
+            ],
+            "activeStageId": "estagio-2",
+            "independentAxes": false,
+            "pollingRate": 4000,
+            "performanceMode": "gaming-plus",
+            "parameters": {
+              "motionSync": true,
+              "angleSnapping": false,
+              "rippleControl": false,
+              "wirelessTurbo": true,
+              "liftOffDistance": 2,
+              "sensorRotation": 0,
+              "debounce": 0,
+              "sleepTimeout": 1
+            },
+            "rPlus": {
+              "activatorButtonId": "lateral-dianteiro",
+              "buttons": {
+                "esquerdo": "desativado",
+                "direito": "desativado",
+                "central": "desativado",
+                "lateral-traseiro": "desativado",
+                "lateral-dianteiro": "desativado",
+                "dpi": "desativado"
+              }
+            }
+          },
+          "expected": [
+            {
+              "send": "c088030824fcf0030303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c0be034424eee1033f152003a00f3008900120034006800c00000000000000000003000000000002070000000000000001000000080102060400000000080001"
+            },
+            {
+              "send": "c0860481828684000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24f67d030a16010a00010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f240661030a16010b00010200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24a790030a16010e00010400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f2437e2030a16010f00010500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c091031124a65f030c18011002010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c09103112475f1030c18010d020e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08d030d2455bb030805016001020300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "macro num botão do editor: sempre completa, e a macro não volta",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "dump": [
+        "00",
+        "030a16010b0001020000",
+        "030a16010c0001030000",
+        "030a16010e0001040000",
+        "030a16010f0001050000",
+        "030c18011002010000000000",
+        "030c18010d020e0000000000",
+        "030805010a010203",
+        "ff"
+      ],
+      "applies": [
+        {
+          "settings": {
+            "buttons": {
+              "esquerdo": "clique-esquerdo",
+              "direito": "clique-direito",
+              "central": "clique-central",
+              "lateral-traseiro": "voltar",
+              "lateral-dianteiro": "avancar",
+              "dpi": "dpi-ciclo"
+            },
+            "dpiStages": [
+              { "id": "estagio-1", "x": 400, "y": 400 },
+              { "id": "estagio-2", "x": 800, "y": 800 },
+              { "id": "estagio-3", "x": 1600, "y": 1600 },
+              { "id": "estagio-4", "x": 3200, "y": 3200 }
+            ],
+            "activeStageId": "estagio-2",
+            "independentAxes": false,
+            "pollingRate": 4000,
+            "performanceMode": "gaming-plus",
+            "parameters": {
+              "motionSync": true,
+              "angleSnapping": false,
+              "rippleControl": false,
+              "wirelessTurbo": true,
+              "liftOffDistance": 2,
+              "sensorRotation": 0,
+              "debounce": 0,
+              "sleepTimeout": 1
+            },
+            "rPlus": {
+              "activatorButtonId": "lateral-dianteiro",
+              "buttons": {
+                "esquerdo": "desativado",
+                "direito": "desativado",
+                "central": "desativado",
+                "lateral-traseiro": "desativado",
+                "lateral-dianteiro": "desativado",
+                "dpi": "desativado"
+              }
+            }
+          },
+          "expected": [
+            {
+              "send": "c088030824fcf0030303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c0be034424eee1033f152003a00f3008900120034006800c00000000000000000003000000000002070000000000000001000000080102060400000000080001"
+            },
+            {
+              "send": "c0860481828684000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24f67d030a16010a00010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f240661030a16010b00010200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24779e030a16010c00010300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24a790030a16010e00010400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f2437e2030a16010f00010500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c091031124a65f030c18011002010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c09103112475f1030c18010d020e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "duas aplicações seguidas: a segunda só com parâmetros",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "dump": null,
+      "applies": [
+        {
+          "settings": {
+            "buttons": {
+              "esquerdo": "clique-esquerdo",
+              "direito": "clique-direito",
+              "central": "clique-central",
+              "lateral-traseiro": "voltar",
+              "lateral-dianteiro": "avancar",
+              "dpi": "dpi-ciclo"
+            },
+            "dpiStages": [
+              { "id": "estagio-1", "x": 400, "y": 400 },
+              { "id": "estagio-2", "x": 800, "y": 800 },
+              { "id": "estagio-3", "x": 1600, "y": 1600 },
+              { "id": "estagio-4", "x": 3200, "y": 3200 }
+            ],
+            "activeStageId": "estagio-2",
+            "independentAxes": false,
+            "pollingRate": 4000,
+            "performanceMode": "gaming-plus",
+            "parameters": {
+              "motionSync": true,
+              "angleSnapping": false,
+              "rippleControl": false,
+              "wirelessTurbo": true,
+              "liftOffDistance": 2,
+              "sensorRotation": 0,
+              "debounce": 0,
+              "sleepTimeout": 1
+            },
+            "rPlus": {
+              "activatorButtonId": "lateral-dianteiro",
+              "buttons": {
+                "esquerdo": "desativado",
+                "direito": "desativado",
+                "central": "desativado",
+                "lateral-traseiro": "desativado",
+                "lateral-dianteiro": "desativado",
+                "dpi": "desativado"
+              }
+            }
+          },
+          "expected": [
+            {
+              "send": "c088030824fcf0030303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c0be034424eee1033f152003a00f3008900120034006800c00000000000000000003000000000002070000000000000001000000080102060400000000080001"
+            },
+            {
+              "send": "c0860481828684000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24f67d030a16010a00010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f240661030a16010b00010200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24779e030a16010c00010300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24a790030a16010e00010400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f2437e2030a16010f00010500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c091031124a65f030c18011002010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c09103112475f1030c18010d020e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 }
+          ]
+        },
+        {
+          "settings": {
+            "buttons": {
+              "esquerdo": "clique-esquerdo",
+              "direito": "clique-direito",
+              "central": "clique-central",
+              "lateral-traseiro": "voltar",
+              "lateral-dianteiro": "avancar",
+              "dpi": "dpi-ciclo"
+            },
+            "dpiStages": [
+              { "id": "estagio-1", "x": 400, "y": 400 },
+              { "id": "estagio-2", "x": 800, "y": 800 },
+              { "id": "estagio-3", "x": 1600, "y": 1600 },
+              { "id": "estagio-4", "x": 3200, "y": 3200 }
+            ],
+            "activeStageId": "estagio-2",
+            "independentAxes": false,
+            "pollingRate": 500,
+            "performanceMode": "gaming-plus",
+            "parameters": {
+              "motionSync": true,
+              "angleSnapping": false,
+              "rippleControl": false,
+              "wirelessTurbo": true,
+              "liftOffDistance": 2,
+              "sensorRotation": 0,
+              "debounce": 0,
+              "sleepTimeout": 1
+            },
+            "rPlus": {
+              "activatorButtonId": "lateral-dianteiro",
+              "buttons": {
+                "esquerdo": "desativado",
+                "direito": "desativado",
+                "central": "desativado",
+                "lateral-traseiro": "desativado",
+                "lateral-dianteiro": "desativado",
+                "dpi": "desativado"
+              }
+            }
+          },
+          "expected": [
+            {
+              "send": "c0be0344246b16033f152003f4013008900120034006800c00000000000000000003000000000002070000000000000001000000080102060400000000080001"
+            },
+            {
+              "send": "c0860481828684000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "sem CRC",
+      "query": "leviathan-v4-captura",
+      "patch": { "crc": 0 },
+      "dump": null,
+      "applies": [
+        {
+          "settings": {
+            "buttons": {
+              "esquerdo": "clique-esquerdo",
+              "direito": "clique-direito",
+              "central": "clique-central",
+              "lateral-traseiro": "voltar",
+              "lateral-dianteiro": "avancar",
+              "dpi": "dpi-ciclo"
+            },
+            "dpiStages": [
+              { "id": "estagio-1", "x": 400, "y": 400 },
+              { "id": "estagio-2", "x": 800, "y": 800 },
+              { "id": "estagio-3", "x": 1600, "y": 1600 },
+              { "id": "estagio-4", "x": 3200, "y": 3200 }
+            ],
+            "activeStageId": "estagio-2",
+            "independentAxes": false,
+            "pollingRate": 4000,
+            "performanceMode": "gaming-plus",
+            "parameters": {
+              "motionSync": true,
+              "angleSnapping": false,
+              "rippleControl": false,
+              "wirelessTurbo": true,
+              "liftOffDistance": 2,
+              "sensorRotation": 0,
+              "debounce": 0,
+              "sleepTimeout": 1
+            },
+            "rPlus": {
+              "activatorButtonId": "lateral-dianteiro",
+              "buttons": {
+                "esquerdo": "desativado",
+                "direito": "desativado",
+                "central": "desativado",
+                "lateral-traseiro": "desativado",
+                "lateral-dianteiro": "desativado",
+                "dpi": "desativado"
+              }
+            }
+          },
+          "expected": [
+            {
+              "send": "c0830303030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c0be033f152003a00f3008900120034006800c000000000000000000030000000000020700000000000000010000000801020604000000000800010481828684"
+            },
+            {
+              "send": "c0810000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08a030a16010a000101000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08a030a16010b000102000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08a030a16010c000103000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08a030a16010e000104000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08a030a16010f000105000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08c030c180110020100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08c030c18010d020e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "dump de outra memória não conta",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "dump": [
+        "02",
+        "030a16010a0001010000",
+        "030a16010b0001020000",
+        "030a16010c0001030000",
+        "030a16010e0001040000",
+        "030a16010f0001050000",
+        "030c18011002010000000000",
+        "030c18010d020e0000000000",
+        "ff"
+      ],
+      "applies": [
+        {
+          "settings": {
+            "buttons": {
+              "esquerdo": "clique-esquerdo",
+              "direito": "clique-direito",
+              "central": "clique-central",
+              "lateral-traseiro": "voltar",
+              "lateral-dianteiro": "avancar",
+              "dpi": "dpi-ciclo"
+            },
+            "dpiStages": [
+              { "id": "estagio-1", "x": 400, "y": 400 },
+              { "id": "estagio-2", "x": 800, "y": 800 },
+              { "id": "estagio-3", "x": 1600, "y": 1600 },
+              { "id": "estagio-4", "x": 3200, "y": 3200 }
+            ],
+            "activeStageId": "estagio-2",
+            "independentAxes": false,
+            "pollingRate": 500,
+            "performanceMode": "gaming-plus",
+            "parameters": {
+              "motionSync": true,
+              "angleSnapping": false,
+              "rippleControl": false,
+              "wirelessTurbo": true,
+              "liftOffDistance": 2,
+              "sensorRotation": 0,
+              "debounce": 0,
+              "sleepTimeout": 1
+            },
+            "rPlus": {
+              "activatorButtonId": "lateral-dianteiro",
+              "buttons": {
+                "esquerdo": "desativado",
+                "direito": "desativado",
+                "central": "desativado",
+                "lateral-traseiro": "desativado",
+                "lateral-dianteiro": "desativado",
+                "dpi": "desativado"
+              }
+            }
+          },
+          "expected": [
+            {
+              "send": "c088030824fcf0030303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c0be0344246b16033f152003f4013008900120034006800c00000000000000000003000000000002070000000000000001000000080102060400000000080001"
+            },
+            {
+              "send": "c0860481828684000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24f67d030a16010a00010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f240661030a16010b00010200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24779e030a16010c00010300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24a790030a16010e00010400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f2437e2030a16010f00010500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c091031124a65f030c18011002010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c09103112475f1030c18010d020e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "entrada sem nome fora do editor força o reset, mesmo com o editor igual",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "dump": [
+        "00",
+        "030a16010a0001010000",
+        "030a16010b0001020000",
+        "030a16010c0001030000",
+        "030a16010e0001040000",
+        "030a16010f0001050000",
+        "030c18011002010000000000",
+        "030c18010d020e0000000000",
+        "0308050160010203",
+        "ff"
+      ],
+      "applies": [
+        {
+          "settings": {
+            "buttons": {
+              "esquerdo": "clique-esquerdo",
+              "direito": "clique-direito",
+              "central": "clique-central",
+              "lateral-traseiro": "voltar",
+              "lateral-dianteiro": "avancar",
+              "dpi": "dpi-ciclo"
+            },
+            "dpiStages": [
+              { "id": "estagio-1", "x": 400, "y": 400 },
+              { "id": "estagio-2", "x": 800, "y": 800 },
+              { "id": "estagio-3", "x": 1600, "y": 1600 },
+              { "id": "estagio-4", "x": 3200, "y": 3200 }
+            ],
+            "activeStageId": "estagio-2",
+            "independentAxes": false,
+            "pollingRate": 4000,
+            "performanceMode": "gaming-plus",
+            "parameters": {
+              "motionSync": true,
+              "angleSnapping": false,
+              "rippleControl": false,
+              "wirelessTurbo": true,
+              "liftOffDistance": 2,
+              "sensorRotation": 0,
+              "debounce": 0,
+              "sleepTimeout": 1
+            },
+            "rPlus": {
+              "activatorButtonId": "lateral-dianteiro",
+              "buttons": {
+                "esquerdo": "desativado",
+                "direito": "desativado",
+                "central": "desativado",
+                "lateral-traseiro": "desativado",
+                "lateral-dianteiro": "desativado",
+                "dpi": "desativado"
+              }
+            }
+          },
+          "expected": [
+            {
+              "send": "c088030824fcf0030303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c0be034424eee1033f152003a00f3008900120034006800c00000000000000000003000000000002070000000000000001000000080102060400000000080001"
+            },
+            {
+              "send": "c0860481828684000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24f67d030a16010a00010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f240661030a16010b00010200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24779e030a16010c00010300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24a790030a16010e00010400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f2437e2030a16010f00010500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c091031124a65f030c18011002010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c09103112475f1030c18010d020e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08d030d2455bb030805016001020300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "R-Plus ligado, sem dump: o par entra no conjunto completo",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "dump": null,
+      "applies": [
+        {
+          "settings": {
+            "buttons": {
+              "esquerdo": "clique-esquerdo",
+              "direito": "clique-direito",
+              "central": "clique-central",
+              "lateral-traseiro": "voltar",
+              "lateral-dianteiro": "avancar",
+              "dpi": "dpi-ciclo"
+            },
+            "dpiStages": [
+              { "id": "estagio-1", "x": 400, "y": 400 },
+              { "id": "estagio-2", "x": 800, "y": 800 },
+              { "id": "estagio-3", "x": 1600, "y": 1600 },
+              { "id": "estagio-4", "x": 3200, "y": 3200 }
+            ],
+            "activeStageId": "estagio-2",
+            "independentAxes": false,
+            "pollingRate": 4000,
+            "performanceMode": "gaming-plus",
+            "parameters": {
+              "motionSync": true,
+              "angleSnapping": false,
+              "rippleControl": false,
+              "wirelessTurbo": true,
+              "liftOffDistance": 2,
+              "sensorRotation": 0,
+              "debounce": 0,
+              "sleepTimeout": 1
+            },
+            "rPlus": {
+              "activatorButtonId": "lateral-dianteiro",
+              "buttons": {
+                "esquerdo": "desativado",
+                "direito": "desativado",
+                "central": "dpi-aumentar",
+                "lateral-traseiro": "desativado",
+                "lateral-dianteiro": "desativado",
+                "dpi": "desativado"
+              }
+            }
+          },
+          "expected": [
+            {
+              "send": "c088030824fcf0030303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c0be034424eee1033f152003a00f3008900120034006800c00000000000000000003000000000002070000000000000001000000080102060400000000080001"
+            },
+            {
+              "send": "c0860481828684000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24f67d030a16010a00010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f240661030a16010b00010200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24779e030a16010c00010300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f24a790030a16010e00010400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c08f030f2437e2030a16010f00010500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c091031124a65f030c18011002010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c092031224d9b9030d18020f0c020200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 },
+            {
+              "send": "c09103112475f1030c18010d020e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "R-Plus ligado, com o par no dump: só parâmetros",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "dump": [
+        "00",
+        "030a16010a0001010000",
+        "030a16010b0001020000",
+        "030a16010c0001030000",
+        "030a16010e0001040000",
+        "030a16010f0001050000",
+        "030c18011002010000000000",
+        "030d18020f0c02020000000000",
+        "030c18010d020e0000000000",
+        "ff"
+      ],
+      "applies": [
+        {
+          "settings": {
+            "buttons": {
+              "esquerdo": "clique-esquerdo",
+              "direito": "clique-direito",
+              "central": "clique-central",
+              "lateral-traseiro": "voltar",
+              "lateral-dianteiro": "avancar",
+              "dpi": "dpi-ciclo"
+            },
+            "dpiStages": [
+              { "id": "estagio-1", "x": 400, "y": 400 },
+              { "id": "estagio-2", "x": 800, "y": 800 },
+              { "id": "estagio-3", "x": 1600, "y": 1600 },
+              { "id": "estagio-4", "x": 3200, "y": 3200 }
+            ],
+            "activeStageId": "estagio-2",
+            "independentAxes": false,
+            "pollingRate": 500,
+            "performanceMode": "gaming-plus",
+            "parameters": {
+              "motionSync": true,
+              "angleSnapping": false,
+              "rippleControl": false,
+              "wirelessTurbo": true,
+              "liftOffDistance": 2,
+              "sensorRotation": 0,
+              "debounce": 0,
+              "sleepTimeout": 1
+            },
+            "rPlus": {
+              "activatorButtonId": "lateral-dianteiro",
+              "buttons": {
+                "esquerdo": "desativado",
+                "direito": "desativado",
+                "central": "dpi-aumentar",
+                "lateral-traseiro": "desativado",
+                "lateral-dianteiro": "desativado",
+                "dpi": "desativado"
+              }
+            }
+          },
+          "expected": [
+            {
+              "send": "c0be0344246b16033f152003f4013008900120034006800c00000000000000000003000000000002070000000000000001000000080102060400000000080001"
+            },
+            {
+              "send": "c0860481828684000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            { "wait": 8 }
+          ]
+        }
+      ]
+    }
+  ],
+  "sessionWriteProfile": [
+    {
+      "name": "grava na memória de destino, com o que ela guarda sem nome",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "dump": ["00", "0308050160010203", "01", "0308050161040506", "ff"],
+      "slot": 1,
+      "settings": {
+        "buttons": {
+          "esquerdo": "clique-esquerdo",
+          "direito": "clique-direito",
+          "central": "clique-central",
+          "lateral-traseiro": "voltar",
+          "lateral-dianteiro": "avancar",
+          "dpi": "dpi-ciclo"
+        },
+        "dpiStages": [
+          { "id": "estagio-1", "x": 400, "y": 400 },
+          { "id": "estagio-2", "x": 800, "y": 800 },
+          { "id": "estagio-3", "x": 1600, "y": 1600 },
+          { "id": "estagio-4", "x": 3200, "y": 3200 }
+        ],
+        "activeStageId": "estagio-2",
+        "independentAxes": false,
+        "pollingRate": 4000,
+        "performanceMode": "gaming-plus",
+        "parameters": {
+          "motionSync": true,
+          "angleSnapping": false,
+          "rippleControl": false,
+          "wirelessTurbo": true,
+          "liftOffDistance": 2,
+          "sensorRotation": 0,
+          "debounce": 0,
+          "sleepTimeout": 1
+        },
+        "rPlus": {
+          "activatorButtonId": "lateral-dianteiro",
+          "buttons": {
+            "esquerdo": "desativado",
+            "direito": "desativado",
+            "central": "desativado",
+            "lateral-traseiro": "desativado",
+            "lateral-dianteiro": "desativado",
+            "dpi": "desativado"
+          }
+        }
+      },
+      "expected": [
+        {
+          "send": "c088030824fcf0030303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c08c030c24c65c060734010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c0be034424eee1033f152003a00f3008900120034006800c00000000000000000003000000000002070000000000000001000000080102060400000000080001"
+        },
+        {
+          "send": "c0860481828684000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c08f030f24f67d030a16010a00010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c08f030f240661030a16010b00010200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c08f030f24779e030a16010c00010300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c08f030f24a790030a16010e00010400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c08f030f2437e2030a16010f00010500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c091031124a65f030c18011002010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c09103112475f1030c18010d020e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c08d030d2423ef030805016104050600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c08c030c24421d060734000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 }
+      ]
+    },
+    {
+      "name": "sem dump: o colchete nomeia a memória 4",
+      "query": "leviathan-v4-captura",
+      "patch": {},
+      "dump": null,
+      "slot": 3,
+      "settings": {
+        "buttons": {
+          "esquerdo": "clique-esquerdo",
+          "direito": "clique-direito",
+          "central": "clique-central",
+          "lateral-traseiro": "voltar",
+          "lateral-dianteiro": "avancar",
+          "dpi": "dpi-ciclo"
+        },
+        "dpiStages": [
+          { "id": "estagio-1", "x": 400, "y": 400 },
+          { "id": "estagio-2", "x": 800, "y": 800 },
+          { "id": "estagio-3", "x": 1600, "y": 1600 },
+          { "id": "estagio-4", "x": 3200, "y": 3200 }
+        ],
+        "activeStageId": "estagio-2",
+        "independentAxes": false,
+        "pollingRate": 4000,
+        "performanceMode": "gaming-plus",
+        "parameters": {
+          "motionSync": true,
+          "angleSnapping": false,
+          "rippleControl": false,
+          "wirelessTurbo": true,
+          "liftOffDistance": 2,
+          "sensorRotation": 0,
+          "debounce": 0,
+          "sleepTimeout": 1
+        },
+        "rPlus": {
+          "activatorButtonId": "lateral-dianteiro",
+          "buttons": {
+            "esquerdo": "desativado",
+            "direito": "desativado",
+            "central": "desativado",
+            "lateral-traseiro": "desativado",
+            "lateral-dianteiro": "desativado",
+            "dpi": "desativado"
+          }
+        }
+      },
+      "expected": [
+        {
+          "send": "c088030824fcf0030303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c08c030c24a632060734010300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c0be034424eee1033f152003a00f3008900120034006800c00000000000000000003000000000002070000000000000001000000080102060400000000080001"
+        },
+        {
+          "send": "c0860481828684000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c08f030f24f67d030a16010a00010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c08f030f240661030a16010b00010200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c08f030f24779e030a16010c00010300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c08f030f24a790030a16010e00010400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c08f030f2437e2030a16010f00010500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c091031124a65f030c18011002010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c09103112475f1030c18010d020e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 },
+        {
+          "send": "c08c030c24421d060734000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        { "wait": 8 }
+      ]
+    }
   ]
 }

@@ -28,11 +28,11 @@ O teste é uma pergunta: **isso mudaria se a casca mudasse?** Se sim, é casca.
 **Regra:** comportamento novo de dispositivo entra no Rust. Uma tarefa de dispositivo que só
 produza `.ts` merece a pergunta — por que isto não está no núcleo?
 
-**Estado real (2026-09-30):** o **codec** migrou — envelope, CRC16, enquadramento de 64 bytes,
-montador de eventos, consulta e decodificação de notificações vivem em
-`packages/core/src/protocols/rawm/`, e `apps/web/src/hardware/rawm/protocol.ts` não existe
-mais. Todo o caminho de leitura está confirmado em hardware, inclusive a descrição e o bloco de
-parâmetros do passo 3 e o dump onboard do passo 4.
+**Estado real (2026-10-19):** a migração fechou. O **codec** migrou — envelope, CRC16,
+enquadramento de 64 bytes, montador de eventos, consulta e decodificação de notificações vivem
+em `packages/core/src/protocols/rawm/`, e `apps/web/src/hardware/rawm/protocol.ts` não existe
+mais. Os cinco passos estão confirmados em hardware, inclusive a descrição e o bloco de
+parâmetros do passo 3, o dump onboard do passo 4 e a sessão do passo 5.
 O vocabulário de ações (`MouseActionId`, gerado para TypeScript por `ts-rs`), a tabela
 ação↔bytes (`packages/core/src/protocols/rawm/actions.rs`) e a tabela de teclas do Leviathan V4
 (`packages/core/src/drivers/leviathan_v4/`) também vivem no núcleo, e `leviathanV4Keys.ts` não
@@ -40,10 +40,12 @@ existe mais. O passo 3 levou o bloco de parâmetros
 (`packages/core/src/protocols/rawm/param_snapshot.rs`), a descrição, o LOD e a identidade do
 Leviathan V4 (`packages/core/src/drivers/leviathan_v4/`); `MouseSettings` é do núcleo. O passo 4
 levou o dump onboard (`packages/core/src/protocols/rawm/onboard.rs`, e `settings_from_slot` em
-`drivers/leviathan_v4/`), e `onboardConfig.ts` não existe mais.
+`drivers/leviathan_v4/`), e `onboardConfig.ts` não existe mais. O passo 5 levou a sessão do
+driver (`packages/core/src/drivers/leviathan_v4/session.rs` e `mappings.rs`): `session.ts` e
+`notifications.ts` não existem mais, e `LeviathanV4Driver.ts` é só fila, bomba e ouvintes.
 
-Ainda em TypeScript, com passo marcado no spec: a sessão de `LeviathanV4Driver.ts` e a
-decodificação de `session.ts` (passo 5).
+Nenhum protocolo resta em TypeScript; o que fica é casca — a bomba e a fila do driver,
+`WebHidTransport`, as sondas de diagnóstico (Decisão 1) e a tela.
 
 Não resta duplicata de protocolo declarada: `declaredLength` fechou no passo 4. Uma exceção
 futura deve ser declarada do mesmo jeito — nomeada no spec, com data para sair —, nunca inferida.
@@ -96,13 +98,13 @@ qualquer `package.json` que encontre no diretório de saída.
 
 **A exceção é `packages/shared/src/generated/`.** O `ts-rs` gera ali tipos TypeScript a partir
 de tipos do núcleo (hoje `MouseActionId`, `MouseSettings` e suas partes, o snapshot de
-parâmetros, a descrição do Leviathan V4 e as memórias do dump onboard), e eles **são**
-versionados, para que `@gearhub/shared` compile sem Rust. Um teste em
-`packages/core/src/bindings.rs` compara cada arquivo com o que o `ts-rs` geraria, reprova se
-divergirem e também reprova arquivo órfão no diretório; para regenerar,
-`UPDATE_BINDINGS=1 cargo test -p gearhub-core generated`. Nunca edite à mão, e não remova o
-caminho dos `inputs` de `test` em `packages/core/turbo.json` — sem ele, uma edição à mão deixa
-`@gearhub/core:test` em cache hit e a guarda não roda.
+parâmetros, a descrição do Leviathan V4, as memórias do dump onboard, a identidade da consulta,
+os passos e eventos da sessão e o `HidCommand`), e eles **são** versionados, para que
+`@gearhub/shared` compile sem Rust. Um teste em `packages/core/src/bindings.rs` compara cada
+arquivo com o que o `ts-rs` geraria, reprova se divergirem e também reprova arquivo órfão no
+diretório; para regenerar, `UPDATE_BINDINGS=1 cargo test -p gearhub-core generated`. Nunca edite
+à mão, e não remova o caminho dos `inputs` de `test` em `packages/core/turbo.json` — sem ele,
+uma edição à mão deixa `@gearhub/core:test` em cache hit e a guarda não roda.
 
 ## Verificação
 

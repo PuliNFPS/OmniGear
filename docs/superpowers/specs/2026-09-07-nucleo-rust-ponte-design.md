@@ -597,8 +597,12 @@ O passo 0 é novo, e os demais absorvem os arquivos que faltavam.
    confirmado em hardware pelo roteiro em `docs/smoke-test-leviathan-v4.md`:
    `onboardConfig.ts` foi apagado e a duplicata `declaredLength` fechou.
 5. **Sessão:** `LeviathanV4Driver.ts` sob a interface de passos puxados acima, mais a
-   decodificação de `session.ts`. O maior e o mais arriscado. Sondas reapontadas.
+   decodificação de `session.ts`. O maior e o mais arriscado. As sondas não mudam (Decisão 1).
    **Confirmação em hardware.**
+   **Fechado em 2026-10-19** pelo plano `docs/superpowers/plans/2026-10-03-migracao-sessao.md`,
+   confirmado em hardware pelo roteiro em `docs/smoke-test-leviathan-v4.md`: `session.ts` e
+   `notifications.ts` foram apagados, e `LeviathanV4Driver.ts` só executa os passos da sessão
+   do núcleo. Com ele, a migração fechou: nenhum protocolo resta em TypeScript.
 
 A barra de conclusão de cada passo continua a de `## Como verificar cada passo`: a lógica
 existe em Rust com os testes portados, o TypeScript **apagou** a sua, as duas suítes passam,
@@ -809,7 +813,360 @@ Corrigir exige decidir como o editor apresenta um botão com binding sem nome �
 produto, pendente do usuário — e mora em `preservedEvents`/`mappingEvents`, portanto no passo 5.
 O roteiro de hardware do passo 4 não grava em memória que guarde macro.
 
+(Revisto em 2026-10-03: o passo 5 porta o defeito com paridade, e a correção vem no PR seguinte —
+ver `### Escopo: migração com paridade`, no desenho do passo 5.)
+
 ### Entrega
 
 Um plano, um PR: vetores → tipos e decodificação no núcleo → `settings_from_slot` → ponte e
 `coreBridge` → casca reapontada e `onboardConfig.ts` apagado → documentos e roteiro de hardware.
+
+## Passo 5 — desenho (2026-10-03)
+
+O passo 5 leva a sessão do driver (`LeviathanV4Driver.ts`) e a decodificação de `session.ts` para o
+núcleo, sob a interface de `## A forma do passo 5: passos puxados, não uma lista pronta`. É o último
+passo da migração.
+
+### Escopo: migração com paridade
+
+Como nos passos 1 a 4, o comportamento observável não muda — inclusive o defeito de
+`### Defeito conhecido, para o passo 5 — macro em botão do editor é sobrescrita`, que é portado
+como está. As três pendências de produto levantadas no teste de hardware do passo 4 ficam fora:
+
+1. **Macro em botão do editor é sobrescrita.** Vem num PR próprio, logo depois, já sobre o Rust.
+2. **Proteção do clique esquerdo** (um botão esquerdo ligado a DPI deixa o mouse sem clique). Mesmo
+   PR do item 1.
+3. **Aplicar numa memória onboard deveria torná-la a ativa.** Não há comando de troca verificado
+   para o mouse; exige investigar o protocolo e só começa a pedido.
+
+O motivo: este é o passo mais arriscado, e uma regra nova testada no mouse junto com a migração
+deixaria a confirmação ambígua — se algo quebrar, não se sabe se foi a migração ou a regra.
+
+O desenho não fecha a porta do item 1: a assinatura do que o mouse guarda passa a ser tipada
+(abaixo), com uma variante para bytes sem nome. Corrigir a macro vira mudar o que o lado pretendido
+produz, não reescrever o escritor.
+
+### Decisão 6 — a sessão é do driver, não do protocolo
+
+O esboço acima a chamava de `RawmSession`, mas o que ela decide é deste aparelho: as teclas do
+editor, a sétima tecla, o número de memórias. Ela mora em `drivers/leviathan_v4/session.rs` como
+`LeviathanV4Session`. O que é do protocolo RAWM em geral desce para `protocols/rawm/`.
+
+### O que desce
+
+| peça                                                                                   | onde                                  |
+| -------------------------------------------------------------------------------------- | ------------------------------------- |
+| `validateRawmIdentity` (`session.ts`)                                                  | `protocols/rawm/query.rs`             |
+| os dois leitores do fluxo (`session.ts` e `notifications.ts`), fundidos em um          | `drivers/leviathan_v4/session.rs`     |
+| o estado: snapshot, memória ativa (`oci`), memórias do dump, revisões de DPI e memória | `drivers/leviathan_v4/session.rs`     |
+| `editorKeySets`, `mappingEvents`, as assinaturas, `isShowPower`, `preservedEvents`     | `drivers/leviathan_v4/mappings.rs`    |
+| o colchete `ACTION_SAVE_CONFIG_TO_FDS` do `writeProfile` e a guarda de memória ativa   | `drivers/leviathan_v4/session.rs`     |
+| o tempo-limite da consulta (o valor, 1000 ms)                                          | constante do núcleo                   |
+| a checagem de nome do `connect`                                                        | a primeira consulta, dentro da sessão |
+
+**Fica em TypeScript**, por ser tempo, fila ou tela: a fila de operações (`enqueue`), a bomba que
+executa os passos (`await send`, `await wait`), o relógio do tempo-limite, a abertura do transporte,
+os ouvintes (`onDeviceReport`, `onOnboardProfiles`), o tipo-guarda `isMouseSettings` e o casamento
+USB do `connect` (que já chama `matchesLeviathanV4` do núcleo).
+
+**Apagados:** `session.ts` e `notifications.ts`. `LeviathanV4Driver.ts` continua, porque implementa
+o `DeviceDriver` da casca, mas sem decisão nenhuma: fila, bomba e ouvintes.
+
+**Sai da ponte o que só o driver usava.** `parseNotification` (com o tipo `RawmNotification`),
+`dpiAxes`, `leviathanOnboardSlotCount` e `leviathanShowPowerKeyId` ficam sem consumidor além do
+próprio teste da ponte: a sessão chama o Rust direto. `OnboardConfigCollector` e
+`decodeOnboardEntry` continuam, porque `vectors.test.ts` e `onboardDump.test.ts` leem os vetores
+`onboardEntry` e `onboardDump` por eles, e um vetor que só um lado lê não é fonte compartilhada.
+`applySettingsToMouseParam` também fica, pelo mesmo motivo: `vectors.test.ts` lê os vetores
+`paramApply` por ele. E `parseRawmIdentity`, novo, existe para o `vitest` ler os vetores
+`identity`.
+
+**As sondas não mudam.** `diagnostics.ts` e `writeProbe.ts` usam só o codec, e `captureQuery` tem o
+seu próprio montador de propósito (Decisão 1).
+
+Rejeitada: funções do núcleo sem estado, com o estado guardado em TypeScript e passado a cada
+chamada. Contradiz a fronteira — o estado do dispositivo é do núcleo.
+
+### A interface
+
+```rust
+#[serde(tag = "kind", rename_all = "kebab-case")]
+pub enum Step {
+    Send(HidCommand),
+    Wait { ms: u32 },
+}
+
+#[serde(tag = "kind", rename_all = "kebab-case")]
+pub enum SessionEvent {
+    /// Resposta à consulta pendente.
+    Queried(RawmIdentity),
+    /// O mouse anunciou um DPI, com os dois eixos diferentes de zero.
+    Dpi(DpiAxes),
+    /// O mouse anunciou a memória ativa — mesmo a que já era.
+    ActiveSlot { index: u8 },
+    /// O dump terminou de chegar.
+    OnboardSlots { slots: Vec<OnboardSlotConfig> },
+}
+
+impl LeviathanV4Session {
+    pub fn new() -> Self;
+    pub fn feed_report(&mut self, report_id: u8, report: &[u8])
+        -> Result<Vec<SessionEvent>, RawmError>;
+    pub fn begin_query(&mut self, epoch_seconds: u64) -> Result<(), RawmError>;
+    pub fn begin_apply(&mut self, settings: &MouseSettings) -> Result<(), RawmError>;
+    // `slot: u32`, e não `u8`: ver o desvio 3, em "Desvios declarados na execução".
+    pub fn begin_write_profile(&mut self, slot: u32, settings: &MouseSettings)
+        -> Result<(), RawmError>;
+    pub fn next_step(&mut self) -> Result<Option<Step>, RawmError>;
+    pub fn abort(&mut self);
+    // e leitura do estado, para quem se inscreve tarde:
+    // memória ativa, DPI, memórias do dump
+}
+```
+
+Na ponte, `LeviathanV4Session` é uma classe `wasm-bindgen` que envolve a do núcleo, como o montador
+(Decisão 4). Passos e eventos atravessam como objetos comuns por `to_js`, com tipo gerado por
+`ts-rs` (`{ kind: 'send', reportId, data }`, `{ kind: 'wait', ms }`, e um `kind` por evento); os
+bytes de `send` atravessam como `Uint8Array` (Decisão 5). A etiqueta interna do `serde` não
+serializa variante-tupla cujo conteúdo seja número ou sequência, e o `ts-rs` não conhece
+`Duration`: por isso toda variante que não carrega uma struct é de campos nomeados. `feed_report` ignora relatórios com id
+diferente de 0 — é o núcleo que sabe em que canal o mouse fala.
+
+**Índices de memória contam de 0 no núcleo** (`oci`, `OnboardSlotConfig.index`, `ActiveSlot`,
+`begin_write_profile`). A numeração a partir de 1 é da tela, e a conversão fica na casca, no limite
+do `DeviceDriver`. Antes de converter, a casca recusa um `slotIndex` que não seja inteiro positivo —
+o TypeScript não tem tipo inteiro, e a checagem é da mesma natureza do `isMouseSettings` — com o
+código `invalid-profile-slot`; o núcleo recusa, com o mesmo código, o que passar do número de
+memórias.
+
+### Decisão 7 — a conexão cria a sessão antes de consultar
+
+Hoje `queryRawmDevice` consulta com um leitor próprio, e só depois o driver nasce e se inscreve nas
+notificações; o dump responde à mesma consulta e pode cair no intervalo. Passa a ser o contrário: o
+`connect` cria o driver (e a sessão), que se inscreve no transporte, e só então consulta —
+`new LeviathanV4Driver(transport)`, `await driver.query()`, e o driver só é registrado se a consulta
+der certo. Um único leitor vê o fluxo desde o primeiro relatório. O `readState` usa o mesmo caminho.
+
+**A primeira resposta liga a sessão.** O núcleo valida a identidade, depois o nome
+(`is_device_name`), depois o snapshot — a ordem de hoje — e guarda o suporte a CRC, o número de
+memórias e a memória ativa. Na conexão, um `oci` ausente vale 0 (o `rawSnapshot.oci ?? 0` do
+construtor de hoje); nas consultas seguintes ele é obrigatório (o `readOnboardIndex(raw.oci)` do
+`readState`). Uma resposta de consulta que chega sem consulta pendente é ignorada, como hoje.
+
+**Erros de leitura dependem de haver consulta pendente.** Com consulta pendente, um relatório que
+não decodifica faz `feed_report` falhar, e a casca reprova a consulta — o que `queryRawmDevice` faz
+hoje. Sem consulta pendente, o núcleo reinicia o montador e segue — o que `subscribeToNotifications`
+faz hoje. Quem decide é o núcleo; a casca só repassa. Fundir os dois leitores tem uma consequência:
+um relatório malformado durante a consulta reinicia o montador único, e não só o da consulta.
+
+### A bomba
+
+```ts
+this.session.beginApply(settings);
+try {
+  for (let step = this.session.nextStep(); step; step = this.session.nextStep()) {
+    if (step.kind === 'send') await this.transport.send(step);
+    else await pause(step.ms);
+  }
+} catch (error) {
+  this.session.abort();
+  throw asRawmError(error);
+}
+```
+
+A consulta usa a mesma bomba e, depois dela, espera o evento `Queried` contra o tempo-limite; se o
+tempo esgota, a casca chama `abort()`.
+
+**O que `abort()` faz em cada estado.** Sem operação em andamento, nada — é o caso da casca chamando
+depois que o próprio `next_step` já falhou com `ActiveSlotChanged`. Com uma escrita em andamento, a
+encerra e zera a assinatura (abaixo). Com uma consulta pendente, a encerra, não toca a assinatura —
+um tempo-limite do `readState` não mexe no `appliedMappings` hoje — e reinicia o montador. No TS
+cada consulta tinha o seu montador; sem o reset, uma resposta cortada pelo tempo-limite emendaria
+bytes na próxima. O reset descarta qualquer meio-evento do montador compartilhado, não só a
+resposta. A consulta pendente também se encerra sozinha, sem depender da casca: quando o `Queried`
+sai e quando um `feed_report` falha por causa dela.
+
+**Concorrência.** A fila continua em TypeScript: é encadeamento de promessas. O núcleo, ainda
+assim, recusa um `begin_*` enquanto outra operação está em andamento, para que uma casca de desktop
+não intercale operações sem perceber.
+
+### Paridade fina
+
+**Cada bloco é decidido no instante em que começa.** O TypeScript calcula `mappingEvents` e
+`preservedEvents` entre um `await` e outro; o núcleo calcula cada bloco — reset, parâmetros,
+mapeamentos, preservados — na chamada de `next_step` que o abre. Um dump que chegue no meio de uma
+aplicação produz o mesmo resultado de hoje.
+
+**Guarda de memória ativa.** Vale só durante `applyToSession`, como hoje; não na gravação de perfil
+nem na consulta. A revisão de memória só sobe com uma notificação de memória diferente e dentro do
+número de memórias; uma fora da faixa é ignorada por inteiro. Toda notificação dentro da faixa,
+mesmo a que repete a memória ativa, emite `ActiveSlot` e recalcula a assinatura — só a revisão
+depende de a memória ter mudado. O núcleo confere em toda chamada de
+`next_step`, antes de decidir qualquer passo, inclusive a que devolveria `None` — o equivalente ao
+`checkSlot()` depois da última pausa. Há uma conferência a mais, entre o último envio de um evento e
+a sua pausa de 8 ms; ela só antecipa a falha em 8 ms, e nenhum byte muda.
+
+**Corrida do DPI.** O snapshot novo é calculado quando o bloco de parâmetros começa e só passa a
+valer no `next_step` seguinte à pausa desse bloco. Se uma notificação de DPI chegou nesse intervalo,
+fica a resolução dela (o `dpiRevision` de hoje). Um `abort` antes disso descarta o snapshot novo.
+Toda notificação de DPI atualiza o snapshot, mas o evento `Dpi` só sai com os dois eixos diferentes
+de zero, como o `reportDpi` de hoje.
+
+**A assinatura do que o mouse guarda deixa de ser texto.** Vira uma lista ordenada de pares
+`(teclas, Binding)`, com `enum Binding { Action(MouseActionId), Raw(Vec<u8>) }`. A igualdade é a do
+texto de hoje: a codificação `teclas=valor` é injetiva (nenhum nome de ação começa com `raw:`), e a
+lista guarda repetições como o `join` guardava. O ciclo de vida é portado como está:
+
+- nula até o dump chegar; recalculada na troca de memória, na chegada do dump e na consulta;
+- zerada no início de todo corpo de escrita e em qualquer erro da aplicação à sessão, inclusive um
+  botão desconhecido no `begin_apply`; recebe o valor pretendido ao fim do corpo;
+- um binding sem nome continua forçando `CONFIG_RESET` em toda aplicação — o lado relatado tem um
+  `Binding::Raw` que o pretendido nunca produz;
+- o `writeProfile` deixa a assinatura no valor pretendido mesmo quando grava numa memória que não é
+  a ativa. Fica como está: o `readState` que o editor faz depois de toda gravação a recalcula.
+
+### Mudança de comportamento deliberada — `abort()` zera a assinatura
+
+Hoje, se o `writeProfile` falha no `CONFIG_RESET`, antes do corpo, a assinatura antiga fica — mas o
+reset pode ter chegado ao mouse. Com `abort()`, qualquer escrita interrompida deixa a assinatura
+nula, que significa "a próxima aplicação reescreve tudo": o lado seguro. Só toca caminhos de falha;
+o roteiro de hardware não muda.
+
+### Erros
+
+As mensagens ao usuário ficam idênticas às de hoje. Cada uma ganha variante em `RawmError` e texto
+em `rawmError.ts`:
+
+| variante                        | código                    | texto                                                                                  |
+| ------------------------------- | ------------------------- | -------------------------------------------------------------------------------------- |
+| `ActiveSlotChanged`             | `active-slot-changed`     | A memória ativa mudou durante a aplicação. Revise o perfil antes de aplicar novamente. |
+| `InvalidIdentity`               | `invalid-identity`        | Resposta RAWM sem identidade válida.                                                   |
+| `UnrecognizedMouse { name }`    | `unrecognized-mouse`      | Mouse RAWM conectado nao reconhecido: {campo}.                                         |
+| `InvalidOnboardIndex`           | `invalid-onboard-index`   | Indice onboard ausente ou invalido na resposta do mouse.                               |
+| `InvalidProfileSlot`            | `invalid-profile-slot`    | Indice de perfil RAWM invalido.                                                        |
+| `UnknownButton { button }`      | `unknown-button`          | Botao RAWM desconhecido: {campo}.                                                      |
+| `InvalidRPlusActivator`         | `invalid-rplus-activator` | Ativador R-Plus RAWM invalido.                                                         |
+| `UnknownRPlusButton { button }` | `unknown-rplus-button`    | Botao R-Plus RAWM desconhecido: {campo}.                                               |
+| `OperationInProgress`           | `operation-in-progress`   | Outra operação RAWM ainda está em andamento. (nova; a fila impede que apareça)         |
+| `NotQueried`                    | `not-queried`             | O mouse ainda não respondeu à consulta. (nova; escrever antes da primeira consulta)    |
+| `InvalidQueryJson`              | `invalid-query-json`      | Identificação RAWM inválida. (ver "Desvios declarados na execução")                    |
+
+Nome e botão são dinâmicos, então as variantes com dado passam a carregar `String`, e `detail()`
+passa de `Option<&'static str>` para `Option<&str>`.
+
+Ficam na casca, porque nascem dela: o tempo-limite da consulta ("A consulta RAWM excedeu o tempo
+limite."), o tipo-guarda ("O Leviathan V4 requer configuracao de mouse."), o receptor que não casa
+com o USB e as falhas de transporte.
+
+**A pendência do passo 3 sobre `liftOffDistance` fracionário fecha como "não se aplica".** O driver
+de demonstração não atravessa a ponte, e o `begin_apply` só recebe configurações de um aparelho real,
+que vêm do núcleo. Uma configuração fracionária que chegasse lá falharia na conversão do `serde` —
+como já falha hoje em `applySettingsToMouseParam`.
+
+### Vetores e testes
+
+Capturados do TypeScript atual **antes** de qualquer mudança, lidos pelo `cargo test` e pelo
+`vitest`, com a guarda contra seção vazia nos dois lados:
+
+- `identity`: resposta da consulta → identidade, ou código de erro (sem `dn`, `dn` em branco, sem
+  `pi`, `crc` 0 e 1).
+- `sessionEvents`: fluxo de relatórios → eventos (DPI, DPI zerado sem evento, troca de memória,
+  a mesma memória repetida, memória fora da faixa ignorada, polling ignorado, dump montado,
+  relatório malformado sem consulta pendente ignorado).
+- `sessionApply`: consulta, dump opcional e configurações → a sequência exata de passos, relatório a
+  relatório e com as esperas. Casos: sem dump (completa); com dump e mapeamentos iguais (só
+  parâmetros); mapeamento mudado, com eventos preservados fora do editor; binding sem nome em botão
+  do editor (sempre com reset — o defeito, registrado); duas aplicações seguidas; CRC ligado e
+  desligado.
+- `sessionWriteProfile`: o colchete `ACTION_SAVE_CONFIG_TO_FDS`, com os preservados da memória de
+  destino, e não da ativa.
+
+Antes da migração, o lado `vitest` confere os envios do driver TypeScript contra os vetores; depois,
+confere os passos da sessão pelo WASM real.
+
+As intercalações — a guarda de memória e a corrida do DPI — não são bytes: viram testes portados
+para o Rust, com `feed_report` entre chamadas de `next_step`, e testes TypeScript que passam pelo
+WASM real. A decisão testada hoje em `session.test.ts`, `notifications.test.ts` e nos três
+`LeviathanV4Driver*.test.ts` é portada para o Rust; em TypeScript ficam o tempo-limite, a fila, a
+bomba e os ouvintes. `DeviceWorkspace.liveDpi.test.tsx` e `useDeviceReports.test.ts` se adaptam ao
+novo construtor.
+
+### Confirmação em hardware
+
+Obrigatória, antes do merge, registrada em `docs/smoke-test-leviathan-v4.md`:
+
+1. Conectar: nome, DPI, memória ativa e as quatro memórias com os mapeamentos de cada uma — o leitor
+   único pegou o dump.
+2. Trocar o DPI e a memória pelos botões do mouse: a tela acompanha.
+3. Aplicar só DPI e polling: os botões continuam funcionando (o caminho de um evento só).
+4. Mudar um botão e aplicar à sessão: funciona; depois de desligar e religar o mouse, volta o que
+   está na flash.
+5. Gravar numa memória sem macro e reconectar: a tela relê exatamente o que foi gravado, e o
+   indicador de bateria sobrevive.
+6. Rodar a página de diagnóstico e a sonda de escrita.
+
+A troca de memória no meio de uma aplicação não é provocável à mão — a aplicação dura cerca de
+150 ms — e fica com os testes. Nenhum passo grava em memória que guarde macro.
+
+Esta é a lista do desenho. O roteiro executado está em `docs/smoke-test-leviathan-v4.md`, com o
+que a execução acrescentou: como trocar de memória pelo mouse (item 2), como observar o caminho
+de um evento só (item 3) e a conferência da barra antes de reconectar (item 5). Confirmado em
+2026-10-19.
+
+### Desvios declarados na execução
+
+O desenho acima não os previa. Cada um foi decidido durante a execução do plano e vale como
+exceção nomeada à paridade:
+
+1. **`InvalidQueryJson`** (`invalid-query-json`, "Identificação RAWM inválida."). Hoje uma
+   resposta que não é JSON mostra a mensagem do `SyntaxError` do navegador, e uma que é JSON mas
+   não é objeto mostra "Identificação RAWM inválida.". Na consulta da sessão, as duas passam a
+   mostrar o segundo texto. A sonda `captureQuery` (`diagnostics.ts`) continua no
+   `parseQueryJson` da casca e mostra o `SyntaxError` (Decisão 1).
+2. **Configuração inválida falha no `begin_*`, antes de qualquer byte.** Isso cobre botão
+   desconhecido, ativador R-Plus, modo de desempenho e estágios de DPI. Hoje a aplicação completa
+   já mandou o `CONFIG_RESET` quando o modo falha, e o `writeProfile` já mandou o reset e o `SAVE`
+   de abertura. Só toca caminhos de erro que o editor não produz. Os blocos continuam decididos
+   quando começam; a conferência é um ensaio. Um `begin_write_profile` recusado não toca a
+   assinatura, porque nada foi enviado.
+3. **`begin_write_profile(slot: u32)`, e não `u8`.** O `wasm-bindgen` trunca o número para o tipo
+   do parâmetro, e com `u8` a memória 257 viraria a 1.
+4. **A checagem de tipo `isMouseSettings` não zera mais a assinatura** quando falha. O caminho é
+   inalcançável: este driver só recebe configuração de mouse.
+5. **Corte dos ids USB.** `pi` e `vi` são lidos como `u32`. Um valor acima disso conta como
+   ausente: `pi` recusa a identidade e `vi` vira nulo. O TypeScript aceitava qualquer inteiro
+   não negativo; ids USB têm 16 bits.
+6. **Aparar o nome.** `str::trim` do Rust e `String.prototype.trim` do JavaScript diferem em
+   U+0085 e U+FEFF. O firmware manda ASCII.
+7. **`abort()` de uma consulta pendente reinicia o montador.** No TypeScript cada consulta tinha
+   o seu montador. Sem o reset, uma resposta cortada pelo tempo-limite emendaria bytes na
+   próxima. O reset descarta qualquer meio-evento do montador compartilhado, não só a resposta.
+8. **Limite de cima do número da memória.** `writeProfile` recusa na casca `slotIndex > 2 ** 32`,
+   além de não inteiro e `< 1`. O glue do `wasm-bindgen` passa o número a um `i32` e daria a
+   volta. O driver antigo limitava por cima com o número de memórias.
+9. **Ordem dos erros na conexão.** O núcleo confere o `oci` dentro da primeira resposta, antes de
+   a casca descrever o aparelho (`describeLeviathanV4`). O driver antigo descrevia antes de ler o
+   `oci`. Só muda qual mensagem aparece quando a resposta falha nos dois pontos ao mesmo tempo.
+10. **Ordem em `writeProfile`.** A recusa da memória além das que o mouse tem passou para o
+    núcleo, então espera a fila e vem depois do tipo-guarda. O driver antigo a recusava de forma
+    síncrona, antes da fila. A recusa de não inteiro, `< 1` e `> 2 ** 32` continua síncrona na
+    casca.
+11. **Eventos do relatório de uma resposta inválida.** Se um mesmo relatório traz uma resposta
+    de consulta inválida junto com outros eventos, `feed_report` falha na resposta e nenhum evento
+    daquele relatório chega aos ouvintes. Os que vinham antes dela já mudaram o estado da sessão
+    (memória ativa, DPI, memórias do dump), mas a tela não fica sabendo. Os que vinham depois nem
+    são lidos. O leitor de notificações antigo, que era separado, processava todos. O caminho exige
+    resposta malformada com consulta pendente.
+
+**A geração da bomba.** Uma consulta que estoura o tempo com um envio ainda preso não pode abortar
+nem roubar passos da operação seguinte: o envio velho falharia tarde, quando a sessão já estaria
+com outra operação. Por isso a casca numera as bombas. A geração sobe quando a consulta termina
+por qualquer caminho — resposta, falha por relatório estranho, tempo-limite, falha de envio —, e
+não só no tempo-limite. A bomba de uma geração antiga para sem tocar a sessão.
+
+### Entrega
+
+Um plano, um PR: vetores → `RawmError` → identidade → `mappings.rs` → sessão, leitura → sessão,
+escrita → ponte e tipos gerados → casca (o driver vira bomba, o `connect` muda de ordem,
+`session.ts` e `notifications.ts` apagados) → documentos (este spec, o "Estado real" do `CLAUDE.md`
+dizendo que a migração fechou) e roteiro de hardware.

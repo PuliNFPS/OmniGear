@@ -6,7 +6,7 @@ import { registerDeviceDriver, unregisterDeviceDriver } from '../hardware/device
 import { LeviathanV4Driver } from '../hardware/rawm/LeviathanV4Driver';
 import { createLeviathanV4Peripheral } from '../hardware/rawm/leviathanV4';
 import { leviathanV4QueryFixture as fixture } from '../hardware/rawm/leviathanV4Fixture';
-import { frameEvent, withProtocolEnvelope } from '../core/coreBridge';
+import { fakeLeviathanV4 } from '../hardware/rawm/leviathanV4Harness';
 import { useDeviceStore } from '../store/deviceStore';
 import { useEditorStore } from '../store/editorStore';
 import { DeviceWorkspace } from './DeviceWorkspace';
@@ -37,33 +37,14 @@ function activeStage(): string {
 
 let notify: (type: number, payload: number[]) => void;
 
-beforeEach(() => {
-  vi.useFakeTimers();
+beforeEach(async () => {
   useDeviceStore.setState({ devices: [structuredClone(device)] });
-  const listeners = new Set<(reportId: number, data: Uint8Array) => void>();
-  notify = (type, payload) => {
-    const event = withProtocolEnvelope([0x0b, 0, type, ...payload], false);
-    for (const frame of frameEvent(Uint8Array.from([0xff, 0xff, 0xff, 0xff, ...event]), true)) {
-      for (const listener of listeners) listener(0, frame);
-    }
-  };
-  registerDeviceDriver(
-    device.id,
-    new LeviathanV4Driver(
-      {
-        open: async () => undefined,
-        send: async () => undefined,
-        onInputReport: (listener) => {
-          listeners.add(listener);
-          return () => {
-            listeners.delete(listener);
-          };
-        },
-      },
-      fixture,
-      true,
-    ),
-  );
+  const fake = fakeLeviathanV4(fixture);
+  notify = (type, payload) => fake.notify(type, payload);
+  const driver = new LeviathanV4Driver(fake.transport);
+  await driver.query();
+  registerDeviceDriver(device.id, driver);
+  vi.useFakeTimers();
 });
 
 afterEach(() => {

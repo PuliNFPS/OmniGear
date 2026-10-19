@@ -131,7 +131,7 @@ interface CaptureResult {
 }
 
 /**
- * Sends one query and listens for the whole window. Unlike `queryRawmDevice`,
+ * Sends one query and listens for the whole window. Unlike the driver's query,
  * a malformed report resets the assembler and keeps listening instead of
  * rejecting: on unknown firmware the interesting response often arrives after
  * an unsolicited report.

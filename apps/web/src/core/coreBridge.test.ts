@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import type { SessionStep } from '@gearhub/shared';
 import { leviathanV4QueryFixture } from '../hardware/rawm/leviathanV4Fixture';
+import { answerReports, notifyReport } from '../test/sessionVectors';
+import { fromHex } from '../test/vectors';
 import {
+  LeviathanV4Session,
   OnboardConfigCollector,
+  leviathanQueryTimeoutMs,
+  parseRawmIdentity,
   decodeOnboardEntry,
   settingsFromSlot,
   actionForFunction,
@@ -10,12 +16,10 @@ import {
   encodeMouseParamBody,
   isLeviathanV4Name,
   leviathanLodMillimetres,
-  leviathanOnboardSlotCount,
   leviathanV4Usb,
   matchesLeviathanV4,
   parseMouseParamState,
   actionForKey,
-  dpiAxes,
   encodeAction,
   encodeConfigReset,
   encodeLeviathanShowPower,
@@ -25,22 +29,12 @@ import {
   encodeMouseParamSnapshot,
   leviathanButtonId,
   leviathanKeyId,
-  leviathanShowPowerKeyId,
-  parseNotification,
   type RawMouseKey,
   withProtocolEnvelope,
 } from './coreBridge';
 
 function bytes(value: Uint8Array): number[] {
   return [...value];
-}
-
-/**
- * Builds a notify event the way the mouse sends one — same shape the deleted
- * TypeScript `notifyEvent` helper and the Rust `notify()` test helper both use.
- */
-function notifyEvent(kind: number, payload: number[]): Uint8Array {
-  return withProtocolEnvelope([0x0b, 0, kind, ...payload], false);
 }
 
 describe('RAWM core encoders', () => {
@@ -110,63 +104,6 @@ describe('RAWM core encoders', () => {
   });
 });
 
-/**
- * `notifications.test.ts` only exercises `parseNotification` through
- * `subscribeToNotifications`, and every case there sends a `dpi` event. That
- * leaves the flatten in `core-wasm` (`RawmNotification` → `[kind, value,
- * payload]`) and the reassemble here (`[kind, value, payload]` → the
- * `RawmNotification` union) untested for the other four kinds — a swapped
- * field, or `onboard-config` silently degrading to an empty payload through
- * the `payload ?? new Uint8Array()` fallback, would pass every other suite
- * and only surface on hardware. This exercises the real WASM crossing for
- * all five kinds and asserts the full reassembled shape each time.
- */
-describe('parseNotification e dpiAxes através da ponte', () => {
-  it('reassembles a DPI change', () => {
-    expect(parseNotification(notifyEvent(0x00, [0x20, 0x03]))).toEqual({
-      kind: 'dpi',
-      value: 800,
-    });
-  });
-
-  it('reassembles the packed 32-bit value used for independent axes', () => {
-    expect(parseNotification(notifyEvent(0x06, [0x20, 0x03, 0x90, 0x01]))).toEqual({
-      kind: 'dpi-xy',
-      value: 0x0190_0320,
-    });
-  });
-
-  it('reassembles a polling rate change', () => {
-    expect(parseNotification(notifyEvent(0x01, [0xa0, 0x0f]))).toEqual({
-      kind: 'polling',
-      value: 4000,
-    });
-  });
-
-  it('reassembles the onboard index as a zero-based byte, under the index field', () => {
-    expect(parseNotification(notifyEvent(0x22, [2]))).toEqual({
-      kind: 'onboard-index',
-      index: 2,
-    });
-  });
-
-  it('reassembles an onboard config payload with its bytes intact, not just its presence', () => {
-    const notification = parseNotification(notifyEvent(0x14, [0xaa, 0xbb, 0xcc]));
-
-    expect(notification?.kind).toBe('onboard-config');
-    expect(bytes((notification as { payload: Uint8Array }).payload)).toEqual([0xaa, 0xbb, 0xcc]);
-  });
-
-  it('returns null for a notification this app has no use for', () => {
-    expect(parseNotification(notifyEvent(0x17, [50]))).toBeNull();
-  });
-
-  it('unpacks DPI axes through the real wasm', () => {
-    expect(dpiAxes(0x0190_0320)).toEqual({ x: 800, y: 400 });
-    expect(dpiAxes(800)).toEqual({ x: 800, y: 800 });
-  });
-});
-
 describe('tabelas de ação e de tecla do núcleo', () => {
   it('codifica uma ação e devolve null para desativado', () => {
     expect(bytes(encodeMapping([0x0a], 'clique-esquerdo')!)).toEqual([
@@ -198,11 +135,9 @@ describe('tabelas de ação e de tecla do núcleo', () => {
     expect(leviathanKeyId('dpi')).toBe(0x10);
     expect(leviathanKeyId('roda')).toBeNull();
     expect(leviathanButtonId(0x0e)).toBe('lateral-traseiro');
-    expect(leviathanButtonId(leviathanShowPowerKeyId())).toBeNull();
   });
 
   it('monta a sétima tecla', () => {
-    expect(leviathanShowPowerKeyId()).toBe(0x0d);
     expect(bytes(encodeLeviathanShowPower())).toEqual([
       3, 0, 0x18, 1, 0x0d, 2, 0x0e, 0, 0, 0, 0, 0,
     ]);
@@ -263,7 +198,6 @@ describe('estruturas através da ponte', () => {
   it('expõe LOD, contagem de memórias, USB e nome', () => {
     expect(leviathanLodMillimetres(2)).toBe(1);
     expect(leviathanLodMillimetres(9)).toBeNull();
-    expect(leviathanOnboardSlotCount({ ocs: [1, 2, 3, 4], ocn: 4 })).toBe(4);
     expect(leviathanV4Usb()).toEqual({
       vendorId: 0x1915,
       receiverProductId: 0x2346,
@@ -310,5 +244,87 @@ describe('dump onboard através da ponte', () => {
   it('devolve null, não undefined, para o que não é evento e para o dump sem fim', () => {
     expect(decodeOnboardEntry(Uint8Array.from([0x0b, 0x02, 0x14]))).toBeNull();
     expect(new OnboardConfigCollector().push(Uint8Array.from([0]))).toBeNull();
+  });
+});
+
+describe('sessão do Leviathan V4 através da ponte', () => {
+  function connect(session: LeviathanV4Session) {
+    session.beginQuery(0);
+    const steps: SessionStep[] = [];
+    for (let step = session.nextStep(); step; step = session.nextStep()) steps.push(step);
+    const events = answerReports(leviathanV4QueryFixture).flatMap((report) =>
+      session.feedReport(0, report),
+    );
+    return { steps, events };
+  }
+
+  it('entrega passos e eventos como objetos comuns, com os bytes em Uint8Array', () => {
+    const session = new LeviathanV4Session();
+    expect(session.activeSlot()).toBeNull();
+    expect(session.dpi()).toBeNull();
+    expect(session.slots()).toBeNull();
+
+    const { steps, events } = connect(session);
+    expect(steps).toHaveLength(1);
+    expect(steps[0]).toMatchObject({ kind: 'send', reportId: 0 });
+    expect(steps[0].kind === 'send' && steps[0].data).toBeInstanceOf(Uint8Array);
+    expect(session.nextStep()).toBeNull();
+
+    const queried = events.at(-1);
+    expect(queried).toMatchObject({
+      kind: 'queried',
+      deviceName: 'LEVIATHAN V4',
+      crcSupported: true,
+    });
+    expect(queried?.kind === 'queried' && queried.raw.dn).toBe('LEVIATHAN V4');
+    expect(session.activeSlot()).toBe(0);
+    expect(session.dpi()).toEqual({ x: 800, y: 800 });
+  });
+
+  it('a espera atravessa como { kind: "wait", ms }', () => {
+    const session = new LeviathanV4Session();
+    connect(session);
+    session.beginApply(describeLeviathanV4(leviathanV4QueryFixture).defaults);
+    let last = session.nextStep();
+    for (let step = last; step; step = session.nextStep()) last = step;
+    expect(last).toEqual({ kind: 'wait', ms: 8 });
+  });
+
+  it('o dump chega com os bytes crus em Uint8Array, no evento e no estado', () => {
+    const session = new LeviathanV4Session();
+    connect(session);
+    const events = ['00', '030a16010a0001010000', 'ff'].flatMap((payload) =>
+      session.feedReport(0, notifyReport(0x14, fromHex(payload))),
+    );
+    const dump = events.at(-1);
+    expect(dump?.kind).toBe('onboard-slots');
+    expect(dump?.kind === 'onboard-slots' && dump.slots[0].bindings[0].raw).toBeInstanceOf(
+      Uint8Array,
+    );
+    expect(session.slots()?.[0].bindings[0].raw).toBeInstanceOf(Uint8Array);
+  });
+
+  it('um erro com dado chega traduzido, com o código em cause', () => {
+    const session = new LeviathanV4Session();
+    connect(session);
+    const defaults = describeLeviathanV4(leviathanV4QueryFixture).defaults;
+    let thrown: unknown;
+    try {
+      session.beginApply({ ...defaults, buttons: { ...defaults.buttons, inexistente: 'voltar' } });
+    } catch (error) {
+      thrown = error;
+    }
+    expect((thrown as Error).message).toBe('Botao RAWM desconhecido: inexistente.');
+    expect((thrown as Error).cause).toBe('unknown-button');
+  });
+
+  it('lê a identidade e o tempo-limite da consulta', () => {
+    expect(parseRawmIdentity({ dn: ' Leviathan V4 ', pi: 1 })).toMatchObject({
+      deviceName: 'Leviathan V4',
+      productId: 1,
+      vendorId: null,
+      crcSupported: false,
+    });
+    expect(leviathanQueryTimeoutMs()).toBe(1000);
   });
 });

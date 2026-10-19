@@ -84,6 +84,62 @@ interface OnboardDumpVector {
     | null;
 }
 
+/** Um passo da sessão como os vetores o guardam: o relatório em hex, ou a espera. */
+export type StepJson = { send: string } | { wait: number };
+
+export interface SlotJson {
+  index: number;
+  bindings: { keyIds: number[]; action: MouseActionId | null; raw: string }[];
+}
+
+export type SessionEventJson =
+  | { kind: 'dpi'; x: number; y: number }
+  | { kind: 'active-slot'; index: number }
+  | { kind: 'onboard-slots'; slots: SlotJson[] };
+
+interface IdentityVector {
+  name: string;
+  query: string;
+  patch: Record<string, unknown>;
+  /** Null quando a resposta não tem identidade (`invalid-identity`). */
+  expected: {
+    deviceName: string;
+    productId: number;
+    vendorId: number | null;
+    crcSupported: boolean;
+  } | null;
+}
+
+interface SessionEventsVector {
+  name: string;
+  query: string;
+  patch: Record<string, unknown>;
+  /** Relatórios de 64 bytes, entregues com id 0 depois da consulta. */
+  reports: string[];
+  expected: SessionEventJson[];
+}
+
+interface SessionApplyVector {
+  name: string;
+  query: string;
+  patch: Record<string, unknown>;
+  /** Payloads `0x14` entregues antes das aplicações; null quando o dump não chega. */
+  dump: string[] | null;
+  /** Aplicações em sequência, na mesma sessão. */
+  applies: { settings: MouseSettings; expected: StepJson[] }[];
+}
+
+interface SessionWriteProfileVector {
+  name: string;
+  query: string;
+  patch: Record<string, unknown>;
+  dump: string[] | null;
+  /** A memória de destino, contando de 0. */
+  slot: number;
+  settings: MouseSettings;
+  expected: StepJson[];
+}
+
 export interface ProtocolVectors {
   version: number;
   envelope: EnvelopeVector[];
@@ -97,6 +153,10 @@ export interface ProtocolVectors {
   invalidSnapshot: InvalidSnapshotVector[];
   onboardEntry: OnboardEntryVector[];
   onboardDump: OnboardDumpVector[];
+  identity: IdentityVector[];
+  sessionEvents: SessionEventsVector[];
+  sessionApply: SessionApplyVector[];
+  sessionWriteProfile: SessionWriteProfileVector[];
 }
 
 export function readProtocolVectors(): ProtocolVectors {

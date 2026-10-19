@@ -457,3 +457,51 @@ O item 3 não foi feito: o Leviathan V4 troca de memória por uma função de fi
 botão (`FUNCTION_NEXT_ONBOARD` e afins, ver `docs/rawm-onboard-config.md`), e nenhum botão
 estava ligado a ela. O que ele exercitaria — a notificação `0x22` — não mudou neste passo e já
 foi confirmado no mouse em 2026-09-17 (seção das notificações, acima).
+
+## Passo 5 — roteiro de confirmação (confirmado em 2026-10-19)
+
+O passo 5 moveu para o núcleo a sessão do driver: o leitor do fluxo de entrada, a consulta,
+a memória ativa, a assinatura do que o mouse guarda e a decisão de cada envio, com as
+pausas. Os bytes e as esperas estão fixados pelos vetores `sessionApply` e
+`sessionWriteProfile`, capturados do driver TypeScript anterior; o que falta é o mouse
+confirmar. Nenhum passo grava em memória que guarde macro (defeito conhecido, portado como
+está).
+
+1. **Conectar.** Nome, DPI, memória ativa e as quatro memórias com os mapeamentos de cada
+   uma — o leitor único pegou o dump.
+2. **Botões do mouse.** A tela acompanha o que o mouse anuncia.
+   - **Trocar o DPI** pelo botão de DPI.
+   - **Trocar a memória.** O app não consegue ligar essa função: `MouseActionId` não tem troca
+     de memória, e foi por isso que o item 3 do roteiro do passo 4 foi pulado. Antes de qualquer
+     aplicação pelo app, ligue `FUNCTION_NEXT_ONBOARD` (0x12) a um botão pelo hub do fabricante
+     e então troque de memória por esse botão. A tela acompanha.
+   - **O cuidado.** Uma aplicação completa pelo app apaga essa ligação da sessão (o defeito da
+     macro), e não se deve gravar pelo app na memória que a guarda.
+   - **Se não for possível,** registre o pulo com o motivo.
+3. **Só parâmetros.** Aplicar só DPI e polling: os botões continuam funcionando (um evento
+   só, sem `CONFIG_RESET`). Para observar: com o DevTools aberto, um logpoint em
+   `WebHidTransport.send` (ou um `console.count` no console) mostra 2 relatórios no caminho
+   curto, contra cerca de 10 no completo. Numa memória com entrada sem nome — a ligação do
+   item 2 é uma — a primeira aplicação depois de conectar, de o dump chegar ou de trocar de
+   memória sai completa, e só as seguintes saem pelo caminho curto. Faça o item numa memória
+   sem a ligação, ou olhe a segunda aplicação.
+4. **Mapeamento na sessão.** Mudar um botão e aplicar à sessão: funciona; desligar e religar
+   o mouse devolve o que está na flash.
+5. **Gravar.** Gravar numa memória sem macro. **Antes de reconectar,** a barra mostra
+   "Alterações salvas no …", sem "Perfil salvo. Não foi possível confirmar o slot ativo;
+   reconecte para atualizar.". É a única vez que a segunda consulta roda na sessão viva (o
+   `readState` depois da gravação), e reconectar esconderia uma falha dela. Olhe a barra na hora
+   de gravar: ela volta ao estado ocioso em cerca de 2,6 s, e uma falha do `readState` não deixa
+   log. Depois reconecte:
+   a tela relê exatamente o que foi gravado, e o indicador de bateria sobrevive.
+6. **Sondas.** Rodar a página de diagnóstico e a sonda de escrita.
+
+A troca de memória no meio de uma aplicação não é provocável à mão (a aplicação dura cerca
+de 150 ms) e fica com os testes.
+
+Resultado (2026-10-19, app local na branch `feat/migracao-sessao`): **o roteiro passou.** O
+usuário rodou o roteiro com o app servido pela branch e relatou tudo funcionando ("pelo que
+aparenta está perfeito, tudo funcionando"). O relato foi de conjunto: não ficaram registrados os
+observáveis de cada item, como a contagem de envios do item 3, nem se o item 2 incluiu a troca de
+memória por um botão ligado no hub. É a primeira confirmação da sessão em Rust — o leitor único,
+a consulta em passos puxados e a escrita com pausas decidida pelo núcleo — contra o firmware real.
