@@ -346,6 +346,24 @@ fn invalid_snapshots_name_the_field_that_fails() {
 }
 
 #[test]
+fn every_query_vector_describes_defaults_that_apply_cleanly() {
+    let vectors = vectors();
+    let mut exercised = 0;
+    for (name, raw) in &vectors.queries {
+        let (Ok(snapshot), Ok(description)) =
+            (parse_mouse_param_snapshot(raw), leviathan_v4::describe(raw))
+        else {
+            continue;
+        };
+        leviathan_v4::apply_settings(&snapshot, &description.defaults)
+            .unwrap_or_else(|error| panic!("{name}: {error:?}"));
+        exercised += 1;
+    }
+    // Poucas consultas: isto é um alarme contra o laço vazio, não uma garantia.
+    assert!(exercised > 0, "nenhuma consulta exercitada");
+}
+
+#[test]
 fn param_apply_matches_the_shared_vectors() {
     let vectors = vectors();
     require_non_empty(&vectors.param_apply, "paramApply");

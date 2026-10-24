@@ -30,12 +30,19 @@ fn pad_to_width(mut values: Vec<u32>, width: usize) -> Vec<u32> {
 /// `describe()` entrega à tela. O passo de 50 do DPI não é imposto: não
 /// corrompe nada, e um mouse configurado pelo fabricante pode ter um estágio
 /// fora dele.
-fn check_ranges(settings: &MouseSettings) -> Result<(), RawmError> {
+///
+/// Polling, LOD e rotação também aceitam o valor que o próprio mouse relatou no
+/// snapshot, mesmo fora das listas: `describe()` o copia para os padrões, e
+/// recusá-lo faria toda edição (e "Descartar") falhar num mouse atípico. Só o
+/// que difere do relatado e está fora da faixa é recusado.
+fn check_ranges(snapshot: &MouseParamSnapshot, settings: &MouseSettings) -> Result<(), RawmError> {
     let parameters = &settings.parameters;
     let lod = lod_range();
     let in_range =
         |value: i64, min: i32, max: i32| (i64::from(min)..=i64::from(max)).contains(&value);
-    if !POLLING_RATES.contains(&settings.polling_rate) {
+    if !POLLING_RATES.contains(&settings.polling_rate)
+        && settings.polling_rate != snapshot.polling_rate
+    {
         return Err(RawmError::InvalidSetting {
             field: "pollingRate",
         });
@@ -47,16 +54,20 @@ fn check_ranges(settings: &MouseSettings) -> Result<(), RawmError> {
     }) {
         return Err(RawmError::InvalidDpiStages);
     }
-    if !in_range(i64::from(parameters.lift_off_distance), lod.min, lod.max) {
+    if parameters.lift_off_distance != snapshot.lift_off_distance
+        && !in_range(i64::from(parameters.lift_off_distance), lod.min, lod.max)
+    {
         return Err(RawmError::InvalidSetting {
             field: "liftOffDistance",
         });
     }
-    if !in_range(
-        i64::from(parameters.sensor_rotation),
-        SENSOR_ROTATION.min,
-        SENSOR_ROTATION.max,
-    ) {
+    if parameters.sensor_rotation != snapshot.angle_tuning
+        && !in_range(
+            i64::from(parameters.sensor_rotation),
+            SENSOR_ROTATION.min,
+            SENSOR_ROTATION.max,
+        )
+    {
         return Err(RawmError::InvalidSetting {
             field: "sensorRotation",
         });
@@ -79,7 +90,7 @@ pub fn apply_settings(
         .find(|stage| stage.id == settings.active_stage_id)
         .filter(|_| !settings.dpi_stages.is_empty() && settings.dpi_stages.len() <= 255)
         .ok_or(RawmError::InvalidDpiStages)?;
-    check_ranges(settings)?;
+    check_ranges(snapshot, settings)?;
     let independent = settings.independent_axes;
     let parameters = &settings.parameters;
 
@@ -226,6 +237,32 @@ mod tests {
             bad.parameters.sensor_rotation = rotation;
             assert_eq!(apply_settings(&snapshot(), &bad), invalid("sensorRotation"));
         }
+    }
+
+    #[test]
+    fn accepts_a_value_the_mouse_itself_reported_outside_the_lists() {
+        let mut reported = snapshot();
+        reported.polling_rate = 3000;
+        reported.lift_off_distance = 0;
+        reported.angle_tuning = 40;
+        let mut same = settings();
+        same.polling_rate = 3000;
+        same.parameters.lift_off_distance = 0;
+        same.parameters.sensor_rotation = 40;
+        assert!(apply_settings(&reported, &same).is_ok());
+
+        let mut rate = same.clone();
+        rate.polling_rate = 3001;
+        assert_eq!(apply_settings(&reported, &rate), invalid("pollingRate"));
+        let mut lod = same.clone();
+        lod.parameters.lift_off_distance = 4;
+        assert_eq!(apply_settings(&reported, &lod), invalid("liftOffDistance"));
+        let mut rotation = same;
+        rotation.parameters.sensor_rotation = 41;
+        assert_eq!(
+            apply_settings(&reported, &rotation),
+            invalid("sensorRotation")
+        );
     }
 
     #[test]
