@@ -41,9 +41,14 @@ export function useDeviceReports(devices: Peripheral[]): void {
    * builds it again — and the driver answers a new subscriber by replaying the
    * dump it already has, which writes to the store again. React ran out of
    * update depth and unmounted the whole app, leaving a blank screen.
+   *
+   * The status is in the key because reconnecting registers a new driver under
+   * the same id: only the status changes then, and it is what resubscribes. It
+   * changes on disconnect and reconnect, never inside the dump replay, so the
+   * loop above does not come back.
    */
   const followed = JSON.stringify(
-    devices.filter((device) => !device.demo).map((device) => device.id),
+    devices.filter((device) => !device.demo).map((device) => [device.id, device.status]),
   );
 
   useEffect(() => {

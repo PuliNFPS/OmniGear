@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, renderHook } from '@testing-library/react';
+import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
 import {
   registerDeviceDriver,
@@ -77,6 +77,29 @@ it('subscribes once even though the dump it replays updates the store', () => {
   // the replay wrote to the store, the store handed back a new array, and the
   // effect tore down and rebuilt the subscription until React gave up.
   expect(subscriptions()).toBe(1);
+});
+
+it('follows the new driver after the device reconnects under the same id', () => {
+  const device = liveMouse();
+  const first = replayingDriver([{ index: 0, bindings: [] }]);
+  registerDeviceDriver(DEVICE_ID, first.driver);
+  useDeviceStore.setState({ devices: [device] });
+  renderHook(() => useDeviceReports(useDeviceStore((state) => state.devices)));
+  expect(first.subscriptions()).toBe(1);
+
+  // O que "Reconectar" faz: um driver novo sob o mesmo id, e um aparelho
+  // recém-descrito (perfis de volta aos valores de fábrica) no lugar do antigo.
+  const second = replayingDriver([{ index: 0, bindings: [] }]);
+  act(() => useDeviceStore.getState().markDisconnected(DEVICE_ID));
+  registerDeviceDriver(DEVICE_ID, second.driver);
+  act(() => useDeviceStore.getState().updateDevice(DEVICE_ID, () => liveMouse()));
+
+  expect(second.subscriptions()).toBe(1);
+  const settings = useDeviceStore
+    .getState()
+    .devices[0].profiles.find((profile) => profile.index === 1)?.settings;
+  if (!settings || !('buttons' in settings)) throw new Error('esperava um perfil de mouse');
+  expect(new Set(Object.values(settings.buttons))).toEqual(new Set(['desativado']));
 });
 
 it('writes what the dump reports into the followed profile', () => {
