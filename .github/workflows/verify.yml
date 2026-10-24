@@ -32,10 +32,21 @@ jobs:
       - name: Install JavaScript dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Cache cargo tools
+        id: cargo-tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/cargo-machete
+            ~/.cargo/bin/wasm-pack
+          key: cargo-tools-${{ runner.os }}-machete-0.9.2-wasm-pack-0.15.0
+
       - name: Install cargo-machete
+        if: steps.cargo-tools.outputs.cache-hit != 'true'
         run: cargo install cargo-machete --version 0.9.2 --locked
 
       - name: Install wasm-pack
+        if: steps.cargo-tools.outputs.cache-hit != 'true'
         run: cargo install wasm-pack --version 0.15.0 --locked
 
       - name: Verify repository
