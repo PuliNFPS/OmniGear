@@ -183,6 +183,21 @@ describe('estruturas através da ponte', () => {
     ).toThrow('Modo de desempenho RAWM invalido.');
   });
 
+  it('recusa um polling fora da lista com o texto e o código em cause', () => {
+    const description = describeLeviathanV4(leviathanV4QueryFixture);
+    let thrown: unknown;
+    try {
+      applySettingsToMouseParam(parseMouseParamState(leviathanV4QueryFixture), {
+        ...description.defaults,
+        pollingRate: 70000,
+      });
+    } catch (error) {
+      thrown = error;
+    }
+    expect((thrown as Error).message).toBe('Ajuste fora do que o mouse aceita: pollingRate.');
+    expect((thrown as Error).cause).toBe('invalid-setting');
+  });
+
   it('mantém a ordem dos botões na travessia', () => {
     const { defaults } = describeLeviathanV4(leviathanV4QueryFixture);
     expect(Object.keys(defaults.buttons)).toEqual([

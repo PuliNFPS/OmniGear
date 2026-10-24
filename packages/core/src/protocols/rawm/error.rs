@@ -59,6 +59,9 @@ pub enum RawmError {
     /// Gravar numa memória que o mouse ainda não relatou: o reset do colchete
     /// apaga o que o app não sabe nomear, e sem o relato não há o que devolver.
     SlotNotReported,
+    /// Valor do editor que o mouse não aceita: escrito, daria a volta no campo
+    /// do protocolo. `field` é o nome no editor (`pollingRate`).
+    InvalidSetting { field: &'static str },
 }
 
 impl RawmError {
@@ -91,6 +94,7 @@ impl RawmError {
             Self::OperationInProgress => "operation-in-progress",
             Self::NotQueried => "not-queried",
             Self::SlotNotReported => "slot-not-reported",
+            Self::InvalidSetting { .. } => "invalid-setting",
         }
     }
 
@@ -98,7 +102,9 @@ impl RawmError {
     /// (`código:dado`), e a casca o usa para montar a mensagem.
     pub fn detail(&self) -> Option<&str> {
         match self {
-            Self::InvalidSnapshotField { field } | Self::IncompleteQuery { field } => Some(field),
+            Self::InvalidSnapshotField { field }
+            | Self::IncompleteQuery { field }
+            | Self::InvalidSetting { field } => Some(field),
             Self::UnrecognizedMouse { name } => Some(name),
             Self::UnknownButton { button } | Self::UnknownRPlusButton { button } => Some(button),
             _ => None,
@@ -169,6 +175,10 @@ mod tests {
         );
         assert_eq!(RawmError::NotQueried.code(), "not-queried");
         assert_eq!(RawmError::SlotNotReported.code(), "slot-not-reported");
+        assert_eq!(
+            RawmError::InvalidSetting { field: "x" }.code(),
+            "invalid-setting"
+        );
     }
 
     #[test]
@@ -200,5 +210,6 @@ mod tests {
             Some("dpi")
         );
         assert_eq!(RawmError::ActiveSlotChanged.detail(), None);
+        assert_eq!(RawmError::InvalidSetting { field: "x" }.detail(), Some("x"));
     }
 }

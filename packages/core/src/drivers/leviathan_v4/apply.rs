@@ -3,6 +3,8 @@
 //! Só os campos que o editor controla mudam; o resto do bloco volta como o
 //! mouse o mandou, inclusive o que esta versão do app não entende.
 
+use super::description::{DPI, POLLING_RATES, SENSOR_ROTATION};
+use super::lod::lod_range;
 use crate::device::MouseSettings;
 use crate::protocols::rawm::{MouseParamSnapshot, RawmError, pack_dpi};
 
@@ -23,6 +25,45 @@ fn pad_to_width(mut values: Vec<u32>, width: usize) -> Vec<u32> {
     values
 }
 
+/// Recusa o que o mouse não aceita: os campos do protocolo são estreitos e um
+/// valor maior daria a volta em silêncio. As faixas são as mesmas que
+/// `describe()` entrega à tela. O passo de 50 do DPI não é imposto: não
+/// corrompe nada, e um mouse configurado pelo fabricante pode ter um estágio
+/// fora dele.
+fn check_ranges(settings: &MouseSettings) -> Result<(), RawmError> {
+    let parameters = &settings.parameters;
+    let lod = lod_range();
+    let in_range =
+        |value: i64, min: i32, max: i32| (i64::from(min)..=i64::from(max)).contains(&value);
+    if !POLLING_RATES.contains(&settings.polling_rate) {
+        return Err(RawmError::InvalidSetting {
+            field: "pollingRate",
+        });
+    }
+    if settings.dpi_stages.iter().any(|stage| {
+        ![stage.x, stage.y]
+            .iter()
+            .all(|axis| (DPI.min..=DPI.max).contains(axis))
+    }) {
+        return Err(RawmError::InvalidDpiStages);
+    }
+    if !in_range(i64::from(parameters.lift_off_distance), lod.min, lod.max) {
+        return Err(RawmError::InvalidSetting {
+            field: "liftOffDistance",
+        });
+    }
+    if !in_range(
+        i64::from(parameters.sensor_rotation),
+        SENSOR_ROTATION.min,
+        SENSOR_ROTATION.max,
+    ) {
+        return Err(RawmError::InvalidSetting {
+            field: "sensorRotation",
+        });
+    }
+    Ok(())
+}
+
 pub fn apply_settings(
     snapshot: &MouseParamSnapshot,
     settings: &MouseSettings,
@@ -38,6 +79,7 @@ pub fn apply_settings(
         .find(|stage| stage.id == settings.active_stage_id)
         .filter(|_| !settings.dpi_stages.is_empty() && settings.dpi_stages.len() <= 255)
         .ok_or(RawmError::InvalidDpiStages)?;
+    check_ranges(settings)?;
     let independent = settings.independent_axes;
     let parameters = &settings.parameters;
 
@@ -143,5 +185,67 @@ mod tests {
             apply_settings(&snapshot(), &orphan),
             Err(RawmError::InvalidDpiStages)
         );
+    }
+
+    fn invalid(field: &'static str) -> Result<MouseParamSnapshot, RawmError> {
+        Err(RawmError::InvalidSetting { field })
+    }
+
+    #[test]
+    fn rejects_values_the_device_cannot_accept() {
+        for rate in [70_000, 999] {
+            let mut bad = settings();
+            bad.polling_rate = rate;
+            assert_eq!(apply_settings(&snapshot(), &bad), invalid("pollingRate"));
+        }
+
+        let mut too_high = settings();
+        too_high.dpi_stages[0].x = 45_050;
+        assert_eq!(
+            apply_settings(&snapshot(), &too_high),
+            Err(RawmError::InvalidDpiStages)
+        );
+        let mut bad_y = settings();
+        bad_y.independent_axes = true;
+        bad_y.dpi_stages[0].y = 99;
+        assert_eq!(
+            apply_settings(&snapshot(), &bad_y),
+            Err(RawmError::InvalidDpiStages)
+        );
+
+        for lod in [0, 4] {
+            let mut bad = settings();
+            bad.parameters.lift_off_distance = lod;
+            assert_eq!(
+                apply_settings(&snapshot(), &bad),
+                invalid("liftOffDistance")
+            );
+        }
+        for rotation in [31, -31] {
+            let mut bad = settings();
+            bad.parameters.sensor_rotation = rotation;
+            assert_eq!(apply_settings(&snapshot(), &bad), invalid("sensorRotation"));
+        }
+    }
+
+    #[test]
+    fn accepts_the_edges_and_an_unaligned_stage() {
+        let mut edges = settings();
+        edges.polling_rate = 8000;
+        edges.dpi_stages[0].x = 100;
+        edges.dpi_stages[0].y = 100;
+        edges.dpi_stages[1].x = 45_000;
+        edges.dpi_stages[1].y = 45_000;
+        for lod in [1, 3] {
+            edges.parameters.lift_off_distance = lod;
+            assert!(apply_settings(&snapshot(), &edges).is_ok());
+        }
+        for rotation in [30, -30] {
+            edges.parameters.sensor_rotation = rotation;
+            assert!(apply_settings(&snapshot(), &edges).is_ok());
+        }
+        edges.dpi_stages[0].x = 1234;
+        edges.dpi_stages[0].y = 1234;
+        assert!(apply_settings(&snapshot(), &edges).is_ok());
     }
 }

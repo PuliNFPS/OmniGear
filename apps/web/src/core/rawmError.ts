@@ -32,6 +32,7 @@ const MESSAGES: Record<string, string> = {
   'not-queried': 'O mouse ainda não respondeu à consulta.',
   'slot-not-reported':
     'O mouse ainda não informou o que esta memória guarda. Aguarde um instante e grave de novo.',
+  'invalid-setting': 'Ajuste fora do que o mouse aceita: {campo}.',
 };
 
 /**

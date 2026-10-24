@@ -58,7 +58,7 @@ pub struct LeviathanV4Description {
     pub defaults: MouseSettings,
 }
 
-const DPI: DpiLimits = DpiLimits {
+pub(super) const DPI: DpiLimits = DpiLimits {
     min: 100,
     max: 45_000,
     step: 50,
@@ -66,8 +66,8 @@ const DPI: DpiLimits = DpiLimits {
     max_stages: 8,
     independent_axes: false,
 };
-const POLLING_RATES: [u32; 7] = [125, 250, 500, 1000, 2000, 4000, 8000];
-const SENSOR_ROTATION: NumericRange = NumericRange {
+pub(super) const POLLING_RATES: [u32; 7] = [125, 250, 500, 1000, 2000, 4000, 8000];
+pub(super) const SENSOR_ROTATION: NumericRange = NumericRange {
     min: -30,
     max: 30,
     step: 1,

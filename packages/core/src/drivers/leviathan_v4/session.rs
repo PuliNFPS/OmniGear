@@ -890,6 +890,22 @@ mod tests {
     }
 
     #[test]
+    fn invalid_values_fail_before_any_byte() {
+        let mut session = connected();
+        let broken = MouseSettings {
+            polling_rate: 70_000,
+            ..defaults()
+        };
+        assert_eq!(
+            session.begin_apply(&broken),
+            Err(RawmError::InvalidSetting {
+                field: "pollingRate"
+            })
+        );
+        assert_eq!(session.next_step(), Ok(None));
+    }
+
+    #[test]
     fn a_memory_change_mid_apply_stops_it_and_forces_a_full_rewrite() {
         let mut session = connected();
         // As duas memórias guardam o mesmo: só a falha explica uma reescrita completa.

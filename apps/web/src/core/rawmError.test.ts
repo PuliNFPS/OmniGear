@@ -142,6 +142,7 @@ describe('erros da sessão', () => {
     ['unrecognized-mouse:RAWM: X', 'Mouse RAWM conectado nao reconhecido: RAWM: X.'],
     ['unknown-button:inexistente', 'Botao RAWM desconhecido: inexistente.'],
     ['unknown-rplus-button:lateral', 'Botao R-Plus RAWM desconhecido: lateral.'],
+    ['invalid-setting:pollingRate', 'Ajuste fora do que o mouse aceita: pollingRate.'],
   ])('%s leva o dado para o texto, mesmo com ":" no dado', (raw, text) => {
     expect(asRawmError(new Error(raw)).message).toBe(text);
   });
