@@ -128,6 +128,10 @@ describe('erros da sessão', () => {
     ],
     ['operation-in-progress', 'Outra operação RAWM ainda está em andamento.'],
     ['not-queried', 'O mouse ainda não respondeu à consulta.'],
+    [
+      'slot-not-reported',
+      'O mouse ainda não informou o que esta memória guarda. Aguarde um instante e grave de novo.',
+    ],
   ])('%s vira o texto de sempre, com o código em cause', (code, text) => {
     const error = asRawmError(new Error(code));
     expect(error.message).toBe(text);

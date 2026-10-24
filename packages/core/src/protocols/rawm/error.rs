@@ -56,6 +56,9 @@ pub enum RawmError {
     OperationInProgress,
     /// Uma escrita antes de a primeira resposta ligar a sessão.
     NotQueried,
+    /// Gravar numa memória que o mouse ainda não relatou: o reset do colchete
+    /// apaga o que o app não sabe nomear, e sem o relato não há o que devolver.
+    SlotNotReported,
 }
 
 impl RawmError {
@@ -87,6 +90,7 @@ impl RawmError {
             Self::ActiveSlotChanged => "active-slot-changed",
             Self::OperationInProgress => "operation-in-progress",
             Self::NotQueried => "not-queried",
+            Self::SlotNotReported => "slot-not-reported",
         }
     }
 
@@ -164,6 +168,7 @@ mod tests {
             "operation-in-progress"
         );
         assert_eq!(RawmError::NotQueried.code(), "not-queried");
+        assert_eq!(RawmError::SlotNotReported.code(), "slot-not-reported");
     }
 
     #[test]

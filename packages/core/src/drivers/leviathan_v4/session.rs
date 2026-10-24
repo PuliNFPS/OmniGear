@@ -265,6 +265,13 @@ impl LeviathanV4Session {
         if slot >= device.slot_count {
             return Err(RawmError::InvalidProfileSlot);
         }
+        let reported = self
+            .slots
+            .as_deref()
+            .is_some_and(|slots| slots.iter().any(|memory| u32::from(memory.index) == slot));
+        if !reported {
+            return Err(RawmError::SlotNotReported);
+        }
         let intended = validate(device, settings)?;
         let blocks = vec![
             Block::Reset,
@@ -922,10 +929,28 @@ mod tests {
     #[test]
     fn a_profile_write_is_not_guarded() {
         let mut session = connected();
+        held_dump(&mut session, &[2], &defaults());
         session.begin_write_profile(2, &defaults()).unwrap();
         session.next_step().unwrap();
         feed(&mut session, &[notify(0x22, &[1])]).unwrap();
         assert!(drain(&mut session).is_ok());
+    }
+
+    #[test]
+    fn a_profile_write_waits_for_the_mouse_to_report_that_memory() {
+        let mut session = connected();
+        assert_eq!(
+            session.begin_write_profile(2, &defaults()),
+            Err(RawmError::SlotNotReported)
+        );
+        assert_eq!(session.next_step(), Ok(None));
+        held_dump(&mut session, &[0], &defaults());
+        assert_eq!(
+            session.begin_write_profile(2, &defaults()),
+            Err(RawmError::SlotNotReported)
+        );
+        held_dump(&mut session, &[0, 2], &defaults());
+        assert_eq!(session.begin_write_profile(2, &defaults()), Ok(()));
     }
 
     #[test]

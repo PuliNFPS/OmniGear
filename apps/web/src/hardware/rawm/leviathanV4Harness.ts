@@ -47,6 +47,12 @@ export function fakeLeviathanV4(raw: Record<string, unknown> = leviathanV4QueryF
     notify(type: number, payload: number[]) {
       deliver(deliveredReports(withProtocolEnvelope([CMD_NOTIFY, 0, type, ...payload], false)));
     },
+    /** Um dump completo: o marcador de cada memória, e o terminador. */
+    dump(slots: number[]) {
+      for (const slot of [...slots, 0xff]) {
+        deliver(deliveredReports(withProtocolEnvelope([CMD_NOTIFY, 0, 0x14, slot], false)));
+      }
+    },
     report(data: Uint8Array) {
       deliver([data]);
     },

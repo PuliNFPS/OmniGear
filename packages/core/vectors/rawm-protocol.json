@@ -1898,10 +1898,10 @@
       ]
     },
     {
-      "name": "sem dump: o colchete nomeia a memória 4",
+      "name": "memória sem entradas relatada: o colchete nomeia a memória 4",
       "query": "leviathan-v4-captura",
       "patch": {},
-      "dump": null,
+      "dump": ["03", "ff"],
       "slot": 3,
       "settings": {
         "buttons": {

@@ -30,6 +30,8 @@ const MESSAGES: Record<string, string> = {
     'A memória ativa mudou durante a aplicação. Revise o perfil antes de aplicar novamente.',
   'operation-in-progress': 'Outra operação RAWM ainda está em andamento.',
   'not-queried': 'O mouse ainda não respondeu à consulta.',
+  'slot-not-reported':
+    'O mouse ainda não informou o que esta memória guarda. Aguarde um instante e grave de novo.',
 };
 
 /**

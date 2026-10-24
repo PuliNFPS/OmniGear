@@ -31,6 +31,7 @@ describe('LeviathanV4Driver', () => {
   it('brackets a profile write with the saves that commit it', async () => {
     const fake = fakeLeviathanV4();
     const driver = await connectedDriver(fake);
+    fake.dump([3]);
     await driver.writeProfile(4, 'Perfil 4', settings);
     const actions = fake.sent.filter((report) => innerCommand(report) === 0x06);
     expect(actions).toHaveLength(2);
@@ -40,6 +41,15 @@ describe('LeviathanV4Driver', () => {
     expect(actions[0][11]).toBe(0x03);
     expect(actions[1][10]).toBe(0x00);
     expect(actions[1][11]).toBe(0x00);
+  });
+
+  it('refuses a profile write before the mouse reports the memory, without sending', async () => {
+    const fake = fakeLeviathanV4();
+    const driver = await connectedDriver(fake);
+    await expect(driver.writeProfile(4, 'Perfil 4', settings)).rejects.toThrow(
+      'O mouse ainda não informou o que esta memória guarda. Aguarde um instante e grave de novo.',
+    );
+    expect(fake.sent).toHaveLength(0);
   });
 
   it('refuses a slot the shell cannot convert, without sending', async () => {
