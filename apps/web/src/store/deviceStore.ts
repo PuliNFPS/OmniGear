@@ -11,7 +11,7 @@ import { reportHardwareFailure } from '../hardware/hardwareFailure';
 const DEMO_STORAGE_KEY = 'omnigear:demonstracao';
 let demoGeneration = 0;
 
-export type ConnectionState = 'ocioso' | 'conectando' | 'cancelado' | 'erro';
+type ConnectionState = 'ocioso' | 'conectando' | 'cancelado' | 'erro';
 
 interface DeviceStore {
   devices: Peripheral[];

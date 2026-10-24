@@ -15,8 +15,10 @@ function mount() {
 /**
  * Separate entry on purpose. The main app restores authorized devices on mount
  * and registers a live driver, and any edit in the editor applies to hardware
- * immediately. Keeping the probe out of that tree is what makes "read-only" a
- * structural property instead of a promise.
+ * immediately. Keeping the page out of that tree means nothing here writes to
+ * the mouse unless the user asks for it: it only queries until the user ticks
+ * "Entendo que isto escreve no mouse", and after that each write probe is an
+ * explicit click. `probeProfileWrite` does reach the flash.
  *
  * Like the main entry, it waits for the core: every probe stage goes through
  * it. A core that fails to load still renders, and the first stage reports why.

@@ -6,7 +6,7 @@
   "ignore": ["apps/web/.impeccable/**"],
   "workspaces": {
     "apps/web": {
-      // Second Vite HTML entry: the read-only RAWM probe. index.html is detected.
+      // Second Vite HTML entry: the RAWM diagnostic page. index.html is detected.
       "entry": ["src/diagnostico.tsx"],
     },
     "packages/core-wasm": {
@@ -16,11 +16,5 @@
       // it reads this as unused — it is not.
       "ignoreDependencies": ["@gearhub/core"],
     },
-  },
-  "ignoreIssues": {
-    // Skeleton kept for the upcoming WebHID implementation.
-    "apps/web/src/hardware/WebHidTransport.ts": ["files"],
-    // Public while the store API is still being shaped.
-    "apps/web/src/store/deviceStore.ts": ["types"],
   },
 }

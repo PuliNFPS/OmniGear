@@ -9,8 +9,10 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        // The read-only RAWM probe is its own entry so it never mounts the
+        // The RAWM diagnostic page is its own entry so it never mounts the
         // editor, which applies changes to hardware as soon as a control moves.
+        // It only queries until the user ticks "Entendo que isto escreve no
+        // mouse"; after that each write probe is an explicit click.
         main: 'index.html',
         diagnostico: 'diagnostico.html',
       },
