@@ -188,11 +188,8 @@ export function DeviceWorkspace({ device, sectionId }: { device: Peripheral; sec
           onDiscard={() => setDiscardOpen(true)}
           onSave={() => void save(device)}
           onRetry={() => retry(device)}
-          onReconnect={() =>
-            void reconnect(device.id).then((restored) => {
-              if (restored) retry(device);
-            })
-          }
+          // No automatic repeat: the mouse is still sending its dump; "Tentar novamente" repeats.
+          onReconnect={() => void reconnect(device.id)}
         />
       </div>
 

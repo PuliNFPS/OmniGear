@@ -17,9 +17,9 @@ import { initialEntry, useEditorStore } from '../store/editorStore';
 import { DeviceWorkspace } from './DeviceWorkspace';
 
 /**
- * "Reconectar" must wait for the device to come back before repeating the
- * apply that failed; repeating it while the device is still offline does
- * nothing and nothing repeats it afterwards.
+ * "Reconectar" only reconnects. The mouse is still sending its memory dump when
+ * the new driver registers, so repeating the failed operation here would race
+ * it; repeating is "Tentar novamente"'s job.
  */
 
 const offline: Peripheral = {
@@ -43,7 +43,13 @@ beforeEach(() => {
   registerDeviceDriver(offline.id, { applyToSession, writeProfile: vi.fn(async () => {}) });
   useDeviceStore.setState({ devices: [structuredClone(offline)] });
   useEditorStore.setState({
-    entries: { [offline.id]: { ...initialEntry(offline), status: 'falha-aplicacao' } },
+    entries: {
+      [offline.id]: {
+        ...initialEntry(offline),
+        draft: { ...initialEntry(offline).draft, pollingRate: 500 },
+        status: 'falha-aplicacao',
+      },
+    },
   });
 });
 
@@ -53,26 +59,35 @@ afterEach(() => {
   unregisterDeviceDriver(offline.id);
 });
 
-it('retries the failed apply only after the device is back', async () => {
+it('does not repeat the failed operation by itself after reconnecting', async () => {
   let comeBack!: (devices: Peripheral[]) => void;
   restoreMock.mockReturnValue(new Promise<Peripheral[]>((resolve) => (comeBack = resolve)));
   render(<Workspace />);
+  const before = structuredClone(useEditorStore.getState().entries[offline.id].draft);
 
   fireEvent.click(screen.getByRole('button', { name: 'Reconectar' }));
-  expect(applyToSession).not.toHaveBeenCalled();
-
   await act(async () => comeBack([structuredClone(online)]));
 
-  expect(applyToSession).toHaveBeenCalledTimes(1);
+  expect(restoreMock).toHaveBeenCalledTimes(1);
+  expect(applyToSession).not.toHaveBeenCalled();
+  const entry = useEditorStore.getState().entries[offline.id];
+  expect(entry.status).toBe('falha-aplicacao');
+  expect(entry.draft).toEqual(before);
+  expect(useDeviceStore.getState().devices[0].status).toBe('conectado');
 });
 
-it('does not retry when the device did not come back', async () => {
+it('leaves the entry untouched when the device did not come back', async () => {
   restoreMock.mockResolvedValue([]);
   render(<Workspace />);
+  const before = structuredClone(useEditorStore.getState().entries[offline.id].draft);
 
   await act(async () => {
     fireEvent.click(screen.getByRole('button', { name: 'Reconectar' }));
   });
 
+  expect(restoreMock).toHaveBeenCalledTimes(1);
   expect(applyToSession).not.toHaveBeenCalled();
+  const entry = useEditorStore.getState().entries[offline.id];
+  expect(entry.status).toBe('falha-aplicacao');
+  expect(entry.draft).toEqual(before);
 });
