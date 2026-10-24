@@ -398,28 +398,7 @@ export const useEditorStore = create<EditorStore>((set, get) => {
         .getState()
         .updateDevice(device.id, (current) => ({ ...current, activeProfileSlot: slotIndex }));
       if (device.status === 'desconectado') return;
-
-      // A device that keeps its profiles onboard already holds this slot: ask
-      // it to run that one instead of writing the settings back into it.
-      let driver;
-      try {
-        driver = driverFor(device);
-      } catch {
-        driver = undefined;
-      }
-      if (!driver?.switchProfile) {
-        await applyToSession(device, settings);
-        return;
-      }
-      cancelPendingApply(device.id);
-      queuedApplies.delete(device.id);
-      try {
-        await driver.switchProfile(slotIndex);
-        put(device.id, { status: 'ocioso' });
-      } catch (error) {
-        reportHardwareFailure('trocar de perfil', error);
-        put(device.id, { status: 'falha-aplicacao' });
-      }
+      await applyToSession(device, settings);
     },
 
     renameProfile: async (input, slotIndex, name) => {

@@ -30,8 +30,6 @@ export interface DeviceDriver {
    * holds, and anything it shows is its own assumption.
    */
   onOnboardProfiles?(listener: (slots: OnboardProfileReport[]) => void): () => void;
-  /** Makes the device run another of its onboard slots. */
-  switchProfile?(slotIndex: number): Promise<void>;
 }
 
 /** One onboard slot as the device reports it. Generated from the core. */

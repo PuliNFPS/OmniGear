@@ -249,13 +249,11 @@ describe('choosing an onboard profile for editing', () => {
     );
   });
 
-  it('loads the editor without switching, applying or writing to the mouse', async () => {
-    const switchProfile = vi.fn(async () => undefined);
+  it('loads the editor without applying or writing to the mouse', async () => {
     const applyToSession = vi.fn(async () => undefined);
     const driver: DeviceDriver = {
       applyToSession,
       writeProfile: vi.fn(async () => undefined),
-      switchProfile,
     };
     registerDeviceDriver(DEVICE_ID, driver);
     const device = useDeviceStore.getState().devices[0];
@@ -263,7 +261,6 @@ describe('choosing an onboard profile for editing', () => {
     await useEditorStore.getState().loadProfile(device, 2);
     await vi.runAllTimersAsync();
 
-    expect(switchProfile).not.toHaveBeenCalled();
     expect(applyToSession).not.toHaveBeenCalled();
     expect(driver.writeProfile).not.toHaveBeenCalled();
     expect(useDeviceStore.getState().devices[0].activeProfileSlot).toBe(1);

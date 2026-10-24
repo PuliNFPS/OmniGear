@@ -49,14 +49,6 @@ describe('reading the onboard slots', () => {
   });
 });
 
-// The vendor's mouse dropdown only selects which onboard slot to edit.
-describe('switching the active onboard slot', () => {
-  it('is not offered without a verified mouse-side switch command', async () => {
-    const driver = await connectedDriver(fakeLeviathanV4());
-    expect((driver as { switchProfile?: unknown }).switchProfile).toBeUndefined();
-  });
-});
-
 it('stops skipping after a write that failed part way through', async () => {
   const fake = fakeLeviathanV4();
   const driver = await connectedDriver(fake);
