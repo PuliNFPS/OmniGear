@@ -220,8 +220,9 @@ export function RawmDiagnosticPage() {
       <p className="mt-2 text-sm text-muted-foreground">
         Consulta o receptor e o mouse e mostra a resposta crua. Não constrói driver e não abre o
         editor, então nada é aplicado por engano ao mexer num controle. A leitura só transmite
-        eventos de consulta; a única escrita possível está no fim da página, atrás de uma
-        confirmação, e é um evento só.
+        eventos de consulta. As sondas de escrita ficam atrás da caixa «Entendo que isto escreve no
+        mouse»; algumas enviam vários eventos, e a de perfil grava na flash — desligar o mouse não
+        desfaz.
       </p>
 
       <div className="mt-6 flex flex-wrap gap-3">
