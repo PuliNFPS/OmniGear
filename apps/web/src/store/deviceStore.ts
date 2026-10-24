@@ -30,7 +30,8 @@ interface DeviceStore {
   connectDevice(): Promise<void>;
   resetConnection(): void;
   markDisconnected(deviceId: string): void;
-  reconnect(deviceId: string): Promise<void>;
+  /** `true` when the authorized device was found and put back in place. */
+  reconnect(deviceId: string): Promise<boolean>;
   updateDevice(deviceId: string, update: (device: Peripheral) => Peripheral): void;
 }
 
@@ -138,9 +139,16 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
     get().updateDevice(deviceId, (device) => ({ ...device, status: 'desconectado' })),
 
   reconnect: async (deviceId) => {
-    const restored = await restoreAuthorizedDevices().catch(() => []);
-    const device = restored.find((item) => item.id === deviceId);
-    if (device) get().updateDevice(deviceId, () => device);
+    try {
+      const restored = await restoreAuthorizedDevices();
+      const device = restored.find((item) => item.id === deviceId);
+      if (!device) return false;
+      get().updateDevice(deviceId, () => device);
+      return true;
+    } catch (error) {
+      reportHardwareFailure('reconectar o dispositivo', error);
+      return false;
+    }
   },
 
   updateDevice: (deviceId, update) =>

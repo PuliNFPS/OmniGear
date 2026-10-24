@@ -2,10 +2,15 @@ import type { Peripheral } from '@gearhub/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const requestDeviceMock = vi.hoisted(() => vi.fn());
+const restoreMock = vi.hoisted(() => vi.fn());
 
 vi.mock('../hardware/deviceDiscovery', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../hardware/deviceDiscovery')>();
-  return { ...actual, requestDevice: requestDeviceMock };
+  return {
+    ...actual,
+    requestDevice: requestDeviceMock,
+    restoreAuthorizedDevices: restoreMock,
+  };
 });
 
 import { exitDemonstration } from '../app/demo';
@@ -45,6 +50,8 @@ async function reload() {
 beforeEach(() => {
   vi.useFakeTimers();
   requestDeviceMock.mockReset();
+  restoreMock.mockReset();
+  restoreMock.mockResolvedValue([]);
   vi.stubGlobal('localStorage', fakeStorage());
   useDeviceStore.setState({
     devices: [],
@@ -165,5 +172,46 @@ describe('connecting real devices', () => {
     await useDeviceStore.getState().connectDevice();
 
     expect(useDeviceStore.getState().devices).toEqual([connected]);
+  });
+});
+
+describe('reconnecting a device', () => {
+  const existing: Peripheral = {
+    ...createDemoMouse(),
+    id: 'mouse-real',
+    demo: false,
+    status: 'desconectado',
+  };
+
+  beforeEach(() => useDeviceStore.setState({ devices: [existing] }));
+
+  it('resolves true and swaps in the restored device', async () => {
+    const connected: Peripheral = { ...existing, status: 'conectado' };
+    restoreMock.mockResolvedValue([connected]);
+
+    expect(await useDeviceStore.getState().reconnect('mouse-real')).toBe(true);
+    expect(useDeviceStore.getState().devices).toEqual([connected]);
+  });
+
+  it('resolves false and leaves the list alone when the device is not among the authorized ones', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(await useDeviceStore.getState().reconnect('mouse-real')).toBe(false);
+    expect(useDeviceStore.getState().devices).toEqual([existing]);
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('resolves false and reports when reopening throws', async () => {
+    restoreMock.mockRejectedValue(new Error('boom'));
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(await useDeviceStore.getState().reconnect('mouse-real')).toBe(false);
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringContaining('Falha ao reconectar o dispositivo'),
+      expect.any(Error),
+    );
+    expect(useDeviceStore.getState().devices).toEqual([existing]);
+    spy.mockRestore();
   });
 });
