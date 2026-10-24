@@ -23,6 +23,10 @@ describe('parseHash', () => {
       section: '',
     });
   });
+
+  it('falls back to home when the device id is not valid percent-encoding', () => {
+    expect(parseHash('#/dispositivo/%E0%A4%A/dpi')).toEqual({ name: 'home' });
+  });
 });
 
 describe('routeToHash', () => {

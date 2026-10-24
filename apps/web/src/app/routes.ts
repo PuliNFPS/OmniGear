@@ -24,7 +24,12 @@ export function parseHash(hash: string): Route {
   const path = hash.replace(/^#/, '').replace(/^\/+|\/+$/g, '');
   const [area, deviceId, section] = path.split('/');
   if (area === 'dispositivo' && deviceId) {
-    return { name: 'device', deviceId: decodeURIComponent(deviceId), section: section ?? '' };
+    try {
+      return { name: 'device', deviceId: decodeURIComponent(deviceId), section: section ?? '' };
+    } catch {
+      // Percent-encoding inválido (URIError): um hash digitado à mão não pode derrubar o app.
+      return homeRoute;
+    }
   }
   return homeRoute;
 }
