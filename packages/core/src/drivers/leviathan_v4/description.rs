@@ -64,7 +64,7 @@ pub(super) const DPI: DpiLimits = DpiLimits {
     step: 50,
     min_stages: 1,
     max_stages: 8,
-    independent_axes: false,
+    independent_axes: true,
 };
 pub(super) const POLLING_RATES: [u32; 7] = [125, 250, 500, 1000, 2000, 4000, 8000];
 pub(super) const SENSOR_ROTATION: NumericRange = NumericRange {
@@ -193,25 +193,28 @@ pub fn describe(raw: &Value) -> Result<LeviathanV4Description, RawmError> {
     let profile_slots = onboard_slot_count(raw);
     let active_profile_slot = (onboard_index + 1.0).max(1.0).min(f64::from(profile_slots)) as u32;
 
+    let dpi_stages: Vec<DpiStage> = levels
+        .iter()
+        .enumerate()
+        .map(|(index, &level)| {
+            let DpiAxes { x, y } = axes(level);
+            DpiStage {
+                id: format!("estagio-{}", index + 1),
+                x,
+                y,
+            }
+        })
+        .collect();
+    let independent_axes = dpi_stages.iter().any(|stage| stage.x != stage.y);
+
     let defaults = MouseSettings {
         buttons: FACTORY_BUTTONS
             .iter()
             .map(|&(id, action)| (id.to_owned(), action))
             .collect(),
-        dpi_stages: levels
-            .iter()
-            .enumerate()
-            .map(|(index, &level)| {
-                let DpiAxes { x, y } = axes(level);
-                DpiStage {
-                    id: format!("estagio-{}", index + 1),
-                    x,
-                    y,
-                }
-            })
-            .collect(),
+        dpi_stages,
         active_stage_id: format!("estagio-{}", active_index + 1),
-        independent_axes: false,
+        independent_axes,
         polling_rate: polling_rate as u32,
         performance_mode: Some(performance_mode(raw_mode).to_owned()),
         parameters: MouseParameters {
@@ -296,6 +299,21 @@ mod tests {
             stages.iter().map(|stage| stage.x).collect::<Vec<_>>(),
             [400, 800, 1600, 3200]
         );
+    }
+
+    #[test]
+    fn reads_separate_axes_when_a_stage_has_them() {
+        let description = describe(&capture()).unwrap();
+        assert!(description.dpi.independent_axes);
+        assert!(!description.defaults.independent_axes);
+
+        let mut raw = capture();
+        // X 400 nos 16 bits baixos, Y 800 nos altos.
+        raw["cpi_l"] = json!([400 | (800 << 16), 1600, 0, 0, 0, 0, 0, 0]);
+        let defaults = describe(&raw).unwrap().defaults;
+        assert!(defaults.independent_axes);
+        let first = &defaults.dpi_stages[0];
+        assert_eq!((first.x, first.y), (400, 800));
     }
 
     #[test]

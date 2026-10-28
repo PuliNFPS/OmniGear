@@ -505,3 +505,16 @@ aparenta está perfeito, tudo funcionando"). O relato foi de conjunto: não fica
 observáveis de cada item, como a contagem de envios do item 3, nem se o item 2 incluiu a troca de
 memória por um botão ligado no hub. É a primeira confirmação da sessão em Rust — o leitor único,
 a consulta em passos puxados e a escrita com pausas decidida pelo núcleo — contra o firmware real.
+
+## Eixos X/Y independentes, confirmados no mouse (2026-10-28)
+
+O Leviathan V4 passou a declarar `independent_axes`, e a consulta marca o perfil como
+independente quando algum estágio de `cpi_l` chega com X≠Y. Roteiro executado:
+
+1. Marcar "Eixos X/Y independentes", gravar um estágio com X 800 e Y 1600.
+2. Mover o mouse: a vertical anda o dobro da horizontal.
+3. Recarregar e reconectar: o checkbox volta marcado, com 800 e 1600.
+4. O software oficial mostra o mesmo X/Y.
+5. Desmarcar e gravar: os eixos voltam a andar igual.
+
+O passo 3 é o que fecha o ciclo: `pack_dpi` na escrita e `dpi_axes` na leitura batem.
